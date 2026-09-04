@@ -45,9 +45,9 @@ The first time you copy, allow clipboard access if ChatGPT or the browser asks.
 
 ## Support
 
-PasteFlick is free to use. If it saves you time or frustration, a $5 tip helps support future updates and more useful free apps.
+Help me keep creating useful apps and sharing them freely. Your $5 contribution supports new ideas, continued development, and more tools for everyone.
 
-No pressure... just genuine appreciation!
+No pressure—just genuine appreciation!
 
 <p align="center">
   <a href="https://ko-fi.com/ryandunham"><img src="extension/icons/tip5.png" alt="Tip $5 on Ko-fi" height="32"></a>

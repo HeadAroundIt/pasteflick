@@ -218,10 +218,11 @@ export default function App() {
               <p className="version">{version ? `PasteFlick ${version}` : 'PasteFlick'}</p>
               <div className="support">
                 <p>
-                  PasteFlick is free to use. If it saves you time or frustration, a $5
-                  tip helps support future updates and more useful free apps.
+                  Help me keep creating useful apps and sharing them freely. Your $5
+                  contribution supports new ideas, continued development, and more
+                  tools for everyone.
                 </p>
-                <p>No pressure... just genuine appreciation!</p>
+                <p>No pressure—just genuine appreciation!</p>
                 <a className="kofi" href="https://ko-fi.com/ryandunham" target="_blank" rel="noreferrer">
                   Tip $5 on Ko-fi
                 </a>
