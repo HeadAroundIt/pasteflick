@@ -54,7 +54,7 @@ CHIP_CSS = """
   position:absolute;top:1px;left:11px;
   width:8px;height:8px;border-radius:4px;background:#171410;
 }
-.actions{display:flex;align-items:center;gap:2px;}
+.actions{display:flex;align-items:center;justify-content:center;gap:2px;}
 .actions i{
   width:24px;height:24px;border-radius:7px;
   display:grid;place-items:center;
@@ -239,7 +239,7 @@ html,body{{margin:0;width:784px;height:520px;background:transparent;}}
   box-sizing:border-box;
   width:100%;height:100%;
   display:grid;
-  grid-template-columns:max-content 92px 36px minmax(0,1fr);
+              grid-template-columns:max-content 108px 36px minmax(0,1fr);
   grid-template-rows:auto auto auto auto;
   column-gap:12px;
   row-gap:18px;
@@ -275,33 +275,39 @@ html,body{{margin:0;width:784px;height:520px;background:transparent;}}
 }}
 .arm{{
   position:absolute;
-  left:16px;right:0;
+  left:5px;right:0;
   height:22px;
   display:flex;
   align-items:center;
-  gap:6px;
 }}
 .arm.one{{top:calc(16.66% - 11px);}}
 .arm.more{{bottom:calc(16.66% - 11px);}}
+.arm .seg{{
+  flex:1 1 0;
+  min-width:8px;
+  height:2px;
+  background:currentColor;
+  border-radius:1px;
+}}
 .arm .cap{{
   flex:none;
+  padding:3px 12px;
+  margin:0;
+  background:#f7f7f5;
   font:650 11px/1 inherit;
   letter-spacing:-0.02em;
-  color:#8a7358;
+  color:#171410;
   white-space:nowrap;
 }}
-.arm svg{{display:block;flex:none;margin-left:auto;}}
+.arm svg{{display:block;flex:none;margin-left:2px;}}
 .rail{{
   position:absolute;
   left:4px;
-  top:calc(16.66% - 1px);
-  bottom:calc(16.66% - 1px);
-  width:12px;
-  border-left:2px solid #c9a66a;
-  border-top:2px solid #c9a66a;
-  border-bottom:2px solid #c9a66a;
-  border-radius:6px 0 0 6px;
-  box-sizing:border-box;
+  top:calc(16.66%);
+  bottom:calc(16.66%);
+  width:2px;
+  background:#c9a66a;
+  border-radius:1px;
 }}
 .mark-wrap{{
   width:30px;
@@ -368,17 +374,19 @@ html,body{{margin:0;width:784px;height:520px;background:transparent;}}
       <div class="arrows" aria-hidden="true">
         <div class="rail"></div>
         <div class="arm one">
+          <span class="seg"></span>
           <span class="cap">one</span>
-          <svg viewBox="0 0 28 16" width="26" height="16">
-            <path d="M2 8h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            <path d="M14 3.5 24 8l-10 4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <span class="seg"></span>
+          <svg viewBox="0 0 10 10" width="10" height="10">
+            <path d="M1.5 1.5 8.5 5 1.5 8.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </div>
         <div class="arm more">
+          <span class="seg"></span>
           <span class="cap">or more</span>
-          <svg viewBox="0 0 28 16" width="26" height="16">
-            <path d="M2 8h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            <path d="M14 3.5 24 8l-10 4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <span class="seg"></span>
+          <svg viewBox="0 0 10 10" width="10" height="10">
+            <path d="M1.5 1.5 8.5 5 1.5 8.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </div>
       </div>
@@ -497,11 +505,11 @@ def main() -> None:
     base = f"http://127.0.0.1:{port}"
     try:
         # New filenames so GitHub doesn't serve stale shots.
-        shot(f"{base}/shot-chip.html?v=12", OUT / "the-chip.png", 152, 96, "00000000")
-        shot(f"{base}/shot-pair.html?v=11", OUT / "popup-pair.png", 688, 616, "00000000")
-        shot(f"{base}/shot-popup.html?v=11", OUT / "panel-main.png", 332, 368, "00000000")
-        shot(f"{base}/shot-settings.html?v=11", OUT / "panel-settings.png", 332, 616, "00000000")
-        shot(f"{base}/shot-chat.html?v=12", OUT / "one-or-more.png", 784, 520, "00000000")
+        shot(f"{base}/shot-chip.html?v=13", OUT / "chip.png", 152, 96, "00000000")
+        shot(f"{base}/shot-pair.html?v=13", OUT / "the-panels.png", 688, 616, "00000000")
+        shot(f"{base}/shot-popup.html?v=13", OUT / "panel-main.png", 332, 368, "00000000")
+        shot(f"{base}/shot-settings.html?v=13", OUT / "panel-settings.png", 332, 616, "00000000")
+        shot(f"{base}/shot-chat.html?v=15", OUT / "the-span.png", 784, 520, "00000000")
     finally:
         httpd.shutdown()
     print("ok")

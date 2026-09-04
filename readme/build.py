@@ -222,24 +222,33 @@ def finish(content: Image.Image, name: str) -> None:
 def coffee_mark(px: int = 16) -> Image.Image:
     s = max(16, px) * SCALE
     w = max(2, round(s * 0.11))
-    img = Image.new("RGBA", (int(s * 1.2), s), (0, 0, 0, 0))
+    img = Image.new("RGBA", (int(s * 1.25), s), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
-    x0, x1 = s * 0.16, s * 0.68
-    y0, y1 = s * 0.30, s * 0.86
+    x0, x1 = s * 0.14, s * 0.64
+    y0, y1 = s * 0.18, s * 0.82
     r = (x1 - x0) * 0.22
     d.line([(x0, y0), (x0, y1 - r)], fill=INK, width=w)
     d.line([(x1, y0), (x1, y1 - r)], fill=INK, width=w)
     d.line([(x0, y0), (x1, y0)], fill=INK, width=w)
     d.arc([x0, y1 - 2 * r, x1, y1], start=0, end=180, fill=INK, width=w)
-    hx0 = x1 - s * 0.04
+    mid = (y0 + y1) / 2
+    hh = (y1 - y0) * 0.36
+    hx0 = x1 - s * 0.02
     d.arc(
-        [hx0, y0 + s * 0.10, hx0 + s * 0.42, y0 + s * 0.58],
+        [hx0, mid - hh, hx0 + s * 0.40, mid + hh],
         start=280,
         end=80,
         fill=INK,
         width=w,
     )
-    return img
+    bbox = img.getbbox()
+    if bbox is None:
+        return img
+    pad = max(1, w // 2)
+    l, t, r, b = bbox
+    return img.crop(
+        (max(0, l - pad), max(0, t - pad), min(img.width, r + pad), min(img.height, b + pad))
+    )
 
 
 def make_button(label: str, size: int = 16, cup: bool = False) -> Image.Image:
@@ -247,12 +256,14 @@ def make_button(label: str, size: int = 16, cup: bool = False) -> Image.Image:
     probe = Image.new("RGBA", (8, 8))
     d0 = ImageDraw.Draw(probe)
     tw, th = measure(d0, label, fnt)
+    tb = d0.textbbox((0, 0), label, font=fnt)
     icon = coffee_mark(17) if cup else None
     gap = 8 * SCALE if icon else 0
     icon_w = icon.width if icon else 0
+    icon_h = icon.height if icon else 0
     pad_x = (20 if cup else 22) * SCALE
-    pad_y = (14 if cup else 14) * SCALE
-    inner_h = max(th, icon.height if icon else 0)
+    pad_y = 14 * SCALE
+    inner_h = max(th, icon_h)
     chip = Image.new(
         "RGBA",
         (tw + pad_x * 2 + icon_w + gap, inner_h + pad_y * 2),
@@ -260,13 +271,15 @@ def make_button(label: str, size: int = 16, cup: bool = False) -> Image.Image:
     )
     d = ImageDraw.Draw(chip)
     d.rounded_rectangle([0, 0, chip.width - 1, chip.height - 1], radius=10 * SCALE, fill=GOLD)
+    # Optical center of the cap-height, not the em box — no descenders in this label.
+    text_cy = (tb[1] + tb[3]) / 2
+    cy = chip.height / 2
     x = pad_x
-    cy = chip.height // 2
     if icon:
-        chip.alpha_composite(icon, (x, cy - icon.height // 2))
+        # Cups read high if you true-center the ink; sit it with the letters.
+        chip.alpha_composite(icon, (x, round(cy - icon_h / 2 + SCALE)))
         x += icon_w + gap
-    bbox = d.textbbox((0, 0), label, font=fnt)
-    d.text((x - bbox[0], cy - th // 2 - bbox[1]), label, font=fnt, fill=INK)
+    d.text((x - tb[0], round(cy - text_cy)), label, font=fnt, fill=INK)
     return chip
 
 
@@ -369,9 +382,9 @@ def build_what() -> None:
         TEXT,
         1.45,
     )
-    y += 28 * SCALE
+    y += 14 * SCALE
     y = draw_subhead(img, "The popup", x, y, inner)
-    y += 6 * SCALE
+    y += 8 * SCALE
     y = draw_paragraph(
         img,
         "The toolbar is there when you want another way in.",
@@ -394,9 +407,9 @@ def build_what() -> None:
         y,
         inner,
     )
-    y += 28 * SCALE
+    y += 24 * SCALE
     y = draw_subhead(img, "Where it goes", x, y, inner)
-    y += 6 * SCALE
+    y += 8 * SCALE
     y = draw_paragraph(img, "Pick one in Settings.", small, x, y, inner, MUTED, 1.4)
     y += 12 * SCALE
     y = draw_tiles(
@@ -410,7 +423,7 @@ def build_what() -> None:
         y,
         inner,
     )
-    y += 18 * SCALE
+    y += 16 * SCALE
     draw_paragraph(
         img,
         "The first time you copy, allow clipboard access if ChatGPT or the browser asks.",
@@ -421,7 +434,7 @@ def build_what() -> None:
         MUTED,
         1.4,
     )
-    finish(img, "you-get.png")
+    finish(img, "the-goods.png")
 
 
 def build_support() -> None:
@@ -466,7 +479,7 @@ def build_support() -> None:
         font=note_f,
         fill=MUTED,
     )
-    finish(img, "support.png")
+    finish(img, "support-box.png")
 
 
 def build_privacy() -> None:
@@ -517,7 +530,7 @@ def build_install() -> None:
         TEXT,
         1.45,
     )
-    y += 28 * SCALE
+    y += 24 * SCALE
     y = draw_subhead(img, "Finish in the browser", x, y, inner)
     y += 8 * SCALE
     y = draw_paragraph(
@@ -530,7 +543,7 @@ def build_install() -> None:
         TEXT,
         1.45,
     )
-    y += 16 * SCALE
+    y += 12 * SCALE
     y = draw_steps(
         img,
         [
@@ -553,7 +566,7 @@ def build_install() -> None:
         MUTED,
         1.4,
     )
-    y += 28 * SCALE
+    y += 24 * SCALE
     y = draw_subhead(img, "Uninstall", x, y, inner)
     y += 8 * SCALE
     y = draw_paragraph(
@@ -577,9 +590,9 @@ def build_install() -> None:
         MUTED,
         1.4,
     )
-    finish(img, "get-it.png")
+    finish(img, "setup.png")
     save_button("Get the Windows zip", "windows-zip.png", 16)
-    save_button("Leave a tip", "leave-a-tip.png", 17, cup=True)
+    save_button("Leave a tip", "tip.png", 17, cup=True)
 
 
 def main() -> None:
