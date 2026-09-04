@@ -280,7 +280,7 @@ def build_hero() -> None:
     y += 20 * SCALE
     y = draw_paragraph(
         img,
-        "Long chats fight the clipboard. PasteFlick sits on the conversation as one chip: take a highlight, or the thread you can see, then Copy, Save, or Fling it into Word, Notes, Cursor — wherever you just were.",
+        "Long chats fight the clipboard. PasteFlick sits on the conversation as one chip: take a highlight, or the thread you can see, then Copy, Save, or Flick it into Word, Notes, Cursor — wherever you just were.",
         font("segoeui.ttf", 16),
         x,
         y,
@@ -299,7 +299,7 @@ def build_hero() -> None:
         MUTED,
         1.4,
     )
-    finish(img, "lead.png")
+    finish(img, "opener.png")
 
 
 def build_what() -> None:
@@ -312,7 +312,7 @@ def build_what() -> None:
     small = font("segoeui.ttf", 13)
     y = draw_paragraph(
         img,
-        "One chip under the chat title. Highlight a passage, or take the visible thread — then Copy, Save, or Fling. ChatGPT’s own buttons stay where they are.",
+        "One chip under the chat title. Highlight a passage, or take the visible thread — then Copy, Save, or Flick. ChatGPT’s own buttons stay where they are.",
         body,
         x,
         y,
@@ -365,7 +365,7 @@ def build_what() -> None:
         img,
         [
             ("Clipboard", "Ready to paste when you are."),
-            ("Fling", "Into the last app you were in."),
+            ("Flick", "Into the last app you were in."),
             ("File", "Markdown or PDF, in a folder you pick."),
         ],
         x,
@@ -383,7 +383,7 @@ def build_what() -> None:
         MUTED,
         1.4,
     )
-    finish(img, "features.png")
+    finish(img, "what-you-get.png")
 
 
 def build_support() -> None:
@@ -424,7 +424,7 @@ def build_privacy() -> None:
     y = section_head(img, "On your machine", "Privacy", x, y, inner)
     draw_paragraph(
         img,
-        "Runs in your browser. Copied text stays on your device. Fling uses a local helper on your computer.",
+        "Runs in your browser. Copied text stays on your device. Flick uses a local helper on your computer.",
         font("segoeui.ttf", 16),
         x,
         y,
@@ -432,7 +432,7 @@ def build_privacy() -> None:
         TEXT,
         1.45,
     )
-    finish(img, "local.png")
+    finish(img, "on-device.png")
 
 
 def build_install() -> None:
@@ -456,7 +456,7 @@ def build_install() -> None:
     y += 14 * SCALE
     y = draw_paragraph(
         img,
-        "Copy to the clipboard works on its own. Fling and PDF save use a small Windows helper that Setup installs and starts with Windows. You do not install Python.",
+        "Copy to the clipboard works on its own. Flick and PDF save use a small Windows helper that Setup installs and starts with Windows. You do not install Python.",
         body,
         x,
         y,
@@ -524,7 +524,7 @@ def build_install() -> None:
         MUTED,
         1.4,
     )
-    finish(img, "setup.png")
+    finish(img, "get-it.png")
     save_button("Get the Windows zip", "windows-zip.png", 16)
     save_button("Leave a tip", "leave-a-tip.png", 15)
 

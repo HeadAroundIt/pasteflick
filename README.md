@@ -1,11 +1,11 @@
 <p align="center">
-  <img src="readme/lead.png" width="760" alt="PasteFlick — Copy from ChatGPT. Flick it into the last app.">
+  <img src="readme/opener.png" width="760" alt="PasteFlick — Copy from ChatGPT. Flick it into the last app.">
 </p>
 
 <p align="center"><br></p>
 
 <p align="center">
-  <img src="readme/shots/badge.png" width="168" alt="PasteFlick chip — Copy, Save, and Fling">
+  <img src="readme/shots/badge.png" width="168" alt="PasteFlick chip — Copy, Save, and Flick">
 </p>
 
 <p align="center">
@@ -15,7 +15,7 @@
 <p align="center"><br></p>
 
 <p align="center">
-  <img src="readme/features.png" width="760" alt="What you get — the chip, the popup, and where copies go">
+  <img src="readme/what-you-get.png" width="760" alt="What you get — the chip, the popup, and where copies go">
 </p>
 
 <p align="center">
@@ -25,7 +25,7 @@
 <p align="center"><br></p>
 
 <p align="center">
-  <img src="readme/setup.png" width="760" alt="Install PasteFlick on Windows, then finish in the browser">
+  <img src="readme/get-it.png" width="760" alt="Install PasteFlick on Windows, then finish in the browser">
 </p>
 
 <p align="center">
@@ -45,5 +45,5 @@
 <p align="center"><br></p>
 
 <p align="center">
-  <img src="readme/local.png" width="760" alt="Privacy — runs in your browser, copied text stays on your device">
+  <img src="readme/on-device.png" width="760" alt="Privacy — runs in your browser, copied text stays on your device">
 </p>
