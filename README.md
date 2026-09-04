@@ -7,15 +7,15 @@
 </p>
 
 <p align="center">
-  <img src="readme/shots/chip.png" width="280" alt="PasteFlick chip — Copy, Save, and Fling">
+  <img src="readme/shots/flick.png" width="240" alt="PasteFlick chip — Copy, Save, and Fling">
 </p>
 
 <p align="center">
-  <img src="readme/shots/chat.png" width="680" alt="PasteFlick chip and bookmark pins on a chat">
+  <img src="readme/shots/thread.png" width="680" alt="PasteFlick chip and bookmark pins on a chat">
 </p>
 
 <p align="center">
-  <img src="readme/shots/windows.png" width="680" alt="PasteFlick popup and settings">
+  <img src="readme/shots/pair.png" width="680" alt="PasteFlick popup and settings">
 </p>
 
 <p align="center">
