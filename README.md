@@ -7,6 +7,16 @@
 </p>
 
 <p align="center">
+  <img src="readme/shots/chat.png" width="680" alt="PasteFlick chip under a ChatGPT title, with bookmark pins on messages">
+</p>
+
+<p align="center">
+  <img src="readme/shots/popup.png" width="300" alt="PasteFlick toolbar popup">
+  &nbsp;&nbsp;
+  <img src="readme/shots/settings.png" width="300" alt="PasteFlick settings and Tip $5">
+</p>
+
+<p align="center">
   <img src="readme/what.png" width="680" alt="What you get">
 </p>
 

@@ -100,6 +100,16 @@
       #log.err {
         border-color: #8a3a3a;
       }
+      html.shot .sidebar,
+      html.shot .toolbar,
+      html.shot .hint,
+      html.shot #log {
+        display: none !important;
+      }
+      html.shot .thread {
+        padding-left: 168px;
+        max-width: 720px;
+      }
       .doc-card {
         background: #ffffff;
         color: #111111;
@@ -319,6 +329,9 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
     </div>
 
     <script>
+      if (/[?&]shot=1/.test(location.search)) {
+        document.documentElement.classList.add("shot");
+      }
       history.replaceState(
         null,
         "",
@@ -436,18 +449,46 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
         await sleep(120);
         const ui = PasteFlick.dockRoot();
         const msgPins = ui.querySelectorAll('[data-pasteflick="pin"][data-kind="message"]');
-        const pinableMessages = Array.from(messages).filter((el) => {
-          const id = el.getAttribute("data-message-id") || "";
-          return (
-            id !== "msg-files-only" &&
-            id !== "msg-two-files" &&
-            id !== "msg-code-files" &&
-            id !== "msg-codex-files" &&
-            id !== "msg-file-plain"
-          );
-        });
-        if (msgPins.length !== pinableMessages.length) {
-          throw new Error("expected a left card for every message, got " + msgPins.length);
+        if (msgPins.length !== messages.length) {
+          throw new Error("expected a pin for every message, got " + msgPins.length);
+        }
+        const threadPin = ui.querySelector('[data-pasteflick="pin"][data-kind="thread"]');
+        if (!threadPin) throw new Error("PasteFlick chip missing");
+        const threadKicker = threadPin.querySelector('[data-pasteflick="kicker"]');
+        if (!threadKicker || threadKicker.textContent !== "PasteFlick") {
+          throw new Error("thread chip should be labeled PasteFlick");
+        }
+        const copyThread = threadPin.querySelector('[data-pasteflick="copy-thread"]');
+        const pasteThread = threadPin.querySelector('[data-pasteflick="paste-thread"]');
+        const saveThread = threadPin.querySelector('[data-pasteflick="save-thread"]');
+        const extras = threadPin.querySelector('[data-pasteflick="extras"]');
+        if (!copyThread || !pasteThread || !saveThread) {
+          throw new Error("thread chip needs Copy, Save, and Fling");
+        }
+        if (!extras) throw new Error("thread chip needs extras toggle");
+        if (copyThread.title !== "Copy the highlight, or the visible thread.") {
+          throw new Error("unexpected thread copy tooltip: " + copyThread.title);
+        }
+        if (pasteThread.title !== "Fling the highlight, or the visible thread.") {
+          throw new Error("unexpected thread fling tooltip: " + pasteThread.title);
+        }
+        if (saveThread.title !== "Save the highlight, or the visible thread.") {
+          throw new Error("unexpected thread save tooltip: " + saveThread.title);
+        }
+        const threadActions = Array.from(
+          threadPin.querySelectorAll('[data-pasteflick="actions"] [data-pasteflick]'),
+        ).map((el) => el.getAttribute("data-pasteflick"));
+        if (threadActions[threadActions.length - 1] !== "paste-thread") {
+          throw new Error("Fling should be rightmost on the thread chip, got " + threadActions.join(","));
+        }
+        if (ui.querySelector('[data-pasteflick="pin"][data-kind="block"]')) {
+          throw new Error("inside cards should not appear");
+        }
+        if (ui.querySelector('[data-pasteflick="pin"][data-kind="link"]')) {
+          throw new Error("link chips should not appear");
+        }
+        if (ui.querySelector('[data-pasteflick="copy-message"], [data-pasteflick="paste-message"], [data-pasteflick="save-message"]')) {
+          throw new Error("message pins should be bookmark-only");
         }
 
         const extra = document.createElement("div");
@@ -459,7 +500,7 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
         let extraPin = null;
         for (let i = 0; i < 20; i++) {
           extraPin = PasteFlick.pinFor(extra);
-          if (extraPin && extraPin.querySelector('[data-pasteflick="copy-message"]')) break;
+          if (extraPin && extraPin.querySelector('[data-pasteflick="mark"]')) break;
           await sleep(50);
           PasteFlick.scan();
         }
@@ -471,9 +512,9 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
           extra.remove();
           throw new Error("new message should not contain overlay nodes");
         }
-        if (!extraPin || !extraPin.querySelector('[data-pasteflick="copy-message"]')) {
+        if (!extraPin || extraPin.getAttribute("data-kind") !== "message" || !extraPin.querySelector('[data-pasteflick="mark"]')) {
           extra.remove();
-          throw new Error("new message did not get a Message card");
+          throw new Error("new message did not get a mark pin");
         }
         extra.remove();
         await sleep(200);
@@ -618,64 +659,14 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
         window.scrollTo(0, 0);
         await sleep(40);
         const assistantPin = PasteFlick.pinFor(assistant);
-        const copyMsg = assistantPin && assistantPin.querySelector('[data-pasteflick="copy-message"]');
-        const pasteMsg = assistantPin && assistantPin.querySelector('[data-pasteflick="paste-message"]');
-        const saveMsg = assistantPin && assistantPin.querySelector('[data-pasteflick="save-message"]');
         const autoPaste = document.querySelector('[data-pasteflick="auto-paste"]');
-        const innerPins = ui.querySelectorAll('[data-pasteflick="pin"][data-kind="block"]');
-        const kicker = assistantPin && assistantPin.querySelector('[data-pasteflick="kicker"]');
-        if (!copyMsg) throw new Error("message copy control missing");
-        if (!pasteMsg) throw new Error("message Auto-paste control missing");
-        if (!saveMsg) throw new Error("message Save control missing");
-        if (!kicker || kicker.textContent !== "Message") {
-          throw new Error("message card should be labeled Message");
+        if (!assistantPin || !assistantPin.querySelector('[data-pasteflick="mark"]')) {
+          throw new Error("assistant turn should have a mark pin");
         }
-        if (!copyMsg.closest('[data-pasteflick="pin"][data-kind="message"]')) {
-          throw new Error("message copy should sit on the Message card");
-        }
-        if (copyMsg.closest('[data-pasteflick="pin"][data-kind="block"]')) {
-          throw new Error("message copy should not sit on an inside card");
-        }
-        if (copyMsg.title !== "Copy this message.") {
-          throw new Error("unexpected message copy tooltip: " + copyMsg.title);
-        }
-        if (pasteMsg.title !== "Paste what you see.") {
-          throw new Error("unexpected message paste tooltip: " + pasteMsg.title);
-        }
-        if (saveMsg.title !== "Save this message.") {
-          throw new Error("unexpected message save tooltip: " + saveMsg.title);
-        }
-        const msgActions = Array.from(assistantPin.querySelectorAll('[data-pasteflick="actions"] [data-pasteflick]')).map(
-          (el) => el.getAttribute("data-pasteflick"),
-        );
-        if (msgActions[msgActions.length - 1] !== "paste-message") {
-          throw new Error("Auto-paste should be rightmost on the Message card, got " + msgActions.join(","));
+        if (assistantPin.querySelector('[data-pasteflick="kicker"], [data-pasteflick="copy-message"]')) {
+          throw new Error("message pin should be bookmark-only");
         }
         if (autoPaste) throw new Error("page auto-paste toggle should not exist");
-        if (innerPins.length < 2) {
-          throw new Error("inside cards missing, got " + innerPins.length);
-        }
-        const innerCards = Array.from(innerPins).map((pin) => pin.querySelector('[data-pasteflick="copy-block"]'));
-        const innerPaste = Array.from(innerPins).map((pin) => pin.querySelector('[data-pasteflick="paste-block"]'));
-        const innerSave = Array.from(innerPins).map((pin) => pin.querySelector('[data-pasteflick="save-block"]'));
-        const innerText = Array.from(innerPins)
-          .map((pin) => pin.getAttribute("data-block-card") || "")
-          .join(" ");
-        if (innerCards.some((btn) => !btn) || innerPaste.some((btn) => !btn) || innerSave.some((btn) => !btn)) {
-          throw new Error("inside cards need copy, Auto-paste, and Save");
-        }
-        const innerOrder = Array.from(innerPins).map((pin) => {
-          const keys = Array.from(pin.querySelectorAll('[data-pasteflick="actions"] [data-pasteflick]')).map((el) =>
-            el.getAttribute("data-pasteflick"),
-          );
-          return keys[keys.length - 1];
-        });
-        if (innerOrder.some((last) => last !== "paste-block")) {
-          throw new Error("Auto-paste should be rightmost on inside cards, got " + innerOrder.join(","));
-        }
-        if (!/python/i.test(innerText)) {
-          throw new Error("code inside card missing: " + innerText);
-        }
         [
           "#file-notes",
           "#file-markdown",
@@ -696,64 +687,21 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
         const messageIds = Array.from(ui.querySelectorAll('[data-pasteflick="pin"][data-kind="message"]')).map((pin) =>
           pin.getAttribute("data-message-id"),
         );
-        ["msg-files-only", "msg-two-files", "msg-code-files", "msg-codex-files", "msg-file-plain"].forEach((id) => {
-          if (messageIds.indexOf(id) >= 0) {
-            throw new Error("a message that is only files should not have a Message card: " + id);
+        ["msg-files-only", "msg-two-files", "msg-code-files", "msg-codex-files", "msg-file-plain", "msg-text-and-file"].forEach(
+          (id) => {
+            if (messageIds.indexOf(id) < 0) {
+              throw new Error("every message should have a mark pin: " + id);
+            }
+          },
+        );
+        ["#link-google", "#link-mail", "#code-plain", "#named-doc", "#white-sheet", "#flow-chart"].forEach((sel) => {
+          if (PasteFlick.pinFor(document.querySelector(sel))) {
+            throw new Error("only the thread chip and message pins should appear: " + sel);
           }
         });
-        if (messageIds.indexOf("msg-text-and-file") < 0) {
-          throw new Error("a message with real text plus a file should keep its Message card");
-        }
-        ["#link-google", "#link-mail"].forEach((sel) => {
-          const link = document.querySelector(sel);
-          const pin = PasteFlick.pinFor(link);
-          if (!pin) throw new Error("link should have a compact chip: " + sel);
-          if (pin.getAttribute("data-kind") !== "link") {
-            throw new Error("link chip should be compact, got " + pin.getAttribute("data-kind") + " for " + sel);
-          }
-          if (pin.querySelector('[data-pasteflick="kicker"], [data-pasteflick="extras"]')) {
-            throw new Error("link chip should have no text: " + sel);
-          }
-          const copy = pin.querySelector('[data-pasteflick="copy-block"]');
-          const save = pin.querySelector('[data-pasteflick="save-block"]');
-          const send = pin.querySelector('[data-pasteflick="paste-block"]');
-          if (!copy || !save || !send) throw new Error("link chip needs copy, save, and send: " + sel);
-          if (copy.title !== "Copy this link.") {
-            throw new Error("unexpected link copy tooltip: " + ((copy && copy.title) || "missing"));
-          }
-          const lr = link.getBoundingClientRect();
-          const pr = pin.getBoundingClientRect();
-          if (pr.left + 2 < lr.right) {
-            throw new Error("link chip should sit to the right of the link: " + sel);
-          }
-          if (pr.bottom < lr.top - 4 || pr.top > lr.bottom + 4) {
-            throw new Error("link chip should sit on the same line as the link: " + sel);
-          }
-        });
-        const plainCode = document.querySelector("#code-plain");
-        const plainPin = PasteFlick.pinFor(plainCode);
-        if (!plainPin) throw new Error("unlabeled code should have a card");
-        const plainSend = plainPin.querySelector('[data-pasteflick="paste-block"]');
-        const plainCopy = plainPin.querySelector('[data-pasteflick="copy-block"]');
-        const plainSave = plainPin.querySelector('[data-pasteflick="save-block"]');
-        if (!plainSend || !plainCopy || !plainSave) {
-          throw new Error("code card needs copy, save, and send");
-        }
-        plainCopy.click();
-        await sleep(400);
-        const copied = ((await overlayState()).markdown || "").trim();
-        if (copied.indexOf("CONFIRM_GATE_G_WINDOWS_CLEANUP") < 0) {
-          throw new Error("code copy should copy the code text, got " + copied.slice(0, 240));
-        }
-        if (/```/.test(copied.split("---").pop() || copied)) {
-          throw new Error("code copy should copy the text, not a markdown fence");
-        }
-        const msgStyle = window.getComputedStyle(copyMsg);
+        const msgStyle = window.getComputedStyle(assistantPin.querySelector('[data-pasteflick="mark"]'));
         if (msgStyle.opacity !== "1") {
-          throw new Error("message copy should stay visible, opacity=" + msgStyle.opacity);
-        }
-        if (assistantPin.getBoundingClientRect().width <= innerPins[0].getBoundingClientRect().width) {
-          throw new Error("message card should be larger than inside cards");
+          throw new Error("message pin should stay visible, opacity=" + msgStyle.opacity);
         }
 
         function assertRightAligned(pins) {
@@ -892,16 +840,25 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
           throw new Error("message cards should stay with their own turns");
         }
         assertNoPinOverlap(ui);
-        assertRightAligned([assistantPin].concat(Array.from(innerPins)));
+        assertRightAligned([threadPin, firstPin, secondPin, assistantPin]);
         assertPinsBelowHeader(ui);
         const head = document.getElementById("page-head");
         const oldHead = head.style.minHeight;
         head.style.minHeight = "240px";
         window.dispatchEvent(new Event("resize"));
+        PasteFlick.placeAll();
         await sleep(220);
         assertNoPinOverlap(ui);
         if (!pinTracks(assistantPin, assistant, 24)) {
-          throw new Error("message card left its turn after the header grew");
+          throw new Error("message pin left its turn after the header grew");
+        }
+        const threadAfterGrow = threadPin.getBoundingClientRect();
+        const bandAfterGrow = head.getBoundingClientRect();
+        if (threadAfterGrow.top + 1 < bandAfterGrow.bottom) {
+          throw new Error("thread chip entered the header after it grew");
+        }
+        if (threadAfterGrow.top > bandAfterGrow.bottom + 24) {
+          throw new Error("thread chip should stay under the header");
         }
         head.style.minHeight = oldHead;
         window.dispatchEvent(new Event("resize"));
@@ -919,16 +876,17 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
         const siblingUser = siblingTurn.querySelector("[data-message-author-role='user']");
         const siblingDoc = siblingTurn.querySelector("#sibling-doc");
         let siblingMsgPin = null;
-        let siblingDocPin = null;
         for (let i = 0; i < 20; i++) {
           siblingMsgPin = PasteFlick.pinFor(siblingUser);
-          siblingDocPin = PasteFlick.pinFor(siblingDoc);
-          if (siblingMsgPin && siblingDocPin && siblingMsgPin !== siblingDocPin) break;
+          if (siblingMsgPin && siblingMsgPin.querySelector('[data-pasteflick="mark"]')) break;
           await sleep(50);
           PasteFlick.scan();
         }
-        if (!siblingMsgPin || !siblingDocPin || siblingMsgPin === siblingDocPin) {
-          throw new Error("message and document further down should both have cards");
+        if (!siblingMsgPin || !siblingMsgPin.querySelector('[data-pasteflick="mark"]')) {
+          throw new Error("a later message should get a mark pin");
+        }
+        if (PasteFlick.pinFor(siblingDoc)) {
+          throw new Error("documents should not get their own card");
         }
         const midTarget =
           siblingTurn.getBoundingClientRect().top +
@@ -938,21 +896,6 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
         PasteFlick.placeAll();
         await sleep(80);
         assertNoPinOverlap(ui);
-        const downMsg = siblingMsgPin.getBoundingClientRect();
-        const downDoc = siblingDocPin.getBoundingClientRect();
-        if (
-          siblingMsgPin.style.visibility !== "hidden" &&
-          siblingDocPin.style.visibility !== "hidden" &&
-          downMsg.bottom > downDoc.top + 1
-        ) {
-          throw new Error(
-            "message card overlapped document card further down (" +
-              downMsg.bottom.toFixed(1) +
-              " vs " +
-              downDoc.top.toFixed(1) +
-              ")",
-          );
-        }
         {
           const band = document.getElementById("page-head").getBoundingClientRect();
           const start = Math.max(
@@ -963,42 +906,16 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
             start,
             Math.round(nextUserMessage.getBoundingClientRect().top + window.scrollY - band.bottom + 120),
           );
-          let sawMessageDocumentStack = false;
-          let sawDocumentNextMessageStack = false;
           for (let y = start; y <= end; y += 18) {
             document.scrollingElement.scrollTop = y;
             PasteFlick.placeAll();
             await settlePins();
             assertNoPinOverlap(ui);
-
-            const messageBox = siblingMsgPin.getBoundingClientRect();
-            const documentBox = siblingDocPin.getBoundingClientRect();
-            const nextMessageBox = secondPin.getBoundingClientRect();
-            const documentAnchor = siblingDoc.getBoundingClientRect();
-            if (
-              messageBox.top <= band.bottom + 180 &&
-              documentBox.top <= band.bottom + 180 &&
-              messageBox.bottom <= documentBox.top + 1
-            ) {
-              sawMessageDocumentStack = true;
+            assertPinsBelowHeader(ui);
+            const chip = threadPin.getBoundingClientRect();
+            if (chip.height > 2 && chip.top + 1 < band.bottom) {
+              throw new Error("thread chip entered the header while scrolling");
             }
-            if (
-              documentAnchor.top <= band.bottom + 120 &&
-              documentAnchor.bottom > band.bottom &&
-              documentBox.top <= band.bottom + 180 &&
-              nextMessageBox.top <= band.bottom + 180
-            ) {
-              sawDocumentNextMessageStack = true;
-              if (documentBox.top > nextMessageBox.top + 1) {
-                throw new Error("the next Message card jumped above the earlier Document card");
-              }
-              if (documentBox.bottom > nextMessageBox.top + 1) {
-                throw new Error("the earlier Document card overlapped the next Message card");
-              }
-            }
-          }
-          if (!sawMessageDocumentStack || !sawDocumentNextMessageStack) {
-            throw new Error("message-document-message wrap sequence was not exercised");
           }
         }
         siblingTurn.remove();
@@ -1055,59 +972,8 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
         await sleep(80);
         PasteFlick.placeAll();
         await settlePins();
-        const codeBlock = assistant.querySelector("pre");
-        const codePin = PasteFlick.pinFor(codeBlock);
-        if (!codePin) throw new Error("code block should have its own left card");
-        const codeRect = codeBlock.getBoundingClientRect();
-        const codePinRect = codePin.getBoundingClientRect();
-        if (!pinTracks(codePin, codeBlock, 24)) {
-          throw new Error("code card drifted away from that code block");
-        }
-        if (codePinRect.right > codeRect.left + 8) {
-          throw new Error("code card overlapped the code");
-        }
-        const codePaste = codePin.querySelector('[data-pasteflick="paste-block"]');
-        const codeCopy = codePin.querySelector('[data-pasteflick="copy-block"]');
-        if (!codePaste) throw new Error("code card needs an Auto-paste control");
-        if (!codePaste.classList.contains("is-primary")) {
-          throw new Error("code card should prefer Auto-paste");
-        }
-        if (codeCopy && codeCopy.classList.contains("is-primary")) {
-          throw new Error("code copy should not be the main control");
-        }
-        const namedDoc = assistant.querySelector("#named-doc");
-        const sheetDoc = assistant.querySelector("#white-sheet");
-        const namedPin = PasteFlick.pinFor(namedDoc);
-        const sheetPin = PasteFlick.pinFor(sheetDoc);
-        if (!namedPin) {
-          const labels = Array.from(innerPins)
-            .map((pin) => {
-              const btn = pin.querySelector('[data-pasteflick="copy-block"]');
-              return (btn && btn.getAttribute("data-block-card")) || "?";
-            })
-            .join(", ");
-          throw new Error("named document should have its own left card (inside cards: " + labels + ")");
-        }
-        if (!sheetPin) throw new Error("white document sheet should have its own left card");
-        const namedCard = namedPin.querySelector('[data-pasteflick="copy-block"]');
-        if (!namedCard) throw new Error("document copy button missing");
-        if (!namedPin.querySelector('[data-pasteflick="save-block"]')) {
-          throw new Error("document card needs Save");
-        }
-        const namedLabel =
-          ((namedCard && namedCard.getAttribute("data-block-card")) || "") +
-          " " +
-          ((namedCard && namedCard.title) || "");
-        if (!/document|brief/i.test(namedLabel)) {
-          throw new Error("document card missing: " + namedLabel);
-        }
-        const namedRect = namedDoc.getBoundingClientRect();
-        const namedPinRect = namedPin.getBoundingClientRect();
-        if (!pinTracks(namedPin, namedDoc, 28)) {
-          throw new Error("document card drifted away from that document");
-        }
-        if (namedPinRect.right > namedRect.left + 8) {
-          throw new Error("document card overlapped the document");
+        if (PasteFlick.pinFor(assistant.querySelector("pre")) || PasteFlick.pinFor(assistant.querySelector("#named-doc"))) {
+          throw new Error("code and documents should not get their own cards");
         }
 
         const threadElForScroll = document.querySelector(".thread");
@@ -1125,14 +991,10 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
         }
         function assertGlued(label, slack) {
           slack = slack == null ? 0.75 : slack;
-          const checks = [];
-          if (!underHeader(assistant)) checks.push(slip(assistantPin, assistant, baseMsg));
-          if (!underHeader(codeBlock)) checks.push(slip(codePin, codeBlock, baseCode));
-          if (!underHeader(namedDoc)) checks.push(slip(namedPin, namedDoc, baseNamed));
-          if (!checks.length) return;
-          const worst = Math.max.apply(null, checks);
+          if (underHeader(assistant)) return;
+          const worst = slip(assistantPin, assistant, baseMsg);
           if (worst > slack) {
-            throw new Error(label + " — chips slipped " + worst.toFixed(2) + "px from their messages");
+            throw new Error(label + " — mark pin slipped " + worst.toFixed(2) + "px from its message");
           }
         }
         function assertWrapsHeader(label, pin, owner) {
@@ -1141,23 +1003,30 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
           const o = owner.getBoundingClientRect();
           if (o.bottom <= band.bottom + 2) return;
           if (p.top + 1 < band.bottom) {
-            throw new Error(label + " — a chip overlapped the header");
+            throw new Error(label + " — a pin overlapped the header");
           }
           if (o.top >= band.bottom + 8) return;
           if (p.top > band.bottom + 180) {
-            throw new Error(label + " — chip jumped down instead of wrapping at the header");
+            throw new Error(label + " — pin jumped down instead of wrapping at the header");
           }
-          if (p.bottom < o.top - 4 || p.top > o.bottom + 4) {
-            throw new Error(label + " — parked chip left its message");
+        }
+        function assertChipParked(label) {
+          const band = document.getElementById("page-head").getBoundingClientRect();
+          const chip = threadPin.getBoundingClientRect();
+          if (chip.height < 2) return;
+          if (chip.top + 1 < band.bottom) {
+            throw new Error(label + " — thread chip overlapped the header");
+          }
+          if (chip.top > band.bottom + 28) {
+            throw new Error(label + " — thread chip left the header");
           }
         }
         const baseMsg = pinOffset(assistantPin, assistant);
-        const baseCode = pinOffset(codePin, codeBlock);
-        const baseNamed = pinOffset(namedPin, namedDoc);
         document.scrollingElement.scrollTop += 36;
         PasteFlick.placeAll();
         await settlePins();
         assertGlued("small scroll");
+        assertChipParked("small scroll");
         await sleep(220);
         assertGlued("small scroll after settle");
         document.scrollingElement.scrollTop = 0;
@@ -1167,6 +1036,7 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
           PasteFlick.placeAll();
           await settlePins();
           assertGlued("slow scroll step " + (i + 1));
+          assertChipParked("slow scroll step " + (i + 1));
           assertNoPinOverlap(ui);
         }
         document.scrollingElement.scrollTop += 140;
@@ -1184,86 +1054,22 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
         assertNoPinOverlap(ui);
         assertPinsBelowHeader(ui);
         assertWrapsHeader("fast scroll message", assistantPin, assistant);
-        {
-          const band = document.getElementById("page-head").getBoundingClientRect();
-          const keepDocY = Math.max(
-            0,
-            Math.round(namedDoc.getBoundingClientRect().top + window.scrollY - band.bottom - 64),
-          );
-          document.scrollingElement.scrollTop = keepDocY;
-          PasteFlick.placeAll();
-          await settlePins();
-          const docTop = namedDoc.getBoundingClientRect().top;
-          if (docTop > band.bottom + 24 && !pinTracks(namedPin, namedDoc, 28)) {
-            throw new Error("document chip left its document before that document reached the header");
-          }
-          assertNoPinOverlap(ui);
-          const meetY = Math.max(
-            0,
-            Math.round(namedDoc.getBoundingClientRect().top + window.scrollY - band.bottom - 10),
-          );
-          document.scrollingElement.scrollTop = meetY;
-          PasteFlick.placeAll();
-          await settlePins();
-          assertNoPinOverlap(ui);
-        }
-        {
-          const band = document.getElementById("page-head").getBoundingClientRect();
-          const msgH = Math.ceil(assistantPin.getBoundingClientRect().height) || 70;
-          const start = Math.max(
-            0,
-            Math.round(codeBlock.getBoundingClientRect().top + window.scrollY - band.bottom - msgH - 24),
-          );
-          const end = Math.max(
-            0,
-            Math.round(codeBlock.getBoundingClientRect().top + window.scrollY - band.bottom + 12),
-          );
-          for (let y = start; y <= end; y += 20) {
-            document.scrollingElement.scrollTop = y;
-            PasteFlick.placeAll();
-            await settlePins();
-            assertNoPinOverlap(ui);
-          }
-        }
-        const midY = Math.max(
-          0,
-          namedDoc.getBoundingClientRect().top + window.scrollY - Math.round((window.innerHeight || 800) * 0.4),
-        );
-        document.scrollingElement.scrollTop = midY;
-        PasteFlick.placeAll();
-        await settlePins();
-        assertGlued("jump to mid sheet", 1);
-        assertPinsBelowHeader(ui);
-        assertWrapsHeader("mid sheet", namedPin, namedDoc);
-        if (namedPin.style.visibility === "hidden") {
-          throw new Error("document chip should stay pinned in the middle of the sheet");
-        }
-        if (!pinTracks(namedPin, namedDoc, 28)) {
-          throw new Error("document chip left its document in the middle of the sheet");
-        }
-        if (!pinInTurn(namedPin, assistant)) {
-          throw new Error("document chip lost its pin in the middle of the sheet");
-        }
-        if (assistantPin.style.visibility === "hidden") {
-          throw new Error("message chip should stay pinned in the middle of the sheet");
-        }
-        assertNoPinOverlap(ui);
+        assertChipParked("fast scroll");
         window.scrollTo(0, 0);
         spacer.remove();
         await sleep(80);
 
-        namedCard.click();
-        await sleep(200);
-        const docMd = (await overlayState()).markdown || "";
-        if (!docMd.includes("lantern-brief-ok")) {
-          throw new Error("document copy missing body");
-        }
-        if (docMd.includes("print(\"transcript-copy-ok\")")) {
-          throw new Error("document copy included the neighboring code block");
-        }
         const host = document.getElementById("pasteflick-dock-host") || document.getElementById("pasteflick-dock-host");
         if (!host || host.closest("[data-message-author-role]")) {
           throw new Error("dock should sit outside the message");
+        }
+
+        window.getSelection().removeAllRanges();
+        copyThread.click();
+        await sleep(400);
+        const chipMd = (await overlayState()).markdown || "";
+        if (!chipMd.includes("copper lantern") && !chipMd.includes("Second user turn")) {
+          throw new Error("thread chip copy missed the visible thread");
         }
 
         const one = await api.captureMessage({
@@ -1297,24 +1103,21 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
           throw new Error("block copy missing code");
         }
 
-        const extras = assistantPin.querySelector('[data-pasteflick="extras"]');
-        if (!extras) throw new Error("message card needs extras toggle");
         if (!extras.classList.contains("on") || extras.getAttribute("aria-checked") !== "true") {
           throw new Error("extras should start on");
         }
 
-        const flow = document.getElementById("flow-chart");
-        const flowPin = PasteFlick.pinFor(flow);
-        if (!flowPin) throw new Error("flowchart should have its own left card");
-        const flowCopy = flowPin.querySelector('[data-pasteflick="copy-block"]');
-        const flowExtras = flowPin.querySelector('[data-pasteflick="extras"]');
-        if (!flowCopy) throw new Error("flowchart copy button missing");
-        if (!flowExtras || !flowExtras.classList.contains("on")) {
-          throw new Error("flowchart extras should start on");
-        }
-
-        flowCopy.click();
-        await sleep(200);
+        const flowOn = await api.captureFragment(
+          {
+            kind: "diagram",
+            type: "text/x-mermaid",
+            title: "Flowchart",
+            label: "flowchart",
+            body: "```mermaid\nflowchart TD\n    A[Start] --> B[copper-flow-ok]\n```",
+          },
+          { destination: "clipboard", copyExtras: true },
+        );
+        if (!flowOn || !flowOn.ok) throw new Error("flowchart copy failed");
         let flowMd = (await overlayState()).markdown || "";
         if (!flowMd.includes("copper-flow-ok")) {
           throw new Error("flowchart copy missing source");
@@ -1329,22 +1132,19 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
         extras.click();
         await sleep(40);
         if (extras.classList.contains("on")) throw new Error("extras did not turn off");
-        if (flowExtras.classList.contains("on")) {
-          throw new Error("extras should stay in sync on every card");
-        }
 
-        flowCopy.click();
-        await sleep(200);
-        flowMd = (await overlayState()).markdown || "";
-        if (!flowMd.includes("copper-flow-ok")) {
-          throw new Error("flowchart copy lost source with extras off");
-        }
-        if (flowMd.trimStart().startsWith("---")) {
-          throw new Error("extras off should drop title notes");
-        }
-
-        namedCard.click();
-        await sleep(200);
+        const docOff = await api.captureFragment(
+          {
+            kind: "document",
+            type: "text/markdown",
+            title: "lantern-brief.md",
+            name: "lantern-brief.md",
+            label: "markdown",
+            body: "lantern-brief-ok\n",
+          },
+          { destination: "clipboard", copyExtras: false },
+        );
+        if (!docOff || !docOff.ok) throw new Error("document copy failed");
         const docPlain = (await overlayState()).markdown || "";
         if (!docPlain.includes("lantern-brief-ok")) {
           throw new Error("document copy lost body with extras off");
@@ -1429,45 +1229,43 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
           const msgA = fixture.querySelector('[data-message-id="msg-wrap-a"]');
           const doc = fixture.querySelector("#wrap-doc");
           const msgB = fixture.querySelector('[data-message-id="msg-wrap-b"]');
+          const ui = PasteFlick.dockRoot();
+          const rails = ui.querySelector('[data-pasteflick="rails"]');
+          const threadPin = ui.querySelector('[data-pasteflick="pin"][data-kind="thread"]');
           const msgPinA = PasteFlick.pinFor(msgA);
-          const docPin = PasteFlick.pinFor(doc);
           const msgPinB = PasteFlick.pinFor(msgB);
-          if (!msgPinA || !docPin || !msgPinB) {
-            throw new Error("wrap fixture did not receive all three cards");
+          if (!threadPin || !msgPinA || !msgPinB) {
+            throw new Error("wrap fixture did not receive the thread chip and both message pins");
           }
-          const stackA = msgPinA.closest('[data-pasteflick="stack"]');
-          if (!stackA || docPin.closest('[data-pasteflick="stack"]') !== stackA) {
-            throw new Error("Message and Document should share one sticky stack");
+          if (PasteFlick.pinFor(doc)) {
+            throw new Error("wrap fixture document should not get a card");
           }
-          if (Array.from(stackA.querySelectorAll('[data-pasteflick="pin"]')).indexOf(msgPinA) !== 0) {
-            throw new Error("Message should remain first in its sticky stack");
+          if (threadPin.closest('[data-pasteflick="stack"]') === msgPinA.closest('[data-pasteflick="stack"]')) {
+            throw new Error("thread chip should not live in a message stack");
+          }
+          if (msgPinA.closest('[data-pasteflick="stack"]') === msgPinB.closest('[data-pasteflick="stack"]')) {
+            throw new Error("each message pin should keep its own stack");
+          }
+          if (!msgPinA.querySelector('[data-pasteflick="mark"]') || msgPinA.querySelector('[data-pasteflick="copy-message"]')) {
+            throw new Error("wrap fixture message pins should be bookmark-only");
           }
 
           const beforeMessageTop = msgPinA.getBoundingClientRect().top;
-          const beforeDocumentTop = docPin.getBoundingClientRect().top;
           const reflow = document.createElement("div");
           reflow.style.height = "48px";
           msgA.parentElement.insertBefore(reflow, msgA);
           await sleep(80);
           await frame();
+          PasteFlick.placeAll();
+          await frame();
           const afterMessageTop = msgPinA.getBoundingClientRect().top;
-          const afterDocumentTop = docPin.getBoundingClientRect().top;
-          if (
-            afterMessageTop < beforeMessageTop + 40 ||
-            afterDocumentTop < beforeDocumentTop + 40 ||
-            Math.abs(
-              (afterDocumentTop - afterMessageTop) -
-                (beforeDocumentTop - beforeMessageTop),
-            ) > 2
-          ) {
-            throw new Error("Message reflow should move its whole sticky stack as one unit");
+          if (afterMessageTop < beforeMessageTop + 40) {
+            throw new Error("message reflow should move its pin");
           }
           reflow.remove();
           await sleep(80);
           await frame();
 
-          const ui = PasteFlick.dockRoot();
-          const rails = ui.querySelector('[data-pasteflick="rails"]');
           const markBtn = msgPinA.querySelector('[data-pasteflick="mark"]');
           if (!markBtn) throw new Error("wrap fixture message has no bookmark");
           window.scrollTo(0, 420);
@@ -1499,6 +1297,8 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
           }
           window.scrollTo(0, 0);
           await frame();
+          PasteFlick.placeAll();
+          await frame();
           const band = document.getElementById("page-head").getBoundingClientRect();
           const start = Math.max(
             0,
@@ -1508,9 +1308,9 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
             start,
             Math.round(msgB.getBoundingClientRect().top + window.scrollY - band.bottom + 180),
           );
-          let sawMessageDocument = false;
-          let sawDocumentNextMessage = false;
-          let nearest = { message: Infinity, document: Infinity, next: Infinity };
+          let sawChip = false;
+          let sawNextMessage = false;
+          let nearest = { chip: Infinity, message: Infinity, next: Infinity };
           document.title = "WRAP_TEST_SCROLLING";
 
           for (let y = start; y <= end; y += 6) {
@@ -1521,11 +1321,10 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
               throw new Error("wrap rail clipped the top card: " + clip);
             }
 
+            const chip = threadPin.getBoundingClientRect();
             const a = msgPinA.getBoundingClientRect();
-            const d = docPin.getBoundingClientRect();
             const b = msgPinB.getBoundingClientRect();
             const messageVisible = msgPinA.style.opacity !== "0";
-            const documentVisible = docPin.style.opacity !== "0";
             const nextMessageVisible = msgPinB.style.opacity !== "0";
             const headBottom = document.getElementById("page-head").getBoundingClientRect().bottom;
             const turnABottom = fixture
@@ -1535,13 +1334,23 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
               .querySelector('[data-testid="conversation-turn-wrap-b"]')
               .getBoundingClientRect().bottom;
             nearest = {
+              chip: Math.min(nearest.chip, Math.abs(chip.top - headBottom)),
               message: Math.min(nearest.message, Math.abs(a.top - headBottom)),
-              document: Math.min(nearest.document, Math.abs(d.top - headBottom)),
               next: Math.min(nearest.next, Math.abs(b.top - headBottom)),
             };
+            if (chip.height > 2 && chip.top + 1 < headBottom) {
+              throw new Error(
+                "thread chip entered the header at scroll " +
+                  y +
+                  " top=" +
+                  chip.top.toFixed(1) +
+                  " head=" +
+                  headBottom.toFixed(1),
+              );
+            }
+            if (chip.height > 2 && chip.top <= headBottom + 28) sawChip = true;
             [
               [msgPinA, a, turnABottom],
-              [docPin, d, doc.getBoundingClientRect().bottom],
               [msgPinB, b, turnBBottom],
             ].forEach(([pin, rect, ownerBottom]) => {
               if (pin.style.opacity === "0") return;
@@ -1549,7 +1358,7 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
               if (rect.top < headBottom - 1 && ownerBottom > headBottom + rect.height + 1) {
                 throw new Error(
                   pinName(pin) +
-                    " card entered the header at scroll " +
+                    " pin entered the header at scroll " +
                     y +
                     " top=" +
                     rect.top.toFixed(1) +
@@ -1562,93 +1371,41 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
             });
             if (
               messageVisible &&
-              documentVisible &&
-              overlaps(a, d) &&
-              Math.min(a.bottom, d.bottom) > headBottom + 1
+              chip.height > 2 &&
+              overlaps(a, chip) &&
+              Math.min(a.bottom, chip.bottom) > headBottom + 1
             ) {
               throw new Error(
-                "Document crossed the first Message at scroll " +
+                "message pin overlapped the thread chip at scroll " +
                   y +
                   " (message=" +
                   a.top.toFixed(1) +
                   "-" +
                   a.bottom.toFixed(1) +
-                  " stick=" +
-                  msgPinA._stickTop +
-                  " shift=" +
-                  msgPinA._stackShift +
-                  ", doc=" +
-                  d.top.toFixed(1) +
+                  ", chip=" +
+                  chip.top.toFixed(1) +
                   "-" +
-                  d.bottom.toFixed(1) +
-                  " stick=" +
-                  docPin._stickTop +
-                  " shift=" +
-                  docPin._stackShift +
-                  ")",
-              );
-            }
-            if (
-              documentVisible &&
-              nextMessageVisible &&
-              overlaps(d, b) &&
-              Math.min(d.bottom, b.bottom) > headBottom + 1
-            ) {
-              throw new Error(
-                "Document crossed the next Message at scroll " +
-                  y +
-                  " actual=" +
-                  window.scrollY +
-                  " (doc=" +
-                  d.top.toFixed(1) +
-                  "-" +
-                  d.bottom.toFixed(1) +
-                  " shift=" +
-                  docPin._stackShift +
-                  " stick=" +
-                  docPin._stickTop +
-                  ", next=" +
-                  b.top.toFixed(1) +
-                  "-" +
-                  b.bottom.toFixed(1) +
-                  " shift=" +
-                  msgPinB._stackShift +
-                  " stick=" +
-                  msgPinB._stickTop +
+                  chip.bottom.toFixed(1) +
                   ")",
               );
             }
             if (
               messageVisible &&
-              documentVisible &&
-              sameColumn(a, d) &&
-              a.top <= headBottom + 320 &&
-              d.top <= headBottom + 320
-            ) {
-              sawMessageDocument = true;
-              if (d.top < a.top - 1) {
-                throw new Error("Document moved above the first Message at scroll " + y);
-              }
-            }
-            if (
-              documentVisible &&
               nextMessageVisible &&
-              sameColumn(d, b) &&
-              d.top <= headBottom + 320 &&
-              b.top <= headBottom + 320
+              sameColumn(a, b) &&
+              overlaps(a, b) &&
+              Math.min(a.bottom, b.bottom) > headBottom + 1
             ) {
-              sawDocumentNextMessage = true;
-              if (b.top < d.top - 1) {
-                throw new Error("next Message moved above the Document at scroll " + y);
-              }
+              throw new Error("message pins overlapped at scroll " + y);
             }
+            if (nextMessageVisible && b.top <= headBottom + 320) sawNextMessage = true;
           }
-          if (!sawMessageDocument || !sawDocumentNextMessage) {
+          if (!sawChip || !sawNextMessage) {
             throw new Error(
-              "wrap fixture did not exercise both stack boundaries (message-document=" +
-                sawMessageDocument +
-                ", document-next=" +
-                sawDocumentNextMessage +
+              "wrap fixture did not keep the thread chip under the header (chip=" +
+                sawChip +
+                ", next=" +
+                sawNextMessage +
                 ", nearest=" +
                 JSON.stringify(nearest) +
                 ")",
