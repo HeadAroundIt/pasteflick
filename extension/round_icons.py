@@ -14,6 +14,46 @@ INK = (23, 20, 16, 255)
 SIZES = (16, 32, 48, 128)
 
 
+def _page(s: float, size: int | None = None) -> tuple[float, float, float, float]:
+    # Toolbar icons read as a tiny square. Fill it — the cream margin is lost at 16–32px.
+    if size is not None and size <= 16:
+        return s * 0.08, s * 0.04, s * 0.92, s * 0.96
+    if size is not None and size <= 32:
+        return s * 0.07, s * 0.04, s * 0.93, s * 0.96
+    return s * 0.11, s * 0.06, s * 0.89, s * 0.94
+
+
+def _draw_sheet(d: ImageDraw.ImageDraw, s: float, size: int | None, folded: bool) -> None:
+    left, top, right, bottom = _page(s, size)
+    page_w = right - left
+    d.rounded_rectangle([left, top, right, bottom], radius=page_w * 0.11, fill=PAPER)
+    if folded:
+        fold = page_w * 0.26
+        d.polygon(
+            [(right - fold, bottom), (right, bottom - fold), (right, bottom)],
+            fill=BG,
+        )
+        d.polygon(
+            [
+                (right - fold, bottom),
+                (right - fold, bottom - fold),
+                (right, bottom - fold),
+            ],
+            fill=FOLD,
+        )
+    inset = page_w * 0.16
+    lx, rx = left + inset, right - inset
+    if size is not None and size <= 16:
+        y_fracs, thick = (0.32, 0.50, 0.68), s * 0.08
+    elif size is not None and size <= 32:
+        y_fracs, thick = (0.32, 0.50, 0.68), s * 0.048
+    else:
+        y_fracs, thick = (0.32, 0.46, 0.60), s * 0.038
+    for y_frac in y_fracs:
+        y = s * y_frac
+        d.rounded_rectangle([lx, y - thick / 2, rx, y + thick / 2], radius=thick / 2, fill=INK)
+
+
 def _paint(size: int, scale: int) -> Image.Image:
     canvas = size * scale
     img = Image.new("RGBA", (canvas, canvas), (0, 0, 0, 0))
@@ -23,43 +63,7 @@ def _paint(size: int, scale: int) -> Image.Image:
     # Smaller toolbar sizes need a larger relative radius or the corners read as square.
     radius = s * (0.26 if size <= 16 else 0.24)
     d.rounded_rectangle([0, 0, canvas - 1, canvas - 1], radius=radius, fill=BG)
-
-    if size <= 16:
-        left, top, right, bottom = s * 0.28, s * 0.18, s * 0.72, s * 0.82
-        d.rounded_rectangle([left, top, right, bottom], radius=s * 0.10, fill=PAPER)
-        for y_frac in (0.42, 0.58):
-            y = s * y_frac
-            t = s * 0.05
-            d.rounded_rectangle([s * 0.36, y - t, s * 0.64, y + t], radius=t, fill=INK)
-        return img
-
-    left, top, right, bottom = s * 0.30, s * 0.16, s * 0.70, s * 0.84
-    d.rounded_rectangle([left, top, right, bottom], radius=s * 0.07, fill=PAPER)
-
-    fold = s * 0.14
-    d.polygon(
-        [(right - fold, bottom), (right, bottom - fold), (right, bottom)],
-        fill=BG,
-    )
-    d.polygon(
-        [
-            (right - fold, bottom),
-            (right - fold, bottom - fold),
-            (right, bottom - fold),
-        ],
-        fill=FOLD,
-    )
-
-    line_count = 2 if size <= 32 else 3
-    y_fracs = (0.38, 0.52) if line_count == 2 else (0.36, 0.46, 0.56)
-    thick = s * (0.034 if size <= 32 else 0.028)
-    for y_frac in y_fracs:
-        y = s * y_frac
-        d.rounded_rectangle(
-            [s * 0.38, y - thick / 2, s * 0.62, y + thick / 2],
-            radius=thick / 2,
-            fill=INK,
-        )
+    _draw_sheet(d, s, size, folded=True)
     return img
 
 
@@ -82,30 +86,7 @@ def build(size: int) -> Image.Image:
 def build_master(size: int = 1024) -> Image.Image:
     img = Image.new("RGB", (size, size), BG[:3])
     d = ImageDraw.Draw(img)
-    s = float(size)
-    left, top, right, bottom = s * 0.30, s * 0.16, s * 0.70, s * 0.84
-    d.rounded_rectangle([left, top, right, bottom], radius=s * 0.07, fill=PAPER[:3])
-    fold = s * 0.14
-    d.polygon(
-        [(right - fold, bottom), (right, bottom - fold), (right, bottom)],
-        fill=BG[:3],
-    )
-    d.polygon(
-        [
-            (right - fold, bottom),
-            (right - fold, bottom - fold),
-            (right, bottom - fold),
-        ],
-        fill=FOLD[:3],
-    )
-    thick = s * 0.028
-    for y_frac in (0.36, 0.46, 0.56):
-        y = s * y_frac
-        d.rounded_rectangle(
-            [s * 0.38, y - thick / 2, s * 0.62, y + thick / 2],
-            radius=thick / 2,
-            fill=INK[:3],
-        )
+    _draw_sheet(d, float(size), None, folded=True)
     return img
 
 

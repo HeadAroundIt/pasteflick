@@ -219,26 +219,64 @@ def finish(content: Image.Image, name: str) -> None:
     print(path.name, out.size)
 
 
-def save_button(label: str, name: str, size: int = 16) -> None:
+def coffee_mark(px: int = 16) -> Image.Image:
+    s = max(16, px) * SCALE
+    w = max(2, round(s * 0.11))
+    img = Image.new("RGBA", (int(s * 1.2), s), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    x0, x1 = s * 0.16, s * 0.68
+    y0, y1 = s * 0.30, s * 0.86
+    r = (x1 - x0) * 0.22
+    d.line([(x0, y0), (x0, y1 - r)], fill=INK, width=w)
+    d.line([(x1, y0), (x1, y1 - r)], fill=INK, width=w)
+    d.line([(x0, y0), (x1, y0)], fill=INK, width=w)
+    d.arc([x0, y1 - 2 * r, x1, y1], start=0, end=180, fill=INK, width=w)
+    hx0 = x1 - s * 0.04
+    d.arc(
+        [hx0, y0 + s * 0.10, hx0 + s * 0.42, y0 + s * 0.58],
+        start=280,
+        end=80,
+        fill=INK,
+        width=w,
+    )
+    return img
+
+
+def make_button(label: str, size: int = 16, cup: bool = False) -> Image.Image:
     fnt = font("seguisb.ttf", size)
     probe = Image.new("RGBA", (8, 8))
     d0 = ImageDraw.Draw(probe)
     tw, th = measure(d0, label, fnt)
-    pad_x, pad_y = 22 * SCALE, 14 * SCALE
-    chip = Image.new("RGBA", (tw + pad_x * 2, th + pad_y * 2), (0, 0, 0, 0))
+    icon = coffee_mark(17) if cup else None
+    gap = 8 * SCALE if icon else 0
+    icon_w = icon.width if icon else 0
+    pad_x = (20 if cup else 22) * SCALE
+    pad_y = (14 if cup else 14) * SCALE
+    inner_h = max(th, icon.height if icon else 0)
+    chip = Image.new(
+        "RGBA",
+        (tw + pad_x * 2 + icon_w + gap, inner_h + pad_y * 2),
+        (0, 0, 0, 0),
+    )
     d = ImageDraw.Draw(chip)
     d.rounded_rectangle([0, 0, chip.width - 1, chip.height - 1], radius=10 * SCALE, fill=GOLD)
+    x = pad_x
+    cy = chip.height // 2
+    if icon:
+        chip.alpha_composite(icon, (x, cy - icon.height // 2))
+        x += icon_w + gap
     bbox = d.textbbox((0, 0), label, font=fnt)
-    d.text(
-        ((chip.width - tw) // 2 - bbox[0], (chip.height - th) // 2 - bbox[1]),
-        label,
-        font=fnt,
-        fill=INK,
-    )
+    d.text((x - bbox[0], cy - th // 2 - bbox[1]), label, font=fnt, fill=INK)
+    return chip
+
+
+def save_button(label: str, name: str, size: int = 16, cup: bool = False) -> Image.Image:
+    chip = make_button(label, size, cup)
     out = chip.resize((chip.width // SCALE, chip.height // SCALE), Image.Resampling.LANCZOS)
     path = OUT / name
     out.save(path, format="PNG", compress_level=6)
     print(path.name, out.size)
+    return chip
 
 
 def build_hero() -> None:
@@ -299,7 +337,7 @@ def build_hero() -> None:
         MUTED,
         1.4,
     )
-    finish(img, "opener.png")
+    finish(img, "intro.png")
 
 
 def build_what() -> None:
@@ -323,7 +361,7 @@ def build_what() -> None:
     y += 14 * SCALE
     y = draw_paragraph(
         img,
-        "Pin any message. Copy from PasteFlick starts at that pin, so you can take the rest of the conversation without dragging a selection.",
+        "Bookmark a message. Copy from PasteFlick starts there, so you can take the rest of the conversation without dragging a selection.",
         body,
         x,
         y,
@@ -350,7 +388,7 @@ def build_what() -> None:
         [
             ("Copy selection", "The highlight you made."),
             ("Copy thread", "The conversation currently on the page."),
-            ("Copy from PasteFlick", "From your pin onward."),
+            ("Copy from PasteFlick", "From your bookmark onward."),
         ],
         x,
         y,
@@ -383,7 +421,7 @@ def build_what() -> None:
         MUTED,
         1.4,
     )
-    finish(img, "what-you-get.png")
+    finish(img, "you-get.png")
 
 
 def build_support() -> None:
@@ -402,18 +440,33 @@ def build_support() -> None:
         TEXT,
         1.45,
     )
-    y += 14 * SCALE
-    draw_paragraph(
-        img,
-        "No pressure—just genuine appreciation!",
-        font("segoeui.ttf", 14),
-        x,
-        y,
-        inner,
-        MUTED,
-        1.4,
+    y += 20 * SCALE
+    btn = make_button("Leave a tip", 17, cup=True)
+    note_f = font("segoeui.ttf", 14)
+    note = "No pressure—just genuine appreciation!"
+    well_pad = 18 * SCALE
+    note_h = int(note_f.size * 1.4)
+    well_h = well_pad + btn.height + 12 * SCALE + note_h + well_pad - int(note_f.size * 0.28)
+    d = ImageDraw.Draw(img)
+    d.rounded_rectangle(
+        [x, y, x + inner - 1, y + well_h],
+        radius=12 * SCALE,
+        fill=PANEL,
+        outline=STROKE,
+        width=SCALE,
     )
-    finish(img, "thanks.png")
+    bx = x + (inner - btn.width) // 2
+    by = y + well_pad
+    img.alpha_composite(btn, (bx, by))
+    d0 = ImageDraw.Draw(img)
+    tw, _ = measure(d0, note, note_f)
+    d0.text(
+        (x + (inner - tw) // 2, by + btn.height + 12 * SCALE),
+        note,
+        font=note_f,
+        fill=MUTED,
+    )
+    finish(img, "support.png")
 
 
 def build_privacy() -> None:
@@ -526,7 +579,7 @@ def build_install() -> None:
     )
     finish(img, "get-it.png")
     save_button("Get the Windows zip", "windows-zip.png", 16)
-    save_button("Leave a tip", "leave-a-tip.png", 15)
+    save_button("Leave a tip", "leave-a-tip.png", 17, cup=True)
 
 
 def main() -> None:

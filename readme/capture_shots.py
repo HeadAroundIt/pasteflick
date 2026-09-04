@@ -153,17 +153,17 @@ iframe{
         if name == "shot-chip.html":
             html = f"""<!doctype html>
 <html><head><meta charset="utf-8"><style>
-html,body{{margin:0;width:114px;height:66px;background:transparent;}}
+html,body{{margin:0;width:152px;height:96px;background:transparent;}}
 .stage{{
   box-sizing:border-box;
-  width:114px;
-  height:66px;
+  width:152px;
+  height:96px;
   display:flex;
   align-items:center;
   justify-content:center;
-  padding:6px;
+  padding:16px;
   background:#3a3228;
-  border-radius:10px;
+  border-radius:14px;
 }}
 {CHIP_CSS}
 </style></head>
@@ -227,11 +227,11 @@ iframe{{border:0;width:{w}px;height:{h}px;border-radius:10px;overflow:hidden;bac
         if name == "shot-chat.html":
             html = f"""<!doctype html>
 <html><head><meta charset="utf-8"><style>
-html,body{{margin:0;width:784px;height:420px;background:transparent;}}
+html,body{{margin:0;width:784px;height:520px;background:transparent;}}
 .stage{{
   box-sizing:border-box;
-  width:784px;height:420px;
-  padding:32px;
+  width:784px;height:520px;
+  padding:28px;
   background:#3a3228;
   border-radius:16px;
 }}
@@ -239,13 +239,13 @@ html,body{{margin:0;width:784px;height:420px;background:transparent;}}
   box-sizing:border-box;
   width:100%;height:100%;
   display:grid;
-  grid-template-columns:max-content 40px max-content minmax(0,1fr);
-  grid-template-rows:auto auto auto;
-  column-gap:14px;
-  row-gap:28px;
+  grid-template-columns:max-content 92px 36px minmax(0,1fr);
+  grid-template-rows:auto auto auto auto;
+  column-gap:12px;
+  row-gap:18px;
   align-items:center;
   align-content:center;
-  padding:28px 40px 28px 28px;
+  padding:24px 36px 24px 24px;
   overflow:visible;
   background:#f7f7f5;
   border-radius:16px;
@@ -255,32 +255,63 @@ html,body{{margin:0;width:784px;height:420px;background:transparent;}}
 }}
 .title{{
   grid-column:4;grid-row:1;
-  margin:0 0 4px;
+  margin:0 0 2px;
   font:650 15px/1.2 inherit;
   letter-spacing:-0.02em;
   color:#5c4a2e;
 }}
 .chip-slot{{
-  grid-column:1;grid-row:2;
+  grid-column:1;grid-row:2 / 5;
+  align-self:center;
   z-index:2;
+  zoom:0.82;
 }}
 {CHIP_CSS}
-.arrow{{
-  grid-column:2;grid-row:2;
-  display:grid;
-  place-items:center;
+.arrows{{
+  grid-column:2;grid-row:2 / 5;
+  align-self:stretch;
+  position:relative;
   color:#c9a66a;
 }}
-.arrow svg{{display:block;}}
+.arm{{
+  position:absolute;
+  left:16px;right:0;
+  height:22px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}}
+.arm.one{{top:calc(16.66% - 11px);}}
+.arm.more{{bottom:calc(16.66% - 11px);}}
+.arm .cap{{
+  flex:none;
+  font:650 11px/1 inherit;
+  letter-spacing:-0.02em;
+  color:#8a7358;
+  white-space:nowrap;
+}}
+.arm svg{{display:block;flex:none;margin-left:auto;}}
+.rail{{
+  position:absolute;
+  left:4px;
+  top:calc(16.66% - 1px);
+  bottom:calc(16.66% - 1px);
+  width:12px;
+  border-left:2px solid #c9a66a;
+  border-top:2px solid #c9a66a;
+  border-bottom:2px solid #c9a66a;
+  border-radius:6px 0 0 6px;
+  box-sizing:border-box;
+}}
 .mark-wrap{{
-  position:relative;
   width:30px;
   height:30px;
   display:grid;
   place-items:center;
 }}
 .mark-wrap.one{{grid-column:3;grid-row:2;}}
-.mark-wrap.more{{grid-column:3;grid-row:3;}}
+.mark-wrap.skip{{grid-column:3;grid-row:3;}}
+.mark-wrap.more{{grid-column:3;grid-row:4;}}
 .mark{{
   box-sizing:border-box;
   width:30px;height:30px;border-radius:9px;
@@ -292,26 +323,17 @@ html,body{{margin:0;width:784px;height:420px;background:transparent;}}
     0 0 0 5px rgba(201,166,106,.28),
     inset 0 1px 0 rgba(244,226,180,.35);
 }}
-.mark svg{{display:block;}}
-.mark svg path{{fill:currentColor;}}
-.hint{{
-  position:absolute;
-  top:calc(100% + 5px);
-  left:50%;
-  transform:translateX(-50%);
-  padding:2px 6px;
-  font:650 10px/1.2 inherit;
-  letter-spacing:-0.01em;
-  color:#171410;
-  border-radius:6px;
-  background:rgba(201,166,106,.48);
-  box-shadow:inset 0 1px 0 rgba(244,226,180,.35);
-  white-space:nowrap;
+.mark.ghost{{
+  background:transparent;
+  color:rgba(92,74,46,.38);
+  box-shadow:none;
+  border:1px solid rgba(201,166,106,.32);
 }}
+.mark svg{{display:block;}}
 .msg{{
   box-sizing:border-box;
   min-width:0;
-  max-width:348px;
+  max-width:360px;
   margin:0;
   padding:12px 14px;
   border-radius:10px;
@@ -320,14 +342,20 @@ html,body{{margin:0;width:784px;height:420px;background:transparent;}}
   line-height:1.45;
   font-size:13px;
 }}
-.msg.user{{grid-column:4;grid-row:2;background:color-mix(in srgb, #c9a66a 12%, #f7f7f5);color:#171410;}}
-.msg.asst{{grid-column:4;grid-row:3;background:#f3f1ea;color:#5c4a2e;}}
+.msg.one{{grid-column:4;grid-row:2;background:color-mix(in srgb, #c9a66a 12%, #f7f7f5);color:#171410;}}
+.msg.skip{{grid-column:4;grid-row:3;background:#f3f1ea;color:#8a7358;}}
+.msg.more{{grid-column:4;grid-row:4;background:color-mix(in srgb, #c9a66a 12%, #f7f7f5);color:#171410;}}
 .role{{
   display:inline-block;margin:0 0 8px;padding:2px 6px;
   font:650 10px/1.2 inherit;
   color:#171410;border-radius:6px;
   background:rgba(201,166,106,.48);
   box-shadow:inset 0 1px 0 rgba(244,226,180,.35);
+}}
+.msg.skip .role{{
+  background:rgba(201,166,106,.22);
+  box-shadow:none;
+  color:#8a7358;
 }}
 </style></head>
 <body>
@@ -337,26 +365,41 @@ html,body{{margin:0;width:784px;height:420px;background:transparent;}}
       <div class="chip-slot">
 {CHIP_HTML}
       </div>
-      <div class="arrow" aria-hidden="true">
-        <svg viewBox="0 0 40 24" width="36" height="22">
-          <path d="M3 12h26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          <path d="M23 5.5 35 12l-12 6.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+      <div class="arrows" aria-hidden="true">
+        <div class="rail"></div>
+        <div class="arm one">
+          <span class="cap">one</span>
+          <svg viewBox="0 0 28 16" width="26" height="16">
+            <path d="M2 8h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M14 3.5 24 8l-10 4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="arm more">
+          <span class="cap">or more</span>
+          <svg viewBox="0 0 28 16" width="26" height="16">
+            <path d="M2 8h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M14 3.5 24 8l-10 4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
       </div>
       <div class="mark-wrap one">
         <div class="mark">
           <svg viewBox="0 0 24 24" width="14" height="14"><path fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round" d="M7 3.75h10A1.25 1.25 0 0 1 18.25 5v16.25L12 17.5l-6.25 3.75V5A1.25 1.25 0 0 1 7 3.75z"/></svg>
         </div>
-        <span class="hint">one</span>
       </div>
-      <div class="msg user"><span class="role">You</span><div>Can you turn this into a short note I can paste into Slack?</div></div>
+      <div class="msg one"><span class="role">You</span><div>Can you turn this into a short note I can paste into Slack?</div></div>
+      <div class="mark-wrap skip">
+        <div class="mark ghost">
+          <svg viewBox="0 0 24 24" width="14" height="14"><path fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round" d="M7 3.75h10A1.25 1.25 0 0 1 18.25 5v16.25L12 17.5l-6.25 3.75V5A1.25 1.25 0 0 1 7 3.75z"/></svg>
+        </div>
+      </div>
+      <div class="msg skip"><span class="role">Assistant</span><div>Here's a first pass you can drop in as-is.</div></div>
       <div class="mark-wrap more">
         <div class="mark">
           <svg viewBox="0 0 24 24" width="14" height="14"><path fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round" d="M7 3.75h10A1.25 1.25 0 0 1 18.25 5v16.25L12 17.5l-6.25 3.75V5A1.25 1.25 0 0 1 7 3.75z"/></svg>
         </div>
-        <span class="hint">or more</span>
       </div>
-      <div class="msg asst"><span class="role">Assistant</span><div>Bookmark one message, or a few. Copy on the chip takes that stretch.</div></div>
+      <div class="msg more"><span class="role">You</span><div>Make it two sentences, and keep the Friday deadline.</div></div>
     </div>
   </div>
 </body></html>"""
@@ -454,11 +497,11 @@ def main() -> None:
     base = f"http://127.0.0.1:{port}"
     try:
         # New filenames so GitHub doesn't serve stale shots.
-        shot(f"{base}/shot-chip.html?v=10", OUT / "badge.png", 114, 66, "00000000")
-        shot(f"{base}/shot-pair.html?v=10", OUT / "popup-pair.png", 688, 616, "00000000")
-        shot(f"{base}/shot-popup.html?v=10", OUT / "panel-main.png", 332, 368, "00000000")
-        shot(f"{base}/shot-settings.html?v=10", OUT / "panel-settings.png", 332, 616, "00000000")
-        shot(f"{base}/shot-chat.html?v=10", OUT / "copy-from.png", 784, 420, "00000000")
+        shot(f"{base}/shot-chip.html?v=12", OUT / "the-chip.png", 152, 96, "00000000")
+        shot(f"{base}/shot-pair.html?v=11", OUT / "popup-pair.png", 688, 616, "00000000")
+        shot(f"{base}/shot-popup.html?v=11", OUT / "panel-main.png", 332, 368, "00000000")
+        shot(f"{base}/shot-settings.html?v=11", OUT / "panel-settings.png", 332, 616, "00000000")
+        shot(f"{base}/shot-chat.html?v=12", OUT / "one-or-more.png", 784, 520, "00000000")
     finally:
         httpd.shutdown()
     print("ok")

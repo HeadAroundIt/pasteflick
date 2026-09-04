@@ -1,21 +1,21 @@
 <p align="center">
-  <img src="readme/opener.png" width="760" alt="PasteFlick — Copy from ChatGPT. Flick it into the last app.">
+  <img src="readme/intro.png" width="760" alt="PasteFlick — Copy from ChatGPT. Flick it into the last app.">
 </p>
 
 <p align="center"><br></p>
 
 <p align="center">
-  <img src="readme/shots/badge.png" width="168" alt="PasteFlick chip — Copy, Save, and Flick">
+  <img src="readme/shots/the-chip.png" width="200" alt="PasteFlick chip — Copy, Save, and Flick">
 </p>
 
 <p align="center">
-  <img src="readme/shots/copy-from.png" width="760" alt="Bookmark one message or a few, then Copy from the chip">
+  <img src="readme/shots/one-or-more.png" width="760" alt="Bookmark one message, or a later one — Copy on the chip takes that stretch">
 </p>
 
 <p align="center"><br></p>
 
 <p align="center">
-  <img src="readme/what-you-get.png" width="760" alt="What you get — the chip, the popup, and where copies go">
+  <img src="readme/you-get.png" width="760" alt="What you get — the chip, the popup, and where copies go">
 </p>
 
 <p align="center">
@@ -35,11 +35,7 @@
 <p align="center"><br></p>
 
 <p align="center">
-  <img src="readme/thanks.png" width="760" alt="Support — a contribution of any amount helps">
-</p>
-
-<p align="center">
-  <a href="https://ko-fi.com/ryandunham"><img src="readme/leave-a-tip.png" alt="Leave a tip on Ko-fi" height="44"></a>
+  <a href="https://ko-fi.com/ryandunham"><img src="readme/support.png" width="760" alt="Support — leave a tip on Ko-fi if you like it"></a>
 </p>
 
 <p align="center"><br></p>
