@@ -1,0 +1,91 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Version tag to publish, such as v1.2.0
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Test and publish
+    runs-on: windows-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Run unit tests
+        run: python -m pytest
+
+      - name: Check extension syntax
+        run: node --check extension/pasteflick.js
+
+      - name: Run sticky-stack browser regression
+        run: python testbed/verify_wrap.py
+
+      - name: Resolve and validate version
+        id: version
+        shell: pwsh
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PUSH_TAG: ${{ github.ref_name }}
+          MANUAL_TAG: ${{ inputs.tag }}
+        run: |
+          $tag = if ($env:EVENT_NAME -eq "workflow_dispatch") { $env:MANUAL_TAG } else { $env:PUSH_TAG }
+          if (-not $tag.StartsWith("v")) {
+            throw "Release tag must start with v: $tag"
+          }
+          $version = $tag.Substring(1)
+          $manifest = Get-Content extension/manifest.json -Raw | ConvertFrom-Json
+          $appText = Get-Content app/__init__.py -Raw
+          $appMatch = [regex]::Match($appText, '__version__\s*=\s*"([^"]+)"')
+          if ($manifest.version -ne $version -or -not $appMatch.Success -or $appMatch.Groups[1].Value -ne $version) {
+            throw "Tag $tag does not match the extension and app versions"
+          }
+          "tag=$tag" >> $env:GITHUB_OUTPUT
+          "version=$version" >> $env:GITHUB_OUTPUT
+
+      - name: Build release package
+        shell: pwsh
+        run: ./installer/build-release.ps1 -Version "${{ steps.version.outputs.version }}"
+
+      - name: Publish GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          $assets = @(
+            "dist/PasteFlick-$env:RELEASE_VERSION-windows.zip",
+            "dist/PasteFlick-$env:RELEASE_VERSION-windows.zip.sha256"
+          )
+          gh release view $env:RELEASE_TAG *> $null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload $env:RELEASE_TAG @assets --clobber
+          }
+          else {
+            gh release create $env:RELEASE_TAG @assets `
+              --target $env:GITHUB_SHA `
+              --title "PasteFlick $env:RELEASE_VERSION" `
+              --generate-notes
+          }

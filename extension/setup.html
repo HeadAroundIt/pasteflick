@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>PasteFlick — add to a browser</title>
+    <style>
+      body {
+        margin: 0;
+        background: #1e1e1e;
+        color: #e4d2ae;
+        font-family: Segoe UI, system-ui, sans-serif;
+      }
+      main {
+        max-width: 640px;
+        margin: 0 auto;
+        padding: 36px 22px 48px;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 10px;
+      }
+      .brand img {
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        display: block;
+      }
+      h1 {
+        font-size: 28px;
+        margin: 0;
+        letter-spacing: -0.03em;
+      }
+      .sub {
+        color: #b09a78;
+        margin: 0 0 28px;
+        line-height: 1.45;
+      }
+      .card {
+        background: #262626;
+        border: 1px solid rgba(201, 166, 106, 0.16);
+        border-radius: 10px;
+        padding: 18px;
+        margin-bottom: 16px;
+      }
+      h2 {
+        font-size: 15px;
+        margin: 0 0 10px;
+      }
+      ol,
+      ul {
+        margin: 0 0 12px;
+        padding-left: 20px;
+        color: #e4d2ae;
+        line-height: 1.55;
+      }
+      h3 {
+        font-size: 13px;
+        margin: 14px 0 8px;
+        font-weight: 650;
+      }
+      .card > h3:first-of-type {
+        margin-top: 4px;
+      }
+      .callout {
+        margin: 0 0 14px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: #161616;
+        border: 1px solid rgba(201, 166, 106, 0.16);
+        color: #e4d2ae;
+        font-size: 13px;
+        line-height: 1.45;
+      }
+      .path {
+        display: block;
+        margin: 10px 0 14px;
+        padding: 12px 14px;
+        border-radius: 10px;
+        background: #161616;
+        border: 1px solid rgba(201, 166, 106, 0.16);
+        color: #e4d2ae;
+        font: 12.5px/1.4 Consolas, ui-monospace, monospace;
+        word-break: break-all;
+      }
+      code {
+        font: 12.5px/1.4 Consolas, ui-monospace, monospace;
+        color: #e4d2ae;
+      }
+      button {
+        border: 0;
+        border-radius: 10px;
+        padding: 11px 14px;
+        font-weight: 650;
+        cursor: pointer;
+        background: rgba(201, 166, 106, 0.48);
+        color: #171410;
+        box-shadow: inset 0 1px 0 rgba(244, 226, 180, 0.35);
+      }
+      .note {
+        color: #b09a78;
+        font-size: 13px;
+        line-height: 1.45;
+      }
+      .ok {
+        color: #b7c4a8;
+        font-size: 13px;
+        margin-left: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="brand">
+        <img src="icons/icon48.png" alt="" width="48" height="48" />
+        <h1>Add to a browser</h1>
+      </div>
+      <p class="sub">
+        Use this page if you closed the setup window, or to load PasteFlick
+        in another Chromium browser. Same extension for Brave, Chrome, Edge,
+        Chromium, and Arc.
+      </p>
+
+      <div class="card">
+        <h2>1. Copy the extension folder path</h2>
+        <div class="path" id="path">Looking up the installed folder…</div>
+        <button id="copy" type="button">Copy path</button><span class="ok" id="copied"></span>
+      </div>
+
+      <div class="card">
+        <h2>2. Load unpacked</h2>
+        <ol>
+          <li>Open your browser extensions page (paste one of these into the address bar):</li>
+        </ol>
+        <ul>
+          <li><strong>Brave</strong> — <code>brave://extensions/</code></li>
+          <li><strong>Chrome</strong> — <code>chrome://extensions/</code></li>
+          <li><strong>Edge</strong> — <code>edge://extensions/</code></li>
+          <li><strong>Chromium / Arc</strong> — <code>chrome://extensions/</code></li>
+        </ul>
+        <ol start="2">
+          <li>Turn on <strong>Developer mode</strong> (top-right).</li>
+          <li>Click <strong>Load unpacked</strong>.</li>
+          <li>Paste the path from step 1 and open that folder.</li>
+        </ol>
+        <p class="note">
+          Browsers block fully silent installs. Load unpacked is the last step.
+          Repeat it in each browser you use. Then refresh the chat tab.
+        </p>
+      </div>
+
+      <div class="card">
+        <h2>3. How to use</h2>
+        <p class="callout">
+          The first time you copy, ChatGPT or the browser may ask if it can use
+          the clipboard. Allow it — click <strong>Copy</strong> or
+          <strong>Allow</strong> on that chip. If you skip it, PasteFlick has
+          nowhere to put the text.
+        </p>
+        <h3>On the chat</h3>
+        <ul>
+          <li>
+            Each message has a <strong>Message</strong> card on its left, with
+            <strong>Copy</strong>, <strong>Auto-paste</strong>, and
+            <strong>Save</strong>. ChatGPT’s own buttons stay on the right.
+          </li>
+          <li>
+            Code, tables, files, and documents each get a smaller card with the
+            same three actions. On code, Auto-paste is the main one — ChatGPT already
+            copies code.
+          </li>
+          <li>
+            The bookmark on a Message card is where
+            <strong>Copy from PasteFlick</strong> starts.
+          </li>
+        </ul>
+        <h3>From the PasteFlick popup</h3>
+        <ul>
+          <li><strong>Copy selection</strong> — highlight part of the thread, then copy.</li>
+          <li><strong>Copy thread</strong> — the whole conversation.</li>
+          <li><strong>Copy from PasteFlick</strong> — from the bookmark onward.</li>
+        </ul>
+        <p class="note">
+          Copies stay on the clipboard unless you turn on Auto-paste
+          or File in Settings. Save on a card uses the format you pick there
+          (Markdown or PDF). After an update, reload the extension on the
+          Extensions page, then refresh the chat.
+        </p>
+      </div>
+    </main>
+    <script src="setup.js"></script>
+  </body>
+</html>

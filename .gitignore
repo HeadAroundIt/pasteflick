@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+ui/node_modules/
+ui/dist/
+*.egg-info/
+.DS_Store
+Thumbs.db
+dist/
+build/
+helper/
+test.md
+testbed/.chrome-profile/
+Hush Work *.md

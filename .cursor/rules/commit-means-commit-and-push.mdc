@@ -1,0 +1,23 @@
+---
+description: When the user says "commit", commit with intent-focused notes and push
+alwaysApply: true
+---
+
+# Commit means commit, notes, and push
+
+When the user says **commit** (or asks to commit), do all of the following—do not stop after committing:
+
+1. **Commit** the relevant changes (follow the project's git commit protocol).
+2. **Write the commit message as notes**: focus on **context and intent**—why the change was made and what it was for. Do **not** write technical or code-centric messages (avoid listing files, APIs, refactors, or implementation details unless needed for clarity of intent).
+3. **Push** to the remote after a successful commit.
+
+## Commit message style
+
+- Prefer plain language about purpose and situation over what changed in the code.
+- Good: "Capture the meeting notes so we can pick this up next week without rewatching."
+- Bad: "Add transcript parser and update test.md formatting."
+
+## Scope
+
+- Only do this when the user explicitly says commit (or clearly asks to commit).
+- Do not invent commits unprompted.
