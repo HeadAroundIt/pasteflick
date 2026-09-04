@@ -7,11 +7,11 @@
 </p>
 
 <p align="center">
-  <img src="readme/shots/chip.png" width="148" alt="PasteFlick chip — Copy, Save, and Fling">
+  <img src="readme/shots/chip.png" width="160" alt="PasteFlick chip — Copy, Save, and Fling">
 </p>
 
 <p align="center">
-  <img src="readme/shots/howto.png" width="680" alt="Bookmark a message, then Copy from the chip">
+  <img src="readme/shots/howto.png" width="680" alt="Bookmark one message or a few, then Copy from the chip">
 </p>
 
 <p align="center">
