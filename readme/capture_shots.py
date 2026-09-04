@@ -227,11 +227,11 @@ iframe{{border:0;width:{w}px;height:{h}px;border-radius:10px;overflow:hidden;bac
         if name == "shot-chat.html":
             html = f"""<!doctype html>
 <html><head><meta charset="utf-8"><style>
-html,body{{margin:0;width:784px;height:520px;background:transparent;}}
+html,body{{margin:0;width:840px;height:520px;background:transparent;}}
 .stage{{
   box-sizing:border-box;
-  width:784px;height:520px;
-  padding:28px;
+  width:840px;height:520px;
+  padding:24px;
   background:#3a3228;
   border-radius:16px;
 }}
@@ -239,13 +239,13 @@ html,body{{margin:0;width:784px;height:520px;background:transparent;}}
   box-sizing:border-box;
   width:100%;height:100%;
   display:grid;
-              grid-template-columns:max-content 108px 36px minmax(0,1fr);
+  grid-template-columns:max-content 100px 24px minmax(0,1fr);
   grid-template-rows:auto auto auto auto;
-  column-gap:12px;
-  row-gap:18px;
+  column-gap:0;
+  row-gap:14px;
   align-items:center;
   align-content:center;
-  padding:24px 36px 24px 24px;
+  padding:28px 30px 28px 22px;
   overflow:visible;
   background:#f7f7f5;
   border-radius:16px;
@@ -263,55 +263,75 @@ html,body{{margin:0;width:784px;height:520px;background:transparent;}}
 .chip-slot{{
   grid-column:1;grid-row:2 / 5;
   align-self:center;
-  z-index:2;
-  zoom:0.82;
-}}
-{CHIP_CSS}
-.arrows{{
-  grid-column:2;grid-row:2 / 5;
-  align-self:stretch;
-  position:relative;
-  color:#c9a66a;
-}}
-.arm{{
-  position:absolute;
-  left:5px;right:0;
-  height:22px;
   display:flex;
   align-items:center;
+  z-index:2;
 }}
-.arm.one{{top:calc(16.66% - 11px);}}
-.arm.more{{bottom:calc(16.66% - 11px);}}
+.chip-slot .chip{{zoom:1.62;flex:none;}}
+.stem{{
+  flex:none;
+  width:20px;
+  height:2px;
+  margin-left:4px;
+  background:#c9a66a;
+  border-radius:1px;
+}}
+{CHIP_CSS}
+.guide{{
+  position:relative;
+  align-self:stretch;
+  color:#c9a66a;
+}}
+.guide.one{{grid-column:2;grid-row:2;}}
+.guide.skip{{grid-column:2;grid-row:3;}}
+.guide.more{{grid-column:2;grid-row:4;}}
+.v{{
+  position:absolute;
+  left:0;
+  width:2px;
+  background:currentColor;
+  border-radius:1px;
+}}
+.guide.one .v{{top:50%;bottom:0;}}
+.guide.skip .v{{top:0;bottom:0;}}
+.guide.more .v{{top:0;height:50%;}}
+.arm{{
+  position:absolute;
+  left:0;right:8px;
+  top:50%;
+  margin-top:-1px;
+  height:2px;
+  display:flex;
+  align-items:center;
+  color:#c9a66a;
+}}
 .arm .seg{{
   flex:1 1 0;
-  min-width:8px;
+  min-width:6px;
   height:2px;
   background:currentColor;
   border-radius:1px;
 }}
 .arm .cap{{
   flex:none;
-  padding:3px 12px;
+  padding:0 8px;
   margin:0;
   background:#f7f7f5;
   font:650 11px/1 inherit;
   letter-spacing:-0.02em;
   color:#171410;
   white-space:nowrap;
+  transform:translateY(-3px);
 }}
-.arm svg{{display:block;flex:none;margin-left:2px;}}
-.rail{{
-  position:absolute;
-  left:4px;
-  top:calc(16.66%);
-  bottom:calc(16.66%);
-  width:2px;
-  background:#c9a66a;
-  border-radius:1px;
+.arm svg{{
+  display:block;
+  flex:none;
+  width:9px;height:9px;
+  margin-left:1px;
 }}
 .mark-wrap{{
-  width:30px;
-  height:30px;
+  width:24px;
+  height:24px;
   display:grid;
   place-items:center;
 }}
@@ -320,27 +340,28 @@ html,body{{margin:0;width:784px;height:520px;background:transparent;}}
 .mark-wrap.more{{grid-column:3;grid-row:4;}}
 .mark{{
   box-sizing:border-box;
-  width:30px;height:30px;border-radius:9px;
+  width:24px;height:24px;border-radius:7px;
   display:grid;place-items:center;
+  border:2px solid rgba(201,166,106,.75);
   background:rgba(201,166,106,.55);
   color:#171410;
-  box-shadow:
-    0 0 0 2px #c9a66a,
-    0 0 0 5px rgba(201,166,106,.28),
-    inset 0 1px 0 rgba(244,226,180,.35);
+  box-shadow:inset 0 1px 0 rgba(244,226,180,.35);
 }}
+.mark .scrolllog-icon{{fill:currentColor;}}
 .mark.ghost{{
   background:transparent;
-  color:rgba(92,74,46,.38);
+  color:rgba(92,74,46,.4);
   box-shadow:none;
-  border:1px solid rgba(201,166,106,.32);
+  border:2px solid rgba(201,166,106,.32);
 }}
+.mark.ghost .scrolllog-icon{{fill:none;}}
 .mark svg{{display:block;}}
 .msg{{
   box-sizing:border-box;
   min-width:0;
-  max-width:360px;
+  max-width:328px;
   margin:0;
+  margin-left:16px;
   padding:12px 14px;
   border-radius:10px;
   border:1px solid rgba(201,166,106,.22);
@@ -370,41 +391,42 @@ html,body{{margin:0;width:784px;height:520px;background:transparent;}}
       <p class="title">Friday update</p>
       <div class="chip-slot">
 {CHIP_HTML}
+        <span class="stem" aria-hidden="true"></span>
       </div>
-      <div class="arrows" aria-hidden="true">
-        <div class="rail"></div>
-        <div class="arm one">
+      <div class="guide one" aria-hidden="true">
+        <span class="v"></span>
+        <div class="arm">
           <span class="seg"></span>
           <span class="cap">one</span>
           <span class="seg"></span>
-          <svg viewBox="0 0 10 10" width="10" height="10">
-            <path d="M1.5 1.5 8.5 5 1.5 8.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-        <div class="arm more">
-          <span class="seg"></span>
-          <span class="cap">or more</span>
-          <span class="seg"></span>
-          <svg viewBox="0 0 10 10" width="10" height="10">
-            <path d="M1.5 1.5 8.5 5 1.5 8.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+          <svg viewBox="0 0 10 10"><path d="M1.5 1.5 8.5 5 1.5 8.5" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
       </div>
       <div class="mark-wrap one">
         <div class="mark">
-          <svg viewBox="0 0 24 24" width="14" height="14"><path fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round" d="M7 3.75h10A1.25 1.25 0 0 1 18.25 5v16.25L12 17.5l-6.25 3.75V5A1.25 1.25 0 0 1 7 3.75z"/></svg>
+          <svg viewBox="0 0 24 24" width="13" height="13"><path class="scrolllog-icon" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round" d="M7 3.75h10A1.25 1.25 0 0 1 18.25 5v16.25L12 17.5l-6.25 3.75V5A1.25 1.25 0 0 1 7 3.75z"/></svg>
         </div>
       </div>
       <div class="msg one"><span class="role">You</span><div>Can you turn this into a short note I can paste into Slack?</div></div>
+      <div class="guide skip" aria-hidden="true"><span class="v"></span></div>
       <div class="mark-wrap skip">
         <div class="mark ghost">
-          <svg viewBox="0 0 24 24" width="14" height="14"><path fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round" d="M7 3.75h10A1.25 1.25 0 0 1 18.25 5v16.25L12 17.5l-6.25 3.75V5A1.25 1.25 0 0 1 7 3.75z"/></svg>
+          <svg viewBox="0 0 24 24" width="13" height="13"><path class="scrolllog-icon" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round" d="M7 3.75h10A1.25 1.25 0 0 1 18.25 5v16.25L12 17.5l-6.25 3.75V5A1.25 1.25 0 0 1 7 3.75z"/></svg>
         </div>
       </div>
       <div class="msg skip"><span class="role">Assistant</span><div>Here's a first pass you can drop in as-is.</div></div>
+      <div class="guide more" aria-hidden="true">
+        <span class="v"></span>
+        <div class="arm">
+          <span class="seg"></span>
+          <span class="cap">or more</span>
+          <span class="seg"></span>
+          <svg viewBox="0 0 10 10"><path d="M1.5 1.5 8.5 5 1.5 8.5" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+      </div>
       <div class="mark-wrap more">
         <div class="mark">
-          <svg viewBox="0 0 24 24" width="14" height="14"><path fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round" d="M7 3.75h10A1.25 1.25 0 0 1 18.25 5v16.25L12 17.5l-6.25 3.75V5A1.25 1.25 0 0 1 7 3.75z"/></svg>
+          <svg viewBox="0 0 24 24" width="13" height="13"><path class="scrolllog-icon" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round" d="M7 3.75h10A1.25 1.25 0 0 1 18.25 5v16.25L12 17.5l-6.25 3.75V5A1.25 1.25 0 0 1 7 3.75z"/></svg>
         </div>
       </div>
       <div class="msg more"><span class="role">You</span><div>Make it two sentences, and keep the Friday deadline.</div></div>
@@ -509,7 +531,7 @@ def main() -> None:
         shot(f"{base}/shot-pair.html?v=13", OUT / "the-panels.png", 688, 616, "00000000")
         shot(f"{base}/shot-popup.html?v=13", OUT / "panel-main.png", 332, 368, "00000000")
         shot(f"{base}/shot-settings.html?v=13", OUT / "panel-settings.png", 332, 616, "00000000")
-        shot(f"{base}/shot-chat.html?v=15", OUT / "the-span.png", 784, 520, "00000000")
+        shot(f"{base}/shot-chat.html?v=20", OUT / "from-here.png", 840, 520, "00000000")
     finally:
         httpd.shutdown()
     print("ok")
