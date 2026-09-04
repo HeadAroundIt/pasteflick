@@ -36,31 +36,33 @@ class Handler(SimpleHTTPRequestHandler):
         if name == "shot-pair.html":
             html = """<!doctype html>
 <html><head><meta charset="utf-8"><style>
-html,body{margin:0;height:100%;background:#3a3228;}
+html,body{margin:0;height:100%;background:transparent;}
 .stage{
-  min-height:100%;
   box-sizing:border-box;
+  width:100%;
+  height:100%;
   display:flex;
   align-items:center;
   justify-content:center;
-  gap:22px;
-  padding:16px 18px;
+  gap:20px;
+  padding:12px;
+  background:#3a3228;
+  border-radius:10px;
 }
 iframe{
   border:0;
-  width:316px;
-  border-radius:12px;
+  width:300px;
+  border-radius:10px;
   overflow:hidden;
-  box-shadow:0 12px 32px rgba(20,14,8,.4);
-  background:#f7f7f5;
+  background:transparent;
 }
-.home{height:368px;}
-.settings{height:648px;}
+.home{height:336px;}
+.settings{height:636px;}
 </style></head>
 <body>
   <div class="stage">
-    <iframe class="home" src="/popup.html" title="Popup"></iframe>
-    <iframe class="settings" src="/popup-settings.html" title="Settings"></iframe>
+    <iframe class="home" src="/popup.html?shot=1" title="Popup"></iframe>
+    <iframe class="settings" src="/popup-settings.html?shot=1" title="Settings"></iframe>
   </div>
 </body></html>"""
             data = html.encode("utf-8")
@@ -74,36 +76,28 @@ iframe{
         if name == "shot-chip.html":
             html = """<!doctype html>
 <html><head><meta charset="utf-8"><style>
-html,body{margin:0;height:100%;background:#3a3228;}
+html,body{margin:0;height:100%;background:transparent;}
 .stage{
-  min-height:100%;
   box-sizing:border-box;
+  width:100%;
+  height:100%;
   display:flex;
   align-items:center;
   justify-content:center;
-  padding:16px;
-}
-.crop{
-  width:580px;
-  height:220px;
-  overflow:hidden;
-  border-radius:12px;
-  box-shadow:0 12px 32px rgba(20,14,8,.4);
-  background:#212121;
+  padding:12px;
+  background:#3a3228;
+  border-radius:10px;
 }
 iframe{
   border:0;
-  width:920px;
-  height:760px;
-  transform:scale(2.05);
-  transform-origin:0 36px;
+  width:200px;
+  height:120px;
+  background:#3a3228;
 }
 </style></head>
 <body>
   <div class="stage">
-    <div class="crop">
-      <iframe src="/mock-chatgpt.html?shot=1" title="PasteFlick chip"></iframe>
-    </div>
+    <iframe src="/mock-chatgpt.html?shot=chip" title="PasteFlick chip"></iframe>
   </div>
 </body></html>"""
             data = html.encode("utf-8")
@@ -116,27 +110,27 @@ iframe{
             return
         if name in {"shot-popup.html", "shot-settings.html", "shot-chat.html"}:
             if name == "shot-popup.html":
-                inner, h = "/popup.html", 368
+                inner, w, h = "/popup.html?shot=1", 300, 336
             elif name == "shot-settings.html":
-                inner, h = "/popup-settings.html", 648
+                inner, w, h = "/popup-settings.html?shot=1", 300, 636
             else:
-                inner, h = "/mock-chatgpt.html?shot=1", 720
-            w = 316 if "chat" not in name else 920
-            page_bg = "#3a3228"
-            frame_bg = "#f7f7f5" if "chat" not in name else "#212121"
+                inner, w, h = "/mock-chatgpt.html?shot=1", 880, 560
             html = f"""<!doctype html>
 <html><head><meta charset="utf-8"><style>
-html,body{{margin:0;height:100%;background:{page_bg};}}
+html,body{{margin:0;height:100%;background:transparent;}}
 .stage{{
-  min-height:100%;
   box-sizing:border-box;
+  width:100%;
+  height:100%;
   display:flex;
   align-items:center;
   justify-content:center;
-  padding:16px 18px;
+  padding:12px;
+  background:#3a3228;
+  border-radius:10px;
 }}
-iframe{{border:0;width:{w}px;height:{h}px;border-radius:12px;overflow:hidden;
-box-shadow:0 12px 32px rgba(20,14,8,.4);background:{frame_bg};}}
+iframe{{border:0;width:{w}px;height:{h}px;border-radius:10px;overflow:hidden;
+background:{"#f7f7f5" if "chat" in name else "transparent"};}}
 </style></head>
 <body><div class="stage"><iframe src="{inner}"></iframe></div></body></html>"""
             data = html.encode("utf-8")
@@ -149,6 +143,7 @@ box-shadow:0 12px 32px rgba(20,14,8,.4);background:{frame_bg};}}
             return
         if name == "popup-settings.html":
             html = (EXT / "popup.html").read_text(encoding="utf-8")
+            html = html.replace("<html lang=\"en\">", "<html lang=\"en\" class=\"shot\">", 1)
             html = html.replace('id="view-home"', 'id="view-home" hidden', 1)
             html = html.replace('id="view-settings" hidden', 'id="view-settings"', 1)
             data = html.encode("utf-8")
@@ -181,7 +176,10 @@ box-shadow:0 12px 32px rgba(20,14,8,.4);background:{frame_bg};}}
                 return
         if name in {"popup.html", "setup.html"}:
             path = EXT / name
-            data = path.read_bytes()
+            html = path.read_text(encoding="utf-8")
+            if name == "popup.html" and "shot=1" in self.path:
+                html = html.replace("<html lang=\"en\">", "<html lang=\"en\" class=\"shot\">", 1)
+            data = html.encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.send_header("Cache-Control", "no-store")
@@ -228,11 +226,11 @@ def main() -> None:
     time.sleep(0.2)
     base = f"http://127.0.0.1:{port}"
     try:
-        shot(f"{base}/shot-chip.html", OUT / "chip.png", 620, 260, "FF3A3228")
-        shot(f"{base}/shot-pair.html", OUT / "windows.png", 700, 690, "FF3A3228")
-        shot(f"{base}/shot-popup.html", OUT / "popup.png", 360, 410, "FF3A3228")
-        shot(f"{base}/shot-settings.html", OUT / "settings.png", 360, 690, "FF3A3228")
-        shot(f"{base}/shot-chat.html", OUT / "chat.png", 960, 760, "FF3A3228")
+        shot(f"{base}/shot-chip.html", OUT / "chip.png", 224, 144, "00000000")
+        shot(f"{base}/shot-pair.html", OUT / "windows.png", 656, 672, "00000000")
+        shot(f"{base}/shot-popup.html", OUT / "popup.png", 324, 360, "00000000")
+        shot(f"{base}/shot-settings.html", OUT / "settings.png", 324, 660, "00000000")
+        shot(f"{base}/shot-chat.html", OUT / "chat.png", 904, 584, "00000000")
     finally:
         httpd.shutdown()
     print("ok")

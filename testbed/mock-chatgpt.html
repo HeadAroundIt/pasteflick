@@ -110,6 +110,93 @@
         padding-left: 168px;
         max-width: 720px;
       }
+      html.shot,
+      html.shot body,
+      html.shot .layout,
+      html.shot .thread {
+        background: #f7f7f5;
+        color: #171410;
+        font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+        letter-spacing: -0.011em;
+      }
+      html.shot .page-head {
+        display: none !important;
+      }
+      html.shot h1 {
+        margin: 0 0 18px;
+        font-size: 15px;
+        font-weight: 650;
+        letter-spacing: -0.02em;
+        color: #5c4a2e;
+      }
+      html.shot .msg {
+        max-width: 520px;
+        margin: 10px 0;
+        padding: 12px 14px;
+        border-radius: 10px;
+        border: 1px solid rgba(201, 166, 106, 0.22);
+        box-shadow: 0 1px 3px rgba(50, 40, 20, 0.05);
+        line-height: 1.45;
+      }
+      html.shot .msg.user {
+        background: color-mix(in srgb, #c9a66a 12%, #f7f7f5);
+        color: #171410;
+      }
+      html.shot .msg.assistant {
+        background: #f3f1ea;
+        border: 1px solid rgba(201, 166, 106, 0.22);
+        color: #5c4a2e;
+      }
+      html.shot .role {
+        display: inline-block;
+        margin: 0 0 8px;
+        padding: 2px 6px;
+        font: 650 10px/1.2 "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+        letter-spacing: -0.01em;
+        text-transform: none;
+        color: #171410;
+        border-radius: 6px;
+        background: rgba(201, 166, 106, 0.48);
+        box-shadow: inset 0 1px 0 rgba(244, 226, 180, 0.35);
+      }
+      html.shot .msg a {
+        color: #5c4a2e;
+      }
+      html.shot .doc-card,
+      html.shot .gpt-file,
+      html.shot .gpt-code-file,
+      html.shot .diagram,
+      html.shot table,
+      html.shot pre,
+      html.shot [data-testid="file-attachment"],
+      html.shot [data-pasteflick="test-leak"],
+      html.shot .msg:not([data-message-id="msg-user-1"]):not([data-message-id="msg-assistant-1"]) {
+        display: none !important;
+      }
+      html.shot-chip,
+      html.shot-chip body,
+      html.shot-chip .layout,
+      html.shot-chip .thread {
+        margin: 0;
+        padding: 0;
+        min-height: 100%;
+        background: #3a3228 !important;
+      }
+      html.shot-chip .sidebar,
+      html.shot-chip .toolbar,
+      html.shot-chip .hint,
+      html.shot-chip #log,
+      html.shot-chip .page-head,
+      html.shot-chip h1,
+      html.shot-chip .msg {
+        display: none !important;
+      }
+      html.shot-chip #pasteflick-dock-host {
+        position: fixed !important;
+        inset: 0;
+        width: 100% !important;
+        height: 100% !important;
+      }
       .doc-card {
         background: #ffffff;
         color: #111111;
@@ -329,7 +416,9 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
     </div>
 
     <script>
-      if (/[?&]shot=1/.test(location.search)) {
+      if (/[?&]shot=chip(?:&|$)/.test(location.search)) {
+        document.documentElement.classList.add("shot-chip");
+      } else if (/[?&]shot=1/.test(location.search)) {
         document.documentElement.classList.add("shot");
       }
       history.replaceState(
@@ -341,6 +430,62 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
     <script src="/extractor.js"></script>
     <script src="/pasteflick.js"></script>
     <script>
+      if (document.documentElement.classList.contains("shot")) {
+        const title = document.querySelector("h1");
+        if (title) title.textContent = "Friday update";
+        const user = document.querySelector("#selectable");
+        if (user) user.textContent = "Can you turn this into a short note I can paste into Slack?";
+        const assistant = document.querySelector('[data-message-id="msg-assistant-1"]');
+        if (assistant) {
+          const body = assistant.querySelector(":scope > div:not(.role)");
+          if (body) {
+            body.textContent =
+              "Shipped the chip under the chat title. Copy, Save, and Fling sit in one place, and the bookmark still marks where you left off.";
+          }
+        }
+        document.querySelectorAll(".msg.assistant .role").forEach((el) => {
+          el.textContent = "Assistant";
+        });
+        const markShot = (tries) => {
+          const host = document.getElementById("pasteflick-dock-host");
+          const mark =
+            host &&
+            host.shadowRoot &&
+            host.shadowRoot.querySelector('[data-pasteflick="mark"]');
+          if (mark) {
+            mark.click();
+            return;
+          }
+          if (tries < 20) setTimeout(() => markShot(tries + 1), 50);
+        };
+        setTimeout(() => markShot(0), 50);
+      }
+
+      if (document.documentElement.classList.contains("shot-chip")) {
+        const centerChip = (tries) => {
+          const host = document.getElementById("pasteflick-dock-host");
+          const root = host && host.shadowRoot;
+          const pin = root && root.querySelector('[data-pasteflick="pin"][data-kind="thread"]');
+          const silo = pin && pin.closest('[data-pasteflick="silo"]');
+          const stack = pin && pin.closest('[data-pasteflick="stack"]');
+          if (pin && silo && stack) {
+            root.querySelectorAll('[data-pasteflick="pin"][data-kind="message"]').forEach((el) => {
+              el.style.display = "none";
+            });
+            silo.style.left = "50%";
+            silo.style.top = "50%";
+            silo.style.width = "auto";
+            silo.style.height = "auto";
+            silo.style.transform = "translate(-50%, -50%)";
+            stack.style.position = "relative";
+            stack.style.top = "auto";
+            stack.style.left = "auto";
+            return;
+          }
+          if (tries < 30) setTimeout(() => centerChip(tries + 1), 50);
+        };
+        setTimeout(() => centerChip(0), 80);
+      }
 
       const logEl = document.getElementById("log");
       function log(text, kind) {

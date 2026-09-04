@@ -7,11 +7,11 @@
 </p>
 
 <p align="center">
-  <img src="readme/shots/chip.png" width="680" alt="PasteFlick chip — Copy, Save, and Fling under the chat title">
+  <img src="readme/shots/chip.png" width="280" alt="PasteFlick chip — Copy, Save, and Fling">
 </p>
 
 <p align="center">
-  <img src="readme/shots/chat.png" width="680" alt="PasteFlick chip and bookmark pins on a ChatGPT thread">
+  <img src="readme/shots/chat.png" width="680" alt="PasteFlick chip and bookmark pins on a chat">
 </p>
 
 <p align="center">
