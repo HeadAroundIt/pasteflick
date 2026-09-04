@@ -20,21 +20,21 @@ PasteFlick copies what is on the page. If ChatGPT has not rendered a turn yet, t
 
 ## What you get
 
-**Cards on the chat.** Each turn has a Message card on the left: **Copy**, **Fling** (auto-paste), and **Save**. Code, files, and documents get their own smaller cards.
+One chip under the chat title. Highlight a passage, or take the visible thread — then **Copy**, **Save**, or **Fling** it into the last app you were using. ChatGPT’s own buttons stay where they are.
 
-**A bookmark on the Message card.** That mark is where **Copy from PasteFlick** starts. Name it if you want. From-here uses the messages currently on the page.
+Pin any message. **Copy from PasteFlick** starts at that pin, so you can take the rest of the conversation without dragging a selection.
 
-**The PasteFlick popup** (toolbar icon):
+The toolbar popup is there when you want it:
 
-- **Copy selection** — highlight part of the thread, then copy
-- **Copy thread** — the visible conversation
-- **Copy from PasteFlick** — from the bookmark onward, among mounted messages
+- **Copy selection** — the highlight you made
+- **Copy thread** — the conversation currently on the page
+- **Copy from PasteFlick** — from your pin onward
 
-**Where copies go** (Settings):
+Choose where the text goes:
 
-- **Clipboard** — stay there until you paste
-- **Fling / Auto-paste** — into the last app you were using (Windows helper)
-- **File** — Markdown or PDF, into a folder you pick
+- **Clipboard** — ready to paste when you are
+- **Fling** — into the last app you were in (Windows helper)
+- **File** — Markdown or PDF, in a folder you pick
 
 The first time you copy, allow clipboard access if ChatGPT or the browser asks.
 
