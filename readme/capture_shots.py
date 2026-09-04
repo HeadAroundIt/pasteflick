@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import re
 import socket
 import subprocess
 import threading
@@ -15,66 +16,77 @@ EXT = ROOT / "extension"
 TESTBED = ROOT / "testbed"
 OUT = ROOT / "readme" / "shots"
 CHROME = Path(os.environ.get("PROGRAMFILES", r"C:\Program Files")) / "Google/Chrome/Application/chrome.exe"
+EXT_JS = (EXT / "pasteflick.js").read_text(encoding="utf-8")
 
-# Same chip in the close-up and the how-to. Keep these in lockstep.
-CHIP_CSS = """
-.chip{
-  display:flex;
-  flex-direction:column;
-  gap:4px;
-  width:max-content;
-  max-width:148px;
-  padding:5px 5px 4px;
-  color:#5c4a2e;
-  border-radius:10px;
-  background:color-mix(in srgb, #c9a66a 8%, #f7f7f5);
-  border:1px solid rgba(201,166,106,.22);
-  box-shadow:0 1px 3px rgba(50,40,20,.05);
-}
-.head{display:flex;align-items:center;justify-content:space-between;gap:4px;min-width:0;}
-.kicker{
-  flex:none;
-  padding:2px 6px;
-  font:650 10px/1.2 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif;
-  letter-spacing:-0.01em;
-  color:#171410;
-  border-radius:6px;
-  background:rgba(201,166,106,.48);
-  box-shadow:inset 0 1px 0 rgba(244,226,180,.35);
-}
-.extras{
-  position:relative;flex:none;
-  width:22px;height:12px;
-  border:1px solid rgba(201,166,106,.28);
-  border-radius:6px;
-  background:rgba(201,166,106,.4);
-  box-shadow:inset 0 1px 0 rgba(244,226,180,.12);
-}
-.extras span{
-  position:absolute;top:1px;left:11px;
-  width:8px;height:8px;border-radius:4px;background:#171410;
-}
-.actions{display:flex;align-items:center;justify-content:center;gap:2px;}
-.actions i{
-  width:24px;height:24px;border-radius:7px;
-  display:grid;place-items:center;
-  background:rgba(201,166,106,.4);
-  color:#171410;
-  box-shadow:inset 0 1px 0 rgba(244,226,180,.35);
-}
-.actions svg{display:block;width:13px;height:13px;}
+
+def _js_concat(name: str) -> str:
+    match = re.search(
+        rf"const {name} =\s*((?:(?:'[^']*'|\"[^\"]*\")\s*\+\s*)*(?:'[^']*'|\"[^\"]*\"))\s*;",
+        EXT_JS,
+    )
+    if not match:
+        raise SystemExit(f"missing {name} in pasteflick.js")
+    return "".join(a or b for a, b in re.findall(r"'([^']*)'|\"([^\"]*)\"", match.group(1)))
+
+
+def _rail_shot_css() -> str:
+    key = "const RAIL_CSS = `"
+    start = EXT_JS.index(key) + len(key)
+    end = EXT_JS.index("`;", start)
+    raw = EXT_JS[start:end]
+    host = re.search(r":host\s*\{(.*?)\n    \}", raw, re.S)
+    if not host:
+        raise SystemExit("missing :host in RAIL_CSS")
+    vars_only = []
+    for line in host.group(1).splitlines():
+        stripped = line.strip()
+        if stripped.startswith("--"):
+            vars_only.append("      " + stripped)
+    rest = raw[host.end() :]
+    return (
+        ".pf-host {\n"
+        + "\n".join(vars_only)
+        + "\n    }\n"
+        + rest
+        + """
+    .pf-host [data-pasteflick="pin"] {
+      position: relative;
+      top: auto;
+      left: auto;
+      pointer-events: none;
+    }
+    .pf-host button { cursor: default; }
+    .pf-host * { transition: none !important; animation: none !important; }
 """
+    )
 
-CHIP_HTML = """
-    <div class="chip">
-      <div class="head"><span class="kicker">PasteFlick</span><span class="extras"><span></span></span></div>
-      <div class="actions">
-        <i><svg viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="1.75"/><path d="M5 16V5a2 2 0 0 1 2-2h9" fill="none" stroke="currentColor" stroke-width="1.75"/></svg></i>
-        <i><svg viewBox="0 0 24 24"><path d="M12 4v10" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/><path d="M8 10l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 18h14" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></svg></i>
-        <i><svg viewBox="0 0 24 24"><path d="M5 12h11" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/><path d="M12 6l7 6-7 6" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg></i>
+
+RAIL_SHOT_CSS = _rail_shot_css()
+COPY_SVG = _js_concat("COPY_SVG")
+SAVE_SVG = _js_concat("SAVE_SVG")
+SEND_SVG = _js_concat("SEND_SVG")
+BOOKMARK_SVG = _js_concat("BOOKMARK_SVG")
+
+# Same live chip in the close-up and the how-to.
+CHIP_HTML = f"""
+    <div class="pf-host">
+      <div data-pasteflick="pin" data-kind="thread">
+        <div data-pasteflick="head">
+          <span data-pasteflick="kicker">PasteFlick</span>
+          <button type="button" data-pasteflick="extras" class="on" role="switch">
+            <span data-pasteflick="extras-thumb"></span>
+          </button>
+        </div>
+        <div data-pasteflick="actions">
+          <button type="button" data-pasteflick="copy-thread" class="is-primary">{COPY_SVG}</button>
+          <button type="button" data-pasteflick="save-thread">{SAVE_SVG}</button>
+          <button type="button" data-pasteflick="paste-thread">{SEND_SVG}</button>
+        </div>
       </div>
     </div>
 """
+MARK_ON = f'<button type="button" data-pasteflick="mark" class="is-active is-multi" aria-pressed="true">{BOOKMARK_SVG}</button>'
+MARK_OFF = f'<button type="button" data-pasteflick="mark" aria-pressed="false">{BOOKMARK_SVG}</button>'
 
 
 class Handler(SimpleHTTPRequestHandler):
@@ -165,7 +177,7 @@ html,body{{margin:0;width:152px;height:96px;background:transparent;}}
   background:#3a3228;
   border-radius:14px;
 }}
-{CHIP_CSS}
+{RAIL_SHOT_CSS}
 </style></head>
 <body>
   <div class="stage">
@@ -267,7 +279,7 @@ html,body{{margin:0;width:840px;height:520px;background:transparent;}}
   align-items:center;
   z-index:2;
 }}
-.chip-slot .chip{{zoom:1.62;flex:none;}}
+.chip-slot .pf-host{{zoom:1.62;flex:none;}}
 .stem{{
   flex:none;
   width:20px;
@@ -276,7 +288,7 @@ html,body{{margin:0;width:840px;height:520px;background:transparent;}}
   background:#c9a66a;
   border-radius:1px;
 }}
-{CHIP_CSS}
+{RAIL_SHOT_CSS}
 .guide{{
   position:relative;
   align-self:stretch;
@@ -338,24 +350,6 @@ html,body{{margin:0;width:840px;height:520px;background:transparent;}}
 .mark-wrap.one{{grid-column:3;grid-row:2;}}
 .mark-wrap.skip{{grid-column:3;grid-row:3;}}
 .mark-wrap.more{{grid-column:3;grid-row:4;}}
-.mark{{
-  box-sizing:border-box;
-  width:24px;height:24px;border-radius:7px;
-  display:grid;place-items:center;
-  border:2px solid rgba(201,166,106,.75);
-  background:rgba(201,166,106,.55);
-  color:#171410;
-  box-shadow:inset 0 1px 0 rgba(244,226,180,.35);
-}}
-.mark .scrolllog-icon{{fill:currentColor;}}
-.mark.ghost{{
-  background:transparent;
-  color:rgba(92,74,46,.4);
-  box-shadow:none;
-  border:2px solid rgba(201,166,106,.32);
-}}
-.mark.ghost .scrolllog-icon{{fill:none;}}
-.mark svg{{display:block;}}
 .msg{{
   box-sizing:border-box;
   min-width:0;
@@ -387,7 +381,7 @@ html,body{{margin:0;width:840px;height:520px;background:transparent;}}
 </style></head>
 <body>
   <div class="stage">
-    <div class="chat">
+    <div class="chat pf-host">
       <p class="title">Friday update</p>
       <div class="chip-slot">
 {CHIP_HTML}
@@ -402,18 +396,10 @@ html,body{{margin:0;width:840px;height:520px;background:transparent;}}
           <svg viewBox="0 0 10 10"><path d="M1.5 1.5 8.5 5 1.5 8.5" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
       </div>
-      <div class="mark-wrap one">
-        <div class="mark">
-          <svg viewBox="0 0 24 24" width="13" height="13"><path class="scrolllog-icon" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round" d="M7 3.75h10A1.25 1.25 0 0 1 18.25 5v16.25L12 17.5l-6.25 3.75V5A1.25 1.25 0 0 1 7 3.75z"/></svg>
-        </div>
-      </div>
+      <div class="mark-wrap one">{MARK_ON}</div>
       <div class="msg one"><span class="role">You</span><div>Can you turn this into a short note I can paste into Slack?</div></div>
       <div class="guide skip" aria-hidden="true"><span class="v"></span></div>
-      <div class="mark-wrap skip">
-        <div class="mark ghost">
-          <svg viewBox="0 0 24 24" width="13" height="13"><path class="scrolllog-icon" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round" d="M7 3.75h10A1.25 1.25 0 0 1 18.25 5v16.25L12 17.5l-6.25 3.75V5A1.25 1.25 0 0 1 7 3.75z"/></svg>
-        </div>
-      </div>
+      <div class="mark-wrap skip">{MARK_OFF}</div>
       <div class="msg skip"><span class="role">Assistant</span><div>Here's a first pass you can drop in as-is.</div></div>
       <div class="guide more" aria-hidden="true">
         <span class="v"></span>
@@ -424,11 +410,7 @@ html,body{{margin:0;width:840px;height:520px;background:transparent;}}
           <svg viewBox="0 0 10 10"><path d="M1.5 1.5 8.5 5 1.5 8.5" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
       </div>
-      <div class="mark-wrap more">
-        <div class="mark">
-          <svg viewBox="0 0 24 24" width="13" height="13"><path class="scrolllog-icon" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round" d="M7 3.75h10A1.25 1.25 0 0 1 18.25 5v16.25L12 17.5l-6.25 3.75V5A1.25 1.25 0 0 1 7 3.75z"/></svg>
-        </div>
-      </div>
+      <div class="mark-wrap more">{MARK_ON}</div>
       <div class="msg more"><span class="role">You</span><div>Make it two sentences, and keep the Friday deadline.</div></div>
     </div>
   </div>
@@ -527,11 +509,11 @@ def main() -> None:
     base = f"http://127.0.0.1:{port}"
     try:
         # New filenames so GitHub doesn't serve stale shots.
-        shot(f"{base}/shot-chip.html?v=13", OUT / "chip.png", 152, 96, "00000000")
+        shot(f"{base}/shot-chip.html?v=21", OUT / "the-chip.png", 152, 96, "00000000")
         shot(f"{base}/shot-pair.html?v=13", OUT / "the-panels.png", 688, 616, "00000000")
         shot(f"{base}/shot-popup.html?v=13", OUT / "panel-main.png", 332, 368, "00000000")
         shot(f"{base}/shot-settings.html?v=13", OUT / "panel-settings.png", 332, 616, "00000000")
-        shot(f"{base}/shot-chat.html?v=20", OUT / "from-here.png", 840, 520, "00000000")
+        shot(f"{base}/shot-chat.html?v=21", OUT / "one-or-more.png", 840, 520, "00000000")
     finally:
         httpd.shutdown()
     print("ok")
