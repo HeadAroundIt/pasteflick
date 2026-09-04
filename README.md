@@ -41,7 +41,7 @@
 <p align="center"><br></p>
 
 <p align="center">
-  <a href="https://ko-fi.com/ryandunham"><img src="readme/if-you-like-it.png" width="760" alt="Support — leave a tip on Ko-fi if you like it"></a>
+  <a href="https://ko-fi.com/ryandunham"><img src="readme/appreciate.png" width="760" alt="Support — leave a tip on Ko-fi if you like it"></a>
 </p>
 
 <p align="center"><br></p>

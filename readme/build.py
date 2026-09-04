@@ -264,7 +264,7 @@ a{{
   text-decoration:none;
 }}
 svg{{display:block;flex:none;}}
-span{{display:block;line-height:1;transform:translateY(-3px);}}
+span{{display:block;line-height:1;transform:translateY(-1px);}}
 </style></head>
 <body>
 <a>
@@ -497,7 +497,7 @@ def build_support() -> None:
         font=note_f,
         fill=MUTED,
     )
-    finish(img, "if-you-like-it.png")
+    finish(img, "appreciate.png")
 
 
 def build_privacy() -> None:
@@ -610,7 +610,7 @@ def build_install() -> None:
     )
     finish(img, "setup.png")
     save_button("Get the Windows zip", "windows-zip.png", 16)
-    save_button("Leave a tip", "leave-tip.png", 17, cup=True)
+    save_button("Leave a tip", "tip-btn.png", 17, cup=True)
 
 
 def main() -> None:
