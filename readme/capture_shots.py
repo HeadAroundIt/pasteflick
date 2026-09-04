@@ -33,11 +33,49 @@ class Handler(SimpleHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(data)
             return
+        if name == "shot-pair.html":
+            html = """<!doctype html>
+<html><head><meta charset="utf-8"><style>
+html,body{margin:0;height:100%;background:#3a3228;}
+.stage{
+  min-height:100%;
+  box-sizing:border-box;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:32px;
+  padding:40px 36px;
+}
+iframe{
+  border:0;
+  width:316px;
+  border-radius:12px;
+  overflow:hidden;
+  box-shadow:0 12px 32px rgba(20,14,8,.4);
+  background:#f7f7f5;
+}
+.home{height:368px;}
+.settings{height:648px;}
+</style></head>
+<body>
+  <div class="stage">
+    <iframe class="home" src="/popup.html" title="Popup"></iframe>
+    <iframe class="settings" src="/popup-settings.html" title="Settings"></iframe>
+  </div>
+</body></html>"""
+            data = html.encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Cache-Control", "no-store")
+            self.send_header("Content-Length", str(len(data)))
+            self.end_headers()
+            self.wfile.write(data)
+            return
         if name in {"shot-popup.html", "shot-settings.html", "shot-chat.html"}:
             if name == "shot-popup.html":
-                inner, h = "/popup.html", 520
+                inner, h = "/popup.html", 368
             elif name == "shot-settings.html":
-                inner, h = "/popup-settings.html", 740
+                inner, h = "/popup-settings.html", 648
             else:
                 inner, h = "/mock-chatgpt.html?shot=1", 720
             w = 316 if "chat" not in name else 920
@@ -140,8 +178,9 @@ def main() -> None:
     time.sleep(0.2)
     base = f"http://127.0.0.1:{port}"
     try:
-        shot(f"{base}/shot-popup.html", OUT / "popup.png", 380, 600, "FF3A3228")
-        shot(f"{base}/shot-settings.html", OUT / "settings.png", 380, 820, "FF3A3228")
+        shot(f"{base}/shot-pair.html", OUT / "windows.png", 760, 740, "FF3A3228")
+        shot(f"{base}/shot-popup.html", OUT / "popup.png", 380, 480, "FF3A3228")
+        shot(f"{base}/shot-settings.html", OUT / "settings.png", 380, 760, "FF3A3228")
         shot(f"{base}/shot-chat.html", OUT / "chat.png", 1000, 800, "FF1A1A1A")
     finally:
         httpd.shutdown()

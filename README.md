@@ -11,9 +11,7 @@
 </p>
 
 <p align="center">
-  <img src="readme/shots/popup.png" width="300" alt="PasteFlick toolbar popup">
-  &nbsp;&nbsp;
-  <img src="readme/shots/settings.png" width="300" alt="PasteFlick settings and Tip $5">
+  <img src="readme/shots/windows.png" width="680" alt="PasteFlick popup and settings">
 </p>
 
 <p align="center">
