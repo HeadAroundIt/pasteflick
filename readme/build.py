@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import os
+import subprocess
+import tempfile
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
@@ -219,68 +222,83 @@ def finish(content: Image.Image, name: str) -> None:
     print(path.name, out.size)
 
 
-def coffee_mark(px: int = 16) -> Image.Image:
-    s = max(16, px) * SCALE
-    w = max(2, round(s * 0.11))
-    img = Image.new("RGBA", (int(s * 1.25), s), (0, 0, 0, 0))
-    d = ImageDraw.Draw(img)
-    x0, x1 = s * 0.14, s * 0.64
-    y0, y1 = s * 0.18, s * 0.82
-    r = (x1 - x0) * 0.22
-    d.line([(x0, y0), (x0, y1 - r)], fill=INK, width=w)
-    d.line([(x1, y0), (x1, y1 - r)], fill=INK, width=w)
-    d.line([(x0, y0), (x1, y0)], fill=INK, width=w)
-    d.arc([x0, y1 - 2 * r, x1, y1], start=0, end=180, fill=INK, width=w)
-    mid = (y0 + y1) / 2
-    hh = (y1 - y0) * 0.36
-    hx0 = x1 - s * 0.02
-    d.arc(
-        [hx0, mid - hh, hx0 + s * 0.40, mid + hh],
-        start=280,
-        end=80,
-        fill=INK,
-        width=w,
-    )
-    bbox = img.getbbox()
-    if bbox is None:
-        return img
-    pad = max(1, w // 2)
-    l, t, r, b = bbox
-    return img.crop(
-        (max(0, l - pad), max(0, t - pad), min(img.width, r + pad), min(img.height, b + pad))
-    )
+CHROME = Path(os.environ.get("PROGRAMFILES", r"C:\Program Files")) / "Google/Chrome/Application/chrome.exe"
 
 
 def make_button(label: str, size: int = 16, cup: bool = False) -> Image.Image:
+    if cup:
+        return make_tip_button(label, size)
     fnt = font("seguisb.ttf", size)
     probe = Image.new("RGBA", (8, 8))
     d0 = ImageDraw.Draw(probe)
-    tw, th = measure(d0, label, fnt)
-    tb = d0.textbbox((0, 0), label, font=fnt)
-    icon = coffee_mark(17) if cup else None
-    gap = 8 * SCALE if icon else 0
-    icon_w = icon.width if icon else 0
-    icon_h = icon.height if icon else 0
-    pad_x = (20 if cup else 22) * SCALE
-    pad_y = 14 * SCALE
-    inner_h = max(th, icon_h)
-    chip = Image.new(
-        "RGBA",
-        (tw + pad_x * 2 + icon_w + gap, inner_h + pad_y * 2),
-        (0, 0, 0, 0),
-    )
+    bbox = d0.textbbox((0, 0), label, font=fnt)
+    tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
+    pad_x, pad_y = 22 * SCALE, 14 * SCALE
+    bw, bh = tw + pad_x * 2, th + pad_y * 2
+    chip = Image.new("RGBA", (bw, bh), (0, 0, 0, 0))
     d = ImageDraw.Draw(chip)
-    d.rounded_rectangle([0, 0, chip.width - 1, chip.height - 1], radius=10 * SCALE, fill=GOLD)
-    # Optical center of the cap-height, not the em box — no descenders in this label.
-    text_cy = (tb[1] + tb[3]) / 2
-    cy = chip.height / 2
-    x = pad_x
-    if icon:
-        # Cups read high if you true-center the ink; sit it with the letters.
-        chip.alpha_composite(icon, (x, round(cy - icon_h / 2 + SCALE)))
-        x += icon_w + gap
-    d.text((x - tb[0], round(cy - text_cy)), label, font=fnt, fill=INK)
+    d.rounded_rectangle([0, 0, bw - 1, bh - 1], radius=10 * SCALE, fill=GOLD)
+    d.text((bw // 2, bh // 2), label, font=fnt, fill=INK, anchor="mm")
     return chip
+
+
+def make_tip_button(label: str, size: int = 17) -> Image.Image:
+    if not CHROME.is_file():
+        raise RuntimeError("Chrome not found")
+    html = f"""<!doctype html>
+<html><head><meta charset="utf-8"><style>
+html,body{{margin:0;background:transparent;}}
+a{{
+  box-sizing:border-box;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  height:45px;
+  padding:0 20px 0 16px;
+  border-radius:10px;
+  background:#c9a66a;
+  color:#171410;
+  font:650 {size}px/1 "Segoe UI Semibold","Segoe UI",sans-serif;
+  letter-spacing:-0.018em;
+  text-decoration:none;
+}}
+svg{{display:block;flex:none;}}
+span{{display:block;line-height:1;transform:translateY(-3px);}}
+</style></head>
+<body>
+<a>
+  <svg viewBox="3.2 5.4 10.6 7.3" width="17" height="12" aria-hidden="true">
+    <path fill="none" stroke="currentColor" stroke-width="1.55" stroke-linejoin="round" d="M3.4 5.6h7.2v4.3A2.6 2.6 0 0 1 8 12.5H6a2.6 2.6 0 0 1-2.6-2.6V5.6z"/>
+    <path fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" d="M10.6 6.4h1.15a1.7 1.7 0 1 1 0 3.4H10.6"/>
+  </svg>
+  <span>{label}</span>
+</a>
+</body></html>"""
+    with tempfile.TemporaryDirectory() as tmp:
+        folder = Path(tmp)
+        page = folder / "tip.html"
+        dest = folder / "tip.png"
+        page.write_text(html, encoding="utf-8")
+        cmd = [
+            str(CHROME),
+            "--headless=new",
+            "--disable-gpu",
+            "--hide-scrollbars",
+            "--no-first-run",
+            "--force-device-scale-factor=2",
+            "--window-size=280,80",
+            "--default-background-color=00000000",
+            f"--screenshot={dest}",
+            "--virtual-time-budget=2000",
+            page.as_uri(),
+        ]
+        subprocess.run(cmd, check=True)
+        img = Image.open(dest).convert("RGBA")
+    bbox = img.getbbox()
+    if bbox is None:
+        raise RuntimeError("empty tip button")
+    return img.crop(bbox)
 
 
 def save_button(label: str, name: str, size: int = 16, cup: bool = False) -> Image.Image:
@@ -479,7 +497,7 @@ def build_support() -> None:
         font=note_f,
         fill=MUTED,
     )
-    finish(img, "support-box.png")
+    finish(img, "if-you-like-it.png")
 
 
 def build_privacy() -> None:
@@ -592,7 +610,7 @@ def build_install() -> None:
     )
     finish(img, "setup.png")
     save_button("Get the Windows zip", "windows-zip.png", 16)
-    save_button("Leave a tip", "tip.png", 17, cup=True)
+    save_button("Leave a tip", "leave-tip.png", 17, cup=True)
 
 
 def main() -> None:
