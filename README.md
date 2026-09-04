@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="extension/icons/icon128.png" width="96" height="96" alt="PasteFlick">
+  <img src="extension/icons/icon-master.png" width="96" height="96" alt="PasteFlick">
 </p>
 
 <h1 align="center">PasteFlick</h1>
