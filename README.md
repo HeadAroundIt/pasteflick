@@ -50,7 +50,7 @@ Help me keep creating useful apps and sharing them freely. Your $5 contribution 
 No pressure—just genuine appreciation!
 
 <p align="center">
-  <a href="https://ko-fi.com/ryandunham"><img src="extension/icons/tip5.png" alt="Tip $5 on Ko-fi" height="32"></a>
+  <a href="https://ko-fi.com/ryandunham"><img src="extension/icons/tip5.png" alt="Tip $5 on Ko-fi" height="36"></a>
 </p>
 
 ---

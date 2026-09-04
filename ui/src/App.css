@@ -512,19 +512,30 @@ a.kofi {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 28px;
-  padding: 0 10px;
+  gap: 8px;
+  height: 36px;
+  padding: 0 16px 0 14px;
   border-radius: 7px;
-  background: var(--chip-label);
+  background: var(--wood);
   color: var(--ink);
-  font: 650 12px/1 inherit;
-  letter-spacing: -0.01em;
+  font: 650 13px/1 inherit;
+  letter-spacing: -0.018em;
   text-decoration: none;
-  box-shadow: inset 0 1px 0 rgba(244, 226, 180, 0.35);
+  box-shadow: inset 0 1px 0 rgba(244, 226, 180, 0.45);
+  transition: background 280ms var(--ease-out), transform 160ms var(--ease-tap);
 }
 
 a.kofi:hover {
-  background: var(--chip-hot);
+  background: color-mix(in srgb, var(--wood) 78%, var(--core));
+}
+
+a.kofi:active {
+  transform: scale(0.98);
+}
+
+a.kofi svg {
+  display: block;
+  flex: none;
 }
 
 .settings-note {

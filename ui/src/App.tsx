@@ -223,8 +223,30 @@ export default function App() {
                   tools for everyone.
                 </p>
                 <p>No pressure—just genuine appreciation!</p>
-                <a className="kofi" href="https://ko-fi.com/ryandunham" target="_blank" rel="noreferrer">
-                  Tip $5 on Ko-fi
+                <a
+                  className="kofi"
+                  href="https://ko-fi.com/ryandunham"
+                  target="_blank"
+                  rel="noreferrer"
+                  title="Opens Ko-fi"
+                >
+                  <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true">
+                    <path
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.55"
+                      strokeLinejoin="round"
+                      d="M3.4 5.6h7.2v4.3A2.6 2.6 0 0 1 8 12.5H6a2.6 2.6 0 0 1-2.6-2.6V5.6z"
+                    />
+                    <path
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.55"
+                      strokeLinecap="round"
+                      d="M10.6 6.4h1.15a1.7 1.7 0 1 1 0 3.4H10.6"
+                    />
+                  </svg>
+                  Tip $5
                 </a>
               </div>
               <p className="settings-note">{settingsNote}</p>

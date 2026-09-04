@@ -552,26 +552,38 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        height: 28px;
-        padding: 0 10px;
+        gap: 8px;
+        height: 36px;
+        padding: 0 16px 0 14px;
         border-radius: 7px;
-        background: var(--chip-label);
+        background: var(--wood);
         color: var(--ink);
-        font: 650 12px/1 inherit;
-        letter-spacing: -0.01em;
+        font: 650 13px/1 inherit;
+        letter-spacing: -0.018em;
         text-decoration: none;
-        box-shadow: inset 0 1px 0 rgba(244, 226, 180, 0.35);
+        box-shadow: inset 0 1px 0 rgba(244, 226, 180, 0.45);
+        transition: background 280ms var(--ease-out), transform 160ms var(--ease-tap);
       }
 
       a.kofi:hover {
-        background: var(--chip-hot);
+        background: color-mix(in srgb, var(--wood) 78%, var(--core));
+      }
+
+      a.kofi:active {
+        transform: scale(0.98);
+      }
+
+      a.kofi svg {
+        display: block;
+        flex: none;
       }
 
       @media (prefers-reduced-motion: reduce) {
         .clip-switch-thumb,
         .btn,
         .ghost,
-        .chip-toggle {
+        .chip-toggle,
+        a.kofi {
           transition: none;
         }
       }
@@ -675,7 +687,13 @@
           <div class="support">
             <p>Help me keep creating useful apps and sharing them freely. Your $5 contribution supports new ideas, continued development, and more tools for everyone.</p>
             <p>No pressure—just genuine appreciation!</p>
-            <a class="kofi" id="tip-kofi" href="https://ko-fi.com/ryandunham">Tip $5 on Ko-fi</a>
+            <a class="kofi" id="tip-kofi" href="https://ko-fi.com/ryandunham" title="Opens Ko-fi">
+              <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true">
+                <path fill="none" stroke="currentColor" stroke-width="1.55" stroke-linejoin="round" d="M3.4 5.6h7.2v4.3A2.6 2.6 0 0 1 8 12.5H6a2.6 2.6 0 0 1-2.6-2.6V5.6z" />
+                <path fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" d="M10.6 6.4h1.15a1.7 1.7 0 1 1 0 3.4H10.6" />
+              </svg>
+              Tip $5
+            </a>
           </div>
           <p class="version" id="version"></p>
         </div>

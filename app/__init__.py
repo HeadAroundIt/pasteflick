@@ -1,6 +1,6 @@
 """PasteFlick — selection/thread → clipboard overlay."""
 
-__version__ = "1.0.6"
+__version__ = "1.0.7"
 
 # Hush 8765, ScrollMark 8766/8767 — this product uses the next pair.
 DEFAULT_PORT = 8768
