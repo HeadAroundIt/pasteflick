@@ -2,6 +2,11 @@
  * Isolated-world bridge: popup ↔ MAIN extractor via window.postMessage.
  */
 
+if (globalThis.__pasteflickBridge) {
+  /* already attached in this isolated world */
+} else {
+globalThis.__pasteflickBridge = true;
+
 const PAGE = "pasteflick-page";
 const EXTENSION = "pasteflick-extension";
 const LEGACY_PAGE = "pasteflick-page";
@@ -240,4 +245,19 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     .catch((err) => sendResponse({ ok: false, error: err.message || String(err) }));
   return true;
 });
+
+function keepWorker() {
+  try {
+    if (!chrome.runtime || !chrome.runtime.id) return;
+    const port = chrome.runtime.connect({ name: "pasteflick" });
+    port.onDisconnect.addListener(() => {
+      setTimeout(keepWorker, 1200);
+    });
+  } catch (_) {
+    setTimeout(keepWorker, 2000);
+  }
+}
+
+keepWorker();
+}
 

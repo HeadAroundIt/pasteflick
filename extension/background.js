@@ -61,6 +61,63 @@ async function markLoadedVersion() {
   return version;
 }
 
+async function pingTab(tabId) {
+  try {
+    const res = await chrome.tabs.sendMessage(tabId, { type: "ping" });
+    return !!(res && res.ok);
+  } catch (_) {
+    return false;
+  }
+}
+
+async function injectIntoTab(tabId) {
+  await chrome.scripting.executeScript({
+    target: { tabId },
+    files: ["extractor.js"],
+    world: "MAIN",
+  });
+  await chrome.scripting.executeScript({
+    target: { tabId },
+    files: ["pasteflick.js", "content.js"],
+  });
+}
+
+async function wakeChatTabs() {
+  try {
+    const tabs = await chrome.tabs.query({ url: CHAT_TAB_URLS });
+    for (const tab of tabs) {
+      if (!tab.id) continue;
+      if (await pingTab(tab.id)) continue;
+      try {
+        await injectIntoTab(tab.id);
+      } catch (_) {
+        /* tab may still be loading */
+        continue;
+      }
+      await new Promise((r) => setTimeout(r, 80));
+      if (!(await pingTab(tab.id))) {
+        try {
+          await chrome.tabs.reload(tab.id);
+        } catch (_) {
+          /* ignore */
+        }
+      }
+    }
+  } catch (err) {
+    console.warn("PasteFlick: could not wake chat tabs", err);
+  }
+}
+
+chrome.tabs.onUpdated.addListener((tabId, info, tab) => {
+  if (info.status !== "complete") return;
+  const url = (tab && tab.url) || "";
+  if (!/^https:\/\/(chatgpt\.com|chat\.openai\.com)\//i.test(url)) return;
+  void pingTab(tabId).then((ok) => {
+    if (ok) return;
+    void injectIntoTab(tabId).catch(() => {});
+  });
+});
+
 async function refreshChatTabs() {
   try {
     const tabs = await chrome.tabs.query({ url: CHAT_TAB_URLS });
@@ -83,12 +140,18 @@ async function applyVersionChange(reason) {
 }
 
 chrome.runtime.onInstalled.addListener((details) => {
-  void applyVersionChange(details.reason);
+  void applyVersionChange(details.reason).then(() => wakeChatTabs());
 });
 
 chrome.runtime.onStartup.addListener(() => {
   void markLoadedVersion();
   void reloadIfDiskNewer();
+  void wakeChatTabs();
+});
+
+chrome.runtime.onConnect.addListener((port) => {
+  if (!port || port.name !== "pasteflick") return;
+  port.onDisconnect.addListener(() => {});
 });
 
 const UPDATE_ALARM = "pasteflick-update";
@@ -124,6 +187,7 @@ if (chrome.alarms && chrome.alarms.onAlarm) {
 }
 
 void reloadIfDiskNewer();
+void wakeChatTabs();
 
 function safeName(title) {
   const raw = String(title || "transcript").trim() || "transcript";

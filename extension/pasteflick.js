@@ -2,6 +2,22 @@
  * Isolated-world PasteFlick: bookmarks select what the chip copies.
  */
 (function () {
+  function runtimeOk() {
+    try {
+      return !!(typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.id);
+    } catch (_) {
+      return false;
+    }
+  }
+  if (globalThis.PasteFlick && runtimeOk()) return;
+  if (globalThis.PasteFlick && !runtimeOk()) {
+    try {
+      location.reload();
+    } catch (_) {
+      /* page is tearing down */
+    }
+    return;
+  }
   const STORAGE_KEY = "pasteflicks";
   const DRAFT_KEY = "pasteflickDrafts";
   const HOST_ID = "pasteflick-dock-host";
@@ -610,16 +626,36 @@
   let stickTimer = 0;
   let scrollIdle = 0;
   let scrolling = false;
-  let heldStick = 0;
-  let heldSidebar = 8;
+  let heldStick = readHeld("pasteflick.stick", 0);
+  let heldSidebar = readHeld("pasteflick.sidebar", 8);
   let heldTitleLeft = NaN;
   let lastPickEl = null;
+  let lastHostH = 0;
   const geometryObserver =
     typeof ResizeObserver === "function"
       ? new ResizeObserver(() => {
+          if (scrolling) return;
           schedulePlace();
         })
       : null;
+
+  function readHeld(key, fallback) {
+    try {
+      const n = Number(sessionStorage.getItem(key));
+      if (Number.isFinite(n) && n > 0) return n;
+    } catch (_) {
+      /* private mode */
+    }
+    return fallback;
+  }
+
+  function writeHeld(key, value) {
+    try {
+      if (Number.isFinite(value) && value > 0) sessionStorage.setItem(key, String(value));
+    } catch (_) {
+      /* private mode */
+    }
+  }
 
   function holdNum(prev, next, slack) {
     if (Number.isFinite(prev) && Math.abs(next - prev) <= slack) return prev;
@@ -2575,12 +2611,14 @@
       /* leave the scroller as-is */
     }
     const tall = lastTurnBottom(scroller);
+    const hostH = scrolling && lastHostH > tall ? lastHostH : tall;
+    lastHostH = hostH;
     host.style.position = "absolute";
     host.style.top = "0px";
     host.style.left = "0px";
     host.style.right = "auto";
     host.style.width = "0px";
-    host.style.height = tall + "px";
+    host.style.height = hostH + "px";
     host.style.zIndex = "2147483646";
     host.style.overflow = "visible";
     host.style.pointerEvents = "none";
@@ -2588,7 +2626,7 @@
     if (host.parentElement !== scroller) scroller.appendChild(host);
     const rails = host.shadowRoot && host.shadowRoot.querySelector('[data-pasteflick="rails"]');
     if (rails) {
-      rails.style.height = tall + "px";
+      rails.style.height = hostH + "px";
       rails.style.overflow = "visible";
       rails.style.overflowAnchor = "none";
     }
@@ -2676,7 +2714,9 @@
       if (!isLeftRailRect(r)) return;
       if (r.right + 6 > best) best = r.right + 6;
     });
-    heldSidebar = force ? best : holdNum(heldSidebar, best, 3);
+    if (best <= 12 && heldSidebar > 40 && !force) return heldSidebar;
+    heldSidebar = force ? best : holdNum(heldSidebar, best, 6);
+    writeHeld("pasteflick.sidebar", heldSidebar);
     return heldSidebar;
   }
 
@@ -2704,6 +2744,13 @@
     const bump = (el) => {
       if (!el || isDockHost(el)) return;
       try {
+        if (
+          el.closest &&
+          (el.closest('[data-testid^="conversation-turn"]') ||
+            el.closest("[data-message-author-role]"))
+        ) {
+          return;
+        }
         const r = el.getBoundingClientRect();
         if (r.top > 40 || r.height < 18 || r.height > 280 || r.width < 80) return;
         if (r.bottom > bottom) bottom = r.bottom;
@@ -2741,7 +2788,12 @@
     const sr = scrollerRect(scroller);
     const hb = headerBottom();
     const raw = (hb > 8 ? hb + 6 : 16) - sr.top;
-    heldStick = holdNum(heldStick, raw, 2);
+    if (scrolling && heldStick > 16 && raw < heldStick - 2) {
+      return Math.max(0, Math.round(heldStick));
+    }
+    if (raw < 8 && heldStick > 16) return Math.max(0, Math.round(heldStick));
+    heldStick = holdNum(heldStick, raw, 6);
+    writeHeld("pasteflick.stick", heldStick);
     return Math.max(0, Math.round(heldStick));
   }
 
@@ -3060,6 +3112,9 @@
         stick = Math.max(stick, prev.stick + prev.h + gap);
       });
 
+      if (scrolling && Number.isFinite(it.stack._stickTop) && stick < it.stack._stickTop - 0.5) {
+        stick = it.stack._stickTop;
+      }
       const reached = it.naturalView <= sr.top + stick + 8;
       const fill = it.ownerBottomView > sr.top + stick + it.h + 2;
       const occupy = reached && fill;

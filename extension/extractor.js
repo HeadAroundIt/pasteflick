@@ -4,6 +4,8 @@
  * ChatGPT writing documents / canvas text is copied, not stripped.
  */
 (function () {
+  if (globalThis.__pasteflickExtractor) return;
+  globalThis.__pasteflickExtractor = true;
   const OVERLAY = "http://127.0.0.1:8768";
   const PAGE = "pasteflick-page";
   const EXTENSION = "pasteflick-extension";

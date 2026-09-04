@@ -200,6 +200,16 @@ async function refreshMarkStatus(opts) {
       return;
     }
 
+    try {
+      await ensureScripts(tab.id);
+    } catch (_) {
+      fromMarkBtn.disabled = true;
+      openFromMarkBtn.disabled = true;
+      lastMarkName = "";
+      if (!preserveStatus) setStatus("Refresh the tab, then open PasteFlick again.");
+      return;
+    }
+
     let res = null;
     try {
       res = await chrome.tabs.sendMessage(tab.id, { type: "pasteflick-status" });
