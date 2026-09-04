@@ -71,6 +71,49 @@ iframe{
             self.end_headers()
             self.wfile.write(data)
             return
+        if name == "shot-chip.html":
+            html = """<!doctype html>
+<html><head><meta charset="utf-8"><style>
+html,body{margin:0;height:100%;background:#3a3228;}
+.stage{
+  min-height:100%;
+  box-sizing:border-box;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:36px;
+}
+.crop{
+  width:580px;
+  height:220px;
+  overflow:hidden;
+  border-radius:12px;
+  box-shadow:0 12px 32px rgba(20,14,8,.4);
+  background:#212121;
+}
+iframe{
+  border:0;
+  width:920px;
+  height:760px;
+  transform:scale(2.05);
+  transform-origin:0 36px;
+}
+</style></head>
+<body>
+  <div class="stage">
+    <div class="crop">
+      <iframe src="/mock-chatgpt.html?shot=1" title="PasteFlick chip"></iframe>
+    </div>
+  </div>
+</body></html>"""
+            data = html.encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Cache-Control", "no-store")
+            self.send_header("Content-Length", str(len(data)))
+            self.end_headers()
+            self.wfile.write(data)
+            return
         if name in {"shot-popup.html", "shot-settings.html", "shot-chat.html"}:
             if name == "shot-popup.html":
                 inner, h = "/popup.html", 368
@@ -178,6 +221,7 @@ def main() -> None:
     time.sleep(0.2)
     base = f"http://127.0.0.1:{port}"
     try:
+        shot(f"{base}/shot-chip.html", OUT / "chip.png", 660, 300, "FF3A3228")
         shot(f"{base}/shot-pair.html", OUT / "windows.png", 760, 740, "FF3A3228")
         shot(f"{base}/shot-popup.html", OUT / "popup.png", 380, 480, "FF3A3228")
         shot(f"{base}/shot-settings.html", OUT / "settings.png", 380, 760, "FF3A3228")
