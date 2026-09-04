@@ -43,8 +43,8 @@ html,body{margin:0;height:100%;background:#3a3228;}
   display:flex;
   align-items:center;
   justify-content:center;
-  gap:32px;
-  padding:40px 36px;
+  gap:22px;
+  padding:16px 18px;
 }
 iframe{
   border:0;
@@ -81,7 +81,7 @@ html,body{margin:0;height:100%;background:#3a3228;}
   display:flex;
   align-items:center;
   justify-content:center;
-  padding:36px;
+  padding:16px;
 }
 .crop{
   width:580px;
@@ -133,7 +133,7 @@ html,body{{margin:0;height:100%;background:{page_bg};}}
   display:flex;
   align-items:center;
   justify-content:center;
-  padding:40px 36px;
+  padding:16px 18px;
 }}
 iframe{{border:0;width:{w}px;height:{h}px;border-radius:12px;overflow:hidden;
 box-shadow:0 12px 32px rgba(20,14,8,.4);background:{frame_bg};}}
@@ -228,11 +228,11 @@ def main() -> None:
     time.sleep(0.2)
     base = f"http://127.0.0.1:{port}"
     try:
-        shot(f"{base}/shot-chip.html", OUT / "chip.png", 660, 300, "FF3A3228")
-        shot(f"{base}/shot-pair.html", OUT / "windows.png", 760, 740, "FF3A3228")
-        shot(f"{base}/shot-popup.html", OUT / "popup.png", 380, 480, "FF3A3228")
-        shot(f"{base}/shot-settings.html", OUT / "settings.png", 380, 760, "FF3A3228")
-        shot(f"{base}/shot-chat.html", OUT / "chat.png", 1000, 820, "FF3A3228")
+        shot(f"{base}/shot-chip.html", OUT / "chip.png", 620, 260, "FF3A3228")
+        shot(f"{base}/shot-pair.html", OUT / "windows.png", 700, 690, "FF3A3228")
+        shot(f"{base}/shot-popup.html", OUT / "popup.png", 360, 410, "FF3A3228")
+        shot(f"{base}/shot-settings.html", OUT / "settings.png", 360, 690, "FF3A3228")
+        shot(f"{base}/shot-chat.html", OUT / "chat.png", 960, 760, "FF3A3228")
     finally:
         httpd.shutdown()
     print("ok")
