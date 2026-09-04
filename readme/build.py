@@ -10,15 +10,18 @@ ROOT = Path(__file__).resolve().parent
 ICONS = ROOT.parent / "extension" / "icons"
 OUT = ROOT
 SCALE = 2
-WIDTH = 680 * SCALE
+WIDTH = 760 * SCALE
 CARD = (243, 241, 234, 255)
+PANEL = (236, 230, 218, 255)
 TEXT = (92, 74, 46, 255)
 MUTED = (138, 115, 88, 255)
 INK = (23, 20, 16, 255)
 CHIP = (225, 208, 178, 255)
+GOLD = (201, 166, 106, 255)
 STROKE = (201, 166, 106, 56)
+RULE = (201, 166, 106, 88)
 FONTS = Path(r"C:\Windows\Fonts")
-PAD = 28 * SCALE
+PAD = 40 * SCALE
 
 
 def font(name: str, size: int) -> ImageFont.FreeTypeFont:
@@ -63,6 +66,28 @@ def draw_paragraph(
     return y
 
 
+def draw_lines(
+    img: Image.Image,
+    lines: list[str],
+    fnt: ImageFont.FreeTypeFont,
+    x: int,
+    y: int,
+    fill: tuple[int, int, int, int],
+    leading: float = 1.16,
+) -> int:
+    d = ImageDraw.Draw(img)
+    for line in lines:
+        d.text((x, y), line, font=fnt, fill=fill)
+        y += int(fnt.size * leading)
+    return y
+
+
+def paragraph_height(text: str, fnt: ImageFont.FreeTypeFont, max_width: int, leading: float = 1.42) -> int:
+    probe = Image.new("RGBA", (8, 8))
+    d = ImageDraw.Draw(probe)
+    return int(fnt.size * leading) * max(1, len(wrap(d, text, fnt, max_width)))
+
+
 def kicker(label: str, size: int = 12) -> Image.Image:
     fnt = font("seguisb.ttf", size)
     probe = Image.new("RGBA", (8, 8))
@@ -82,8 +107,88 @@ def kicker(label: str, size: int = 12) -> Image.Image:
     return img
 
 
+def draw_rule(img: Image.Image, x: int, y: int, width: int) -> int:
+    d = ImageDraw.Draw(img)
+    d.rectangle([x, y, x + width, y + SCALE], fill=RULE)
+    return y + SCALE
+
+
+def section_head(img: Image.Image, eyebrow: str, title: str, x: int, y: int, inner: int) -> int:
+    chip = kicker(eyebrow, 11)
+    img.alpha_composite(chip, (x, y))
+    y += chip.height + 14 * SCALE
+    y = draw_paragraph(img, title, font("seguisb.ttf", 28), x, y, inner, INK, 1.12)
+    y += 12 * SCALE
+    y = draw_rule(img, x, y, inner)
+    return y + 22 * SCALE
+
+
+def draw_subhead(img: Image.Image, text: str, x: int, y: int, inner: int) -> int:
+    return draw_paragraph(img, text, font("seguisb.ttf", 16), x, y, inner, INK, 1.2)
+
+
+def draw_tiles(
+    img: Image.Image,
+    items: list[tuple[str, str]],
+    x: int,
+    y: int,
+    inner: int,
+    gap: int = 12,
+) -> int:
+    n = len(items)
+    gap_px = gap * SCALE
+    col_w = (inner - gap_px * (n - 1)) // n
+    pad = 16 * SCALE
+    title_f = font("seguisb.ttf", 15)
+    body_f = font("segoeui.ttf", 13)
+    text_w = col_w - pad * 2
+    heights = []
+    for title, body in items:
+        h = pad
+        h += paragraph_height(title, title_f, text_w, 1.2)
+        h += 8 * SCALE
+        h += paragraph_height(body, body_f, text_w, 1.36)
+        h += pad - int(body_f.size * 0.36)
+        heights.append(h)
+    tile_h = max(heights)
+    d = ImageDraw.Draw(img)
+    for i, (title, body) in enumerate(items):
+        cx = x + i * (col_w + gap_px)
+        d.rounded_rectangle([cx, y, cx + col_w - 1, y + tile_h], radius=10 * SCALE, fill=PANEL)
+        ty = y + pad
+        ty = draw_paragraph(img, title, title_f, cx + pad, ty, text_w, INK, 1.2)
+        ty += 6 * SCALE
+        draw_paragraph(img, body, body_f, cx + pad, ty, text_w, TEXT, 1.36)
+    return y + tile_h
+
+
+def draw_steps(img: Image.Image, steps: list[str], x: int, y: int, inner: int) -> int:
+    num_f = font("seguisb.ttf", 14)
+    text_f = font("seguisb.ttf", 16)
+    d = ImageDraw.Draw(img)
+    size = 32 * SCALE
+    for i, label in enumerate(steps, 1):
+        d.ellipse([x, y, x + size, y + size], fill=CHIP)
+        n = str(i)
+        tw, th = measure(d, n, num_f)
+        bbox = d.textbbox((0, 0), n, font=num_f)
+        d.text(
+            (x + (size - tw) // 2 - bbox[0], y + (size - th) // 2 - bbox[1]),
+            n,
+            font=num_f,
+            fill=INK,
+        )
+        tx = x + size + 14 * SCALE
+        tw_avail = inner - size - 14 * SCALE
+        # Keep the action on one visual line when it fits.
+        d.text((tx, y + (size - text_f.size) // 2 - 2 * SCALE), label, font=text_f, fill=INK)
+        _ = tw_avail
+        y += size + 14 * SCALE
+    return y
+
+
 def sheet() -> Image.Image:
-    return Image.new("RGBA", (WIDTH, 2200 * SCALE), (0, 0, 0, 0))
+    return Image.new("RGBA", (WIDTH, 2600 * SCALE), (0, 0, 0, 0))
 
 
 def finish(content: Image.Image, name: str) -> None:
@@ -91,18 +196,18 @@ def finish(content: Image.Image, name: str) -> None:
     if bbox is None:
         raise RuntimeError(f"empty {name}")
     bottom = bbox[3] + PAD
-    h = bottom + 6 * SCALE
+    h = bottom + 8 * SCALE
     content = content.crop((0, 0, WIDTH, min(content.height, h)))
     img = Image.new("RGBA", (WIDTH, h), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
     d.rounded_rectangle(
         [SCALE, SCALE * 2, WIDTH - SCALE, h - SCALE],
-        radius=10 * SCALE,
+        radius=14 * SCALE,
         fill=(50, 40, 20, 14),
     )
     d.rounded_rectangle(
         [0, 0, WIDTH - 1, h - SCALE * 3],
-        radius=10 * SCALE,
+        radius=14 * SCALE,
         fill=CARD,
         outline=STROKE,
         width=SCALE,
@@ -114,8 +219,23 @@ def finish(content: Image.Image, name: str) -> None:
     print(path.name, out.size)
 
 
-def save_raw(img: Image.Image, name: str) -> None:
-    out = img.resize((img.width // SCALE, img.height // SCALE), Image.Resampling.LANCZOS)
+def save_button(label: str, name: str, size: int = 16) -> None:
+    fnt = font("seguisb.ttf", size)
+    probe = Image.new("RGBA", (8, 8))
+    d0 = ImageDraw.Draw(probe)
+    tw, th = measure(d0, label, fnt)
+    pad_x, pad_y = 22 * SCALE, 14 * SCALE
+    chip = Image.new("RGBA", (tw + pad_x * 2, th + pad_y * 2), (0, 0, 0, 0))
+    d = ImageDraw.Draw(chip)
+    d.rounded_rectangle([0, 0, chip.width - 1, chip.height - 1], radius=10 * SCALE, fill=GOLD)
+    bbox = d.textbbox((0, 0), label, font=fnt)
+    d.text(
+        ((chip.width - tw) // 2 - bbox[0], (chip.height - th) // 2 - bbox[1]),
+        label,
+        font=fnt,
+        fill=INK,
+    )
+    out = chip.resize((chip.width // SCALE, chip.height // SCALE), Image.Resampling.LANCZOS)
     path = OUT / name
     out.save(path, format="PNG", compress_level=6)
     print(path.name, out.size)
@@ -129,65 +249,57 @@ def build_hero() -> None:
     icon = (
         Image.open(ICONS / "icon48.png")
         .convert("RGBA")
-        .resize((40 * SCALE, 40 * SCALE), Image.Resampling.LANCZOS)
+        .resize((44 * SCALE, 44 * SCALE), Image.Resampling.LANCZOS)
     )
     brand = kicker("PasteFlick", 13)
     img.alpha_composite(icon, (x, y))
-    img.alpha_composite(brand, (x + icon.width + 10 * SCALE, y + (icon.height - brand.height) // 2))
-    y += max(icon.height, brand.height) + 18 * SCALE
-    y = draw_paragraph(
+    img.alpha_composite(brand, (x + icon.width + 12 * SCALE, y + (icon.height - brand.height) // 2))
+    y += max(icon.height, brand.height) + 28 * SCALE
+    y = draw_lines(
         img,
-        "Copy from ChatGPT. Flick it into the last app you were using.",
-        font("seguisb.ttf", 16),
+        ["Copy from ChatGPT.", "Flick it into the last app."],
+        font("seguisb.ttf", 32),
         x,
         y,
-        inner,
         INK,
-        1.28,
-    )
-    y += 10 * SCALE
-    y = draw_paragraph(
-        img,
-        "Windows  ·  Brave, Chrome, Edge, Chromium, Arc  ·  ChatGPT only  ·  Not affiliated with OpenAI",
-        font("segoeui.ttf", 12),
-        x,
-        y,
-        inner,
-        MUTED,
-        1.35,
+        1.14,
     )
     y += 16 * SCALE
     y = draw_paragraph(
         img,
-        "Long chats fight the clipboard. PasteFlick sits on the conversation as one chip: take a highlight, or the thread you can see, then Copy, Save, or Fling it into Word, Notes, Cursor — wherever you just were.",
-        font("segoeui.ttf", 14),
-        x,
-        y,
-        inner,
-        TEXT,
-    )
-    y += 10 * SCALE
-    draw_paragraph(
-        img,
-        "It copies what is on the page. Turns ChatGPT has not rendered yet are not in the copy.",
-        font("segoeui.ttf", 12),
+        "Windows  ·  Brave, Chrome, Edge, Chromium, Arc  ·  ChatGPT only  ·  Not affiliated with OpenAI",
+        font("segoeui.ttf", 13),
         x,
         y,
         inner,
         MUTED,
         1.4,
     )
-    finish(img, "hero.png")
-
-
-def row(img: Image.Image, label: str, rest: str, x: int, y: int, inner: int) -> int:
-    chip = kicker(label, 11)
-    img.alpha_composite(chip, (x, y))
-    fnt = font("segoeui.ttf", 13)
-    text_x = x + chip.width + 10 * SCALE
-    d = ImageDraw.Draw(img)
-    d.text((text_x, y + (chip.height - fnt.size) // 2 - 2 * SCALE), f"—  {rest}", font=fnt, fill=TEXT)
-    return y + chip.height + 8 * SCALE
+    y += 20 * SCALE
+    y = draw_rule(img, x, y, inner)
+    y += 20 * SCALE
+    y = draw_paragraph(
+        img,
+        "Long chats fight the clipboard. PasteFlick sits on the conversation as one chip: take a highlight, or the thread you can see, then Copy, Save, or Fling it into Word, Notes, Cursor — wherever you just were.",
+        font("segoeui.ttf", 16),
+        x,
+        y,
+        inner,
+        TEXT,
+        1.45,
+    )
+    y += 12 * SCALE
+    draw_paragraph(
+        img,
+        "It copies what is already on the page — not turns ChatGPT has not rendered yet.",
+        font("segoeui.ttf", 13),
+        x,
+        y,
+        inner,
+        MUTED,
+        1.4,
+    )
+    finish(img, "lead.png")
 
 
 def build_what() -> None:
@@ -195,11 +307,9 @@ def build_what() -> None:
     x = PAD
     y = PAD
     inner = WIDTH - PAD * 2
-    head = kicker("What you get", 12)
-    img.alpha_composite(head, (x, y))
-    y += head.height + 16 * SCALE
-    body = font("segoeui.ttf", 14)
-    small = font("segoeui.ttf", 12)
+    y = section_head(img, "On the chat", "What you get", x, y, inner)
+    body = font("segoeui.ttf", 16)
+    small = font("segoeui.ttf", 13)
     y = draw_paragraph(
         img,
         "One chip under the chat title. Highlight a passage, or take the visible thread — then Copy, Save, or Fling. ChatGPT’s own buttons stay where they are.",
@@ -208,8 +318,9 @@ def build_what() -> None:
         y,
         inner,
         TEXT,
+        1.45,
     )
-    y += 12 * SCALE
+    y += 14 * SCALE
     y = draw_paragraph(
         img,
         "Pin any message. Copy from PasteFlick starts at that pin, so you can take the rest of the conversation without dragging a selection.",
@@ -218,20 +329,50 @@ def build_what() -> None:
         y,
         inner,
         TEXT,
+        1.45,
     )
-    y += 16 * SCALE
-    y = draw_paragraph(img, "The toolbar popup is there when you want it.", small, x, y, inner, MUTED, 1.4)
-    y += 8 * SCALE
-    y = row(img, "Copy selection", "the highlight you made", x, y, inner)
-    y = row(img, "Copy thread", "the conversation currently on the page", x, y, inner)
-    y = row(img, "Copy from PasteFlick", "from your pin onward", x, y, inner)
-    y += 8 * SCALE
-    y = draw_paragraph(img, "Choose where the text goes.", small, x, y, inner, MUTED, 1.4)
-    y += 8 * SCALE
-    y = row(img, "Clipboard", "ready to paste when you are", x, y, inner)
-    y = row(img, "Fling", "into the last app you were in", x, y, inner)
-    y = row(img, "File", "Markdown or PDF, in a folder you pick", x, y, inner)
-    y += 8 * SCALE
+    y += 28 * SCALE
+    y = draw_subhead(img, "The popup", x, y, inner)
+    y += 6 * SCALE
+    y = draw_paragraph(
+        img,
+        "The toolbar is there when you want another way in.",
+        small,
+        x,
+        y,
+        inner,
+        MUTED,
+        1.4,
+    )
+    y += 12 * SCALE
+    y = draw_tiles(
+        img,
+        [
+            ("Copy selection", "The highlight you made."),
+            ("Copy thread", "The conversation currently on the page."),
+            ("Copy from PasteFlick", "From your pin onward."),
+        ],
+        x,
+        y,
+        inner,
+    )
+    y += 28 * SCALE
+    y = draw_subhead(img, "Where it goes", x, y, inner)
+    y += 6 * SCALE
+    y = draw_paragraph(img, "Pick one in Settings.", small, x, y, inner, MUTED, 1.4)
+    y += 12 * SCALE
+    y = draw_tiles(
+        img,
+        [
+            ("Clipboard", "Ready to paste when you are."),
+            ("Fling", "Into the last app you were in."),
+            ("File", "Markdown or PDF, in a folder you pick."),
+        ],
+        x,
+        y,
+        inner,
+    )
+    y += 18 * SCALE
     draw_paragraph(
         img,
         "The first time you copy, allow clipboard access if ChatGPT or the browser asks.",
@@ -242,7 +383,7 @@ def build_what() -> None:
         MUTED,
         1.4,
     )
-    finish(img, "what.png")
+    finish(img, "features.png")
 
 
 def build_support() -> None:
@@ -250,30 +391,29 @@ def build_support() -> None:
     x = PAD
     y = PAD
     inner = WIDTH - PAD * 2
-    head = kicker("Support", 12)
-    img.alpha_composite(head, (x, y))
-    y += head.height + 16 * SCALE
+    y = section_head(img, "If you like it", "Support", x, y, inner)
     y = draw_paragraph(
         img,
-        "Help me keep creating useful apps and sharing them freely. Your $5 contribution supports new ideas, continued development, and more tools for everyone.",
-        font("segoeui.ttf", 14),
+        "Help me keep creating useful apps and sharing them freely. A contribution supports new ideas, continued development, and more tools for everyone.",
+        font("segoeui.ttf", 16),
         x,
         y,
         inner,
         TEXT,
+        1.45,
     )
-    y += 12 * SCALE
-    y = draw_paragraph(
+    y += 14 * SCALE
+    draw_paragraph(
         img,
         "No pressure—just genuine appreciation!",
-        font("segoeui.ttf", 13),
+        font("segoeui.ttf", 14),
         x,
         y,
         inner,
         MUTED,
         1.4,
     )
-    finish(img, "support.png")
+    finish(img, "thanks.png")
 
 
 def build_privacy() -> None:
@@ -281,19 +421,18 @@ def build_privacy() -> None:
     x = PAD
     y = PAD
     inner = WIDTH - PAD * 2
-    head = kicker("Privacy", 12)
-    img.alpha_composite(head, (x, y))
-    y += head.height + 16 * SCALE
+    y = section_head(img, "On your machine", "Privacy", x, y, inner)
     draw_paragraph(
         img,
         "Runs in your browser. Copied text stays on your device. Fling uses a local helper on your computer.",
-        font("segoeui.ttf", 14),
+        font("segoeui.ttf", 16),
         x,
         y,
         inner,
         TEXT,
+        1.45,
     )
-    finish(img, "privacy.png")
+    finish(img, "local.png")
 
 
 def build_install() -> None:
@@ -301,13 +440,20 @@ def build_install() -> None:
     x = PAD
     y = PAD
     inner = WIDTH - PAD * 2
-    head = kicker("Install", 12)
-    img.alpha_composite(head, (x, y))
-    y += head.height + 16 * SCALE
-    body = font("segoeui.ttf", 14)
-    small = font("segoeui.ttf", 12)
-    y = draw_paragraph(img, "Windows only. Download the zip, extract it, and run Install PasteFlick.bat.", body, x, y, inner, TEXT)
-    y += 12 * SCALE
+    y = section_head(img, "Windows", "Install", x, y, inner)
+    body = font("segoeui.ttf", 16)
+    small = font("segoeui.ttf", 13)
+    y = draw_paragraph(
+        img,
+        "Download the zip, extract it, and run Install PasteFlick.bat.",
+        body,
+        x,
+        y,
+        inner,
+        TEXT,
+        1.45,
+    )
+    y += 14 * SCALE
     y = draw_paragraph(
         img,
         "Copy to the clipboard works on its own. Fling and PDF save use a small Windows helper that Setup installs and starts with Windows. You do not install Python.",
@@ -316,9 +462,10 @@ def build_install() -> None:
         y,
         inner,
         TEXT,
+        1.45,
     )
-    y += 16 * SCALE
-    y = draw_paragraph(img, "Finish in the browser", font("seguisb.ttf", 13), x, y, inner, INK, 1.3)
+    y += 28 * SCALE
+    y = draw_subhead(img, "Finish in the browser", x, y, inner)
     y += 8 * SCALE
     y = draw_paragraph(
         img,
@@ -328,12 +475,21 @@ def build_install() -> None:
         y,
         inner,
         TEXT,
+        1.45,
     )
-    y += 10 * SCALE
-    y = row(img, "1", "Turn on Developer mode", x, y, inner)
-    y = row(img, "2", "Click Load unpacked", x, y, inner)
-    y = row(img, "3", "Paste the path and open that folder", x, y, inner)
-    y += 8 * SCALE
+    y += 16 * SCALE
+    y = draw_steps(
+        img,
+        [
+            "Turn on Developer mode",
+            "Click Load unpacked",
+            "Paste the path and open that folder",
+        ],
+        x,
+        y,
+        inner,
+    )
+    y += 4 * SCALE
     y = draw_paragraph(
         img,
         "Leave Developer mode on. Repeat in each Chromium browser you use. After that, updates come from GitHub on login.",
@@ -344,14 +500,23 @@ def build_install() -> None:
         MUTED,
         1.4,
     )
-    y += 16 * SCALE
-    y = draw_paragraph(img, "Uninstall", font("seguisb.ttf", 13), x, y, inner, INK, 1.3)
+    y += 28 * SCALE
+    y = draw_subhead(img, "Uninstall", x, y, inner)
     y += 8 * SCALE
-    y = draw_paragraph(img, "%LOCALAPPDATA%\\PasteFlick\\Uninstall.bat", font("segoeui.ttf", 13), x, y, inner, TEXT, 1.4)
+    y = draw_paragraph(
+        img,
+        r"%LOCALAPPDATA%\PasteFlick\Uninstall.bat",
+        font("segoeui.ttf", 15),
+        x,
+        y,
+        inner,
+        TEXT,
+        1.4,
+    )
     y += 8 * SCALE
     draw_paragraph(
         img,
-        "Then remove the extension from the browser if it is still listed. Share the latest release or a clone of this repo — not a working folder, and not %LOCALAPPDATA%\\PasteFlick.",
+        r"Then remove the extension from the browser if it is still listed. Share the latest release or a clone of this repo — not a working folder, and not %LOCALAPPDATA%\PasteFlick.",
         small,
         x,
         y,
@@ -359,26 +524,9 @@ def build_install() -> None:
         MUTED,
         1.4,
     )
-    finish(img, "install.png")
-
-    gold = (201, 166, 106, 255)
-    label = "Get the Windows zip"
-    fnt = font("seguisb.ttf", 13)
-    probe = Image.new("RGBA", (8, 8))
-    d0 = ImageDraw.Draw(probe)
-    tw, th = measure(d0, label, fnt)
-    pad_x, pad_y = 16 * SCALE, 10 * SCALE
-    chip = Image.new("RGBA", (tw + pad_x * 2, th + pad_y * 2), (0, 0, 0, 0))
-    d = ImageDraw.Draw(chip)
-    d.rounded_rectangle([0, 0, chip.width - 1, chip.height - 1], radius=7 * SCALE, fill=gold)
-    bbox = d.textbbox((0, 0), label, font=fnt)
-    d.text(
-        ((chip.width - tw) // 2 - bbox[0], (chip.height - th) // 2 - bbox[1]),
-        label,
-        font=fnt,
-        fill=INK,
-    )
-    save_raw(chip, "get-zip.png")
+    finish(img, "setup.png")
+    save_button("Get the Windows zip", "windows-zip.png", 16)
+    save_button("Leave a tip", "leave-a-tip.png", 15)
 
 
 def main() -> None:

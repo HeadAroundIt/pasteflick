@@ -218,7 +218,7 @@ export default function App() {
               <p className="version">{version ? `PasteFlick ${version}` : 'PasteFlick'}</p>
               <div className="support">
                 <p>
-                  Help me keep creating useful apps and sharing them freely. Your $5
+                  Help me keep creating useful apps and sharing them freely. A
                   contribution supports new ideas, continued development, and more
                   tools for everyone.
                 </p>
@@ -246,7 +246,7 @@ export default function App() {
                       d="M10.6 6.4h1.15a1.7 1.7 0 1 1 0 3.4H10.6"
                     />
                   </svg>
-                  Tip $5
+                  Leave a tip
                 </a>
               </div>
               <p className="settings-note">{settingsNote}</p>

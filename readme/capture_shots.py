@@ -454,11 +454,11 @@ def main() -> None:
     base = f"http://127.0.0.1:{port}"
     try:
         # New filenames so GitHub doesn't serve stale shots.
-        shot(f"{base}/shot-chip.html?v=8", OUT / "badge.png", 114, 66, "00000000")
-        shot(f"{base}/shot-pair.html?v=8", OUT / "panels.png", 688, 616, "00000000")
-        shot(f"{base}/shot-popup.html?v=8", OUT / "panel-main.png", 332, 368, "00000000")
-        shot(f"{base}/shot-settings.html?v=8", OUT / "panel-settings.png", 332, 616, "00000000")
-        shot(f"{base}/shot-chat.html?v=8", OUT / "copy-from.png", 784, 420, "00000000")
+        shot(f"{base}/shot-chip.html?v=9", OUT / "badge.png", 114, 66, "00000000")
+        shot(f"{base}/shot-pair.html?v=9", OUT / "toolbar.png", 688, 616, "00000000")
+        shot(f"{base}/shot-popup.html?v=9", OUT / "panel-main.png", 332, 368, "00000000")
+        shot(f"{base}/shot-settings.html?v=9", OUT / "panel-settings.png", 332, 616, "00000000")
+        shot(f"{base}/shot-chat.html?v=9", OUT / "copy-from.png", 784, 420, "00000000")
     finally:
         httpd.shutdown()
     print("ok")

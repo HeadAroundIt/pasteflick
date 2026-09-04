@@ -1,43 +1,49 @@
 <p align="center">
-  <img src="readme/hero.png" width="680" alt="PasteFlick — copy from ChatGPT and flick it into the last app">
+  <img src="readme/lead.png" width="760" alt="PasteFlick — Copy from ChatGPT. Flick it into the last app.">
+</p>
+
+<p align="center"><br></p>
+
+<p align="center">
+  <img src="readme/shots/badge.png" width="168" alt="PasteFlick chip — Copy, Save, and Fling">
 </p>
 
 <p align="center">
-  <a href="https://github.com/HeadAroundIt/pasteflick">github.com/HeadAroundIt/pasteflick</a>
+  <img src="readme/shots/copy-from.png" width="760" alt="Bookmark one message or a few, then Copy from the chip">
+</p>
+
+<p align="center"><br></p>
+
+<p align="center">
+  <img src="readme/features.png" width="760" alt="What you get — the chip, the popup, and where copies go">
 </p>
 
 <p align="center">
-  <img src="readme/shots/badge.png" width="160" alt="PasteFlick chip — Copy, Save, and Fling">
+  <img src="readme/shots/toolbar.png" width="760" alt="PasteFlick popup and settings">
+</p>
+
+<p align="center"><br></p>
+
+<p align="center">
+  <img src="readme/setup.png" width="760" alt="Install PasteFlick on Windows, then finish in the browser">
 </p>
 
 <p align="center">
-  <img src="readme/shots/copy-from.png" width="680" alt="Bookmark one message or a few, then Copy from the chip">
+  <a href="https://github.com/HeadAroundIt/pasteflick/releases/latest"><img src="readme/windows-zip.png" alt="Get the Windows zip" height="48"></a>
+</p>
+
+<p align="center"><br></p>
+
+<p align="center">
+  <img src="readme/thanks.png" width="760" alt="Support — a contribution of any amount helps">
 </p>
 
 <p align="center">
-  <img src="readme/shots/panels.png" width="680" alt="PasteFlick popup and settings">
+  <a href="https://ko-fi.com/ryandunham"><img src="readme/leave-a-tip.png" alt="Leave a tip on Ko-fi" height="44"></a>
 </p>
 
-<p align="center">
-  <img src="readme/what.png" width="680" alt="What you get">
-</p>
+<p align="center"><br></p>
 
 <p align="center">
-  <img src="readme/support.png" width="680" alt="Support">
-</p>
-
-<p align="center">
-  <a href="https://ko-fi.com/ryandunham"><img src="extension/icons/tip5.png" alt="Tip $5 on Ko-fi" height="36"></a>
-</p>
-
-<p align="center">
-  <img src="readme/install.png" width="680" alt="Install">
-</p>
-
-<p align="center">
-  <a href="https://github.com/HeadAroundIt/pasteflick/releases/latest"><img src="readme/get-zip.png" alt="Get the Windows zip" height="34"></a>
-</p>
-
-<p align="center">
-  <img src="readme/privacy.png" width="680" alt="Privacy">
+  <img src="readme/local.png" width="760" alt="Privacy — runs in your browser, copied text stays on your device">
 </p>
