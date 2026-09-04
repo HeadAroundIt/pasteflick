@@ -19,7 +19,7 @@
 </p>
 
 <p align="center">
-  <img src="readme/shots/toolbar.png" width="760" alt="PasteFlick popup and settings">
+  <img src="readme/shots/popup-pair.png" width="760" alt="PasteFlick popup and settings">
 </p>
 
 <p align="center"><br></p>

@@ -119,7 +119,7 @@ function markLabel(name) {
 async function run(mode) {
   setBusy(true);
   const destHintText =
-    currentDest === "file" ? "Saving…" : currentDest === "cursor" ? "Auto-pasting…" : "Copying…";
+    currentDest === "file" ? "Saving…" : currentDest === "cursor" ? "Flicking…" : "Copying…";
   setStatus(
     mode === "select-view" || mode === "open-from-pasteflick"
       ? "Opening…"
@@ -127,7 +127,7 @@ async function run(mode) {
         ? currentDest === "file"
           ? "Saving from PasteFlick…"
           : currentDest === "cursor"
-            ? "Auto-pasting from PasteFlick…"
+            ? "Flicking from PasteFlick…"
             : "Copying from PasteFlick…"
         : destHintText,
   );
@@ -262,7 +262,7 @@ function readDest(data) {
 }
 
 function destLabel(dest, format) {
-  if (dest === "cursor") return "Copies auto-paste.";
+  if (dest === "cursor") return "Copies flick into the last app.";
   if (dest === "file") {
     return format === "pdf" ? "Copies save as PDF." : "Copies save as Markdown.";
   }
@@ -336,8 +336,8 @@ function setDestUi(dest, format) {
   autoPasteBtn.classList.toggle("on", pasteOn);
   autoPasteBtn.setAttribute("aria-pressed", pasteOn ? "true" : "false");
   autoPasteBtn.title = pasteOn
-    ? "Auto-paste on — copies also paste"
-    : "Auto-paste off — copies stay on the clipboard";
+    ? "Flick on — copies also paste"
+    : "Flick off — copies stay on the clipboard";
 
   autoPasteLock.classList.toggle("on", pasteOn);
   autoPasteLock.setAttribute("aria-checked", pasteOn ? "true" : "false");

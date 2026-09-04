@@ -2122,8 +2122,8 @@
 
   function extrasTip(on) {
     return on
-      ? "Include title and notes with Copy and Save. Fling still sends what you see."
-      : "Copy and Save just the text. Fling still sends what you see.";
+      ? "Include title and notes with Copy and Save. Flick still sends what you see."
+      : "Copy and Save just the text. Flick still sends what you see.";
   }
 
   function paintExtrasSwitch(btn, on) {
@@ -2353,12 +2353,12 @@
   }
 
   function pasteTip(what) {
-    if (/transcript/i.test(what)) return "Fling the transcript.";
-    if (/bookmark/i.test(what)) return "Fling from the bookmark.";
-    if (/selected/i.test(what)) return "Fling the selected messages.";
+    if (/transcript/i.test(what)) return "Flick the transcript.";
+    if (/bookmark/i.test(what)) return "Flick from the bookmark.";
+    if (/selected/i.test(what)) return "Flick the selected messages.";
     if (what === "this file") return "Send this file.";
     if (what === "this link") return "Send this link.";
-    return "Fling what you see.";
+    return "Flick what you see.";
   }
 
   function saveTip(what) {

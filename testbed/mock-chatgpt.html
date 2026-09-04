@@ -464,7 +464,7 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
           const body = assistant.querySelector(":scope > div:not(.role)");
           if (body) {
             body.textContent =
-              "Shipped the chip under the chat title. Copy, Save, and Fling sit in one place, and the bookmark still marks where you left off.";
+              "Shipped the chip under the chat title. Copy, Save, and Flick sit in one place, and the bookmark still marks where you left off.";
           }
         }
         document.querySelectorAll(".msg.assistant .role").forEach((el) => {
@@ -755,14 +755,14 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
         const saveThread = threadPin.querySelector('[data-pasteflick="save-thread"]');
         const extras = threadPin.querySelector('[data-pasteflick="extras"]');
         if (!copyThread || !pasteThread || !saveThread) {
-          throw new Error("thread chip needs Copy, Save, and Fling");
+          throw new Error("thread chip needs Copy, Save, and Flick");
         }
         if (!extras) throw new Error("thread chip needs extras toggle");
         if (copyThread.title !== "Copy the transcript.") {
           throw new Error("unexpected thread copy tooltip: " + copyThread.title);
         }
-        if (pasteThread.title !== "Fling the transcript.") {
-          throw new Error("unexpected thread fling tooltip: " + pasteThread.title);
+        if (pasteThread.title !== "Flick the transcript.") {
+          throw new Error("unexpected thread flick tooltip: " + pasteThread.title);
         }
         if (saveThread.title !== "Save the transcript.") {
           throw new Error("unexpected thread save tooltip: " + saveThread.title);
@@ -771,7 +771,7 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
           threadPin.querySelectorAll('[data-pasteflick="actions"] [data-pasteflick]'),
         ).map((el) => el.getAttribute("data-pasteflick"));
         if (threadActions[threadActions.length - 1] !== "paste-thread") {
-          throw new Error("Fling should be rightmost on the thread chip, got " + threadActions.join(","));
+          throw new Error("Flick should be rightmost on the thread chip, got " + threadActions.join(","));
         }
         if (ui.querySelector('[data-pasteflick="pin"][data-kind="block"]')) {
           throw new Error("inside cards should not appear");
