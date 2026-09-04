@@ -120,6 +120,7 @@ function requestCapture(mode, extra) {
             scrollMark: extra.scrollMark || null,
             target: extra.target || null,
             fragment: extra.fragment || null,
+            marks: extra.marks || null,
             autoPaste: extra.autoPaste,
             destination: extra.destination,
             fileFormat: extra.fileFormat,

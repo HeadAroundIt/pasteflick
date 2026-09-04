@@ -256,7 +256,7 @@ export default function App() {
           <>
             <header className="titlebar">
               <div className="brand pywebview-drag-region" title="Drag to move">
-                <img src="/pasteflick-32.png" alt="" width={18} height={18} />
+                <img src="/pasteflick-32.png" alt="" width={28} height={28} />
                 <span className="kicker">PasteFlick</span>
               </div>
               <div className="chrome">

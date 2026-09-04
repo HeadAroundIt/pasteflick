@@ -1,5 +1,5 @@
 /**
- * Isolated-world PasteFlick: one bookmark per conversation, restored from storage.
+ * Isolated-world PasteFlick: bookmarks select what the chip copies.
  */
 (function () {
   const STORAGE_KEY = "pasteflicks";
@@ -125,12 +125,30 @@
       position: absolute;
       top: 0;
       left: 0;
-      width: 100%;
+      width: 0;
       display: block;
       z-index: 2147483646;
       pointer-events: none;
+      overflow-anchor: none;
+      --well: color-mix(in srgb, #c9a66a 6%, #f7f7f5);
+      --stroke: rgba(201, 166, 106, 0.22);
+      --text: #5c4a2e;
+      --paper: #e4d2ae;
+      --ink: #171410;
+      --chip: rgba(201, 166, 106, 0.4);
+      --chip-hot: rgba(201, 166, 106, 0.55);
+      --chip-label: rgba(201, 166, 106, 0.48);
+      --rim: rgba(201, 166, 106, 0.22);
+      --card: color-mix(in srgb, #c9a66a 8%, #f7f7f5);
       --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
       --ease-tap: cubic-bezier(0.32, 0.72, 0, 1);
+    }
+    [data-pasteflick="highlights"] {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      pointer-events: none;
     }
     [data-pasteflick="highlight"] {
       position: absolute;
@@ -139,6 +157,13 @@
       border-radius: 16px;
       border: 1.5px solid rgba(201, 166, 106, 0.7);
       box-shadow: 0 0 0 1px rgba(33, 28, 22, 0.35);
+      opacity: 0;
+      transform: scale(0.985);
+      transition: opacity 220ms var(--ease-out), transform 280ms var(--ease-out);
+    }
+    [data-pasteflick="highlight"].is-on {
+      opacity: 1;
+      transform: none;
     }
     [data-pasteflick="rails"] {
       position: absolute;
@@ -151,6 +176,7 @@
       position: absolute;
       pointer-events: none;
       overflow: visible;
+      overflow-anchor: none;
       z-index: 1;
     }
     [data-pasteflick="stack"] {
@@ -176,14 +202,11 @@
       padding: 5px 5px 4px;
       pointer-events: auto;
       isolation: isolate;
-      color: #e4d2ae;
-      --chip: rgba(201, 166, 106, 0.48);
-      --chip-hot: rgba(228, 210, 174, 0.58);
-      --chip-label: rgba(201, 166, 106, 0.55);
+      color: var(--text);
       border-radius: 10px;
-      background: rgba(55, 55, 55, 0.62);
-      border: 1px solid rgba(201, 166, 106, 0.16);
-      box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
+      background: var(--card);
+      border: 1px solid var(--rim);
+      box-shadow: 0 1px 3px rgba(50, 40, 20, 0.05);
       transition: background-color 280ms var(--ease-out), border-color 280ms var(--ease-out), box-shadow 280ms var(--ease-out);
     }
     [data-pasteflick="stack"] > [data-pasteflick="pin"] {
@@ -193,12 +216,102 @@
       width: max-content;
       box-sizing: border-box;
     }
-    [data-pasteflick="pin"][data-kind="block"] {
-      padding: 4px;
-      border-radius: 9px;
-      background: rgba(55, 55, 55, 0.52);
-      border-color: rgba(201, 166, 106, 0.12);
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    [data-pasteflick="pin"][data-kind="thread"] {
+      max-width: 148px;
+    }
+    [data-pasteflick="pin"][data-kind="message"] {
+      padding: 3px;
+      max-width: none;
+      gap: 2px;
+    }
+    [data-pasteflick="silo"][data-role="thread"] {
+      z-index: 50;
+    }
+    [data-pasteflick="stack"][data-role="thread"] {
+      align-items: flex-start;
+    }
+    [data-pasteflick="pin"][data-kind="thread"].is-bound {
+      box-shadow: 0 0 0 2px rgba(201, 166, 106, 0.5), 0 1px 3px rgba(50, 40, 20, 0.05);
+    }
+    [data-pasteflick="picks"] {
+      position: absolute;
+      left: calc(100% + 8px);
+      top: 50%;
+      display: flex;
+      align-items: center;
+      padding: 4px 6px 4px 8px;
+      border-radius: 10px;
+      background: var(--card);
+      border: 1px solid var(--rim);
+      box-shadow: 0 1px 3px rgba(50, 40, 20, 0.08);
+      pointer-events: auto;
+      transform: translateY(-50%);
+      transform-origin: left center;
+      animation: pasteflick-pop 320ms var(--ease-out);
+      z-index: 6;
+    }
+    [data-pasteflick="picks"][hidden] {
+      display: none;
+    }
+    [data-pasteflick="pick"] {
+      appearance: none;
+      width: 22px;
+      height: 22px;
+      margin: 0 0 0 -7px;
+      padding: 0;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(201, 166, 106, 0.35);
+      border-radius: 6px;
+      background: var(--chip-hot);
+      color: var(--ink);
+      cursor: pointer;
+      animation: pasteflick-pick-in 280ms var(--ease-out) both;
+    }
+    [data-pasteflick="pick"]:first-child {
+      margin-left: 0;
+    }
+    [data-pasteflick="pick"] .scrolllog-icon {
+      fill: currentColor;
+    }
+    [data-pasteflick="mark"] {
+      position: relative;
+    }
+    [data-pasteflick="mark"].is-joinable:hover {
+      transform: scale(1.08);
+    }
+    [data-pasteflick="mark"].is-joinable::after {
+      content: "";
+      position: absolute;
+      right: -3px;
+      top: -3px;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background:
+        linear-gradient(var(--ink), var(--ink)) center / 6px 1.5px no-repeat,
+        linear-gradient(var(--ink), var(--ink)) center / 1.5px 6px no-repeat,
+        var(--paper);
+      box-shadow: 0 0 0 2px var(--card);
+      opacity: 0;
+      transform: scale(0.6);
+      pointer-events: none;
+      transition: opacity 160ms var(--ease-out), transform 200ms var(--ease-out);
+    }
+    [data-pasteflick="mark"].is-joinable:hover::after {
+      opacity: 1;
+      transform: scale(1);
+    }
+    [data-pasteflick="mark"].is-active.is-multi {
+      box-shadow: 0 0 0 2px rgba(201, 166, 106, 0.7);
+    }
+    @keyframes pasteflick-pop {
+      from { opacity: 0; transform: translateY(-50%) scale(0.7); }
+      to { opacity: 1; transform: translateY(-50%) scale(1); }
+    }
+    @keyframes pasteflick-pick-in {
+      from { opacity: 0; transform: translateX(-8px) scale(0.6); }
+      to { opacity: 1; transform: none; }
     }
     [data-pasteflick="pin"][data-kind="link"] {
       flex-direction: row;
@@ -208,8 +321,8 @@
       max-width: none;
       padding: 2px;
       border-radius: 8px;
-      background: rgba(55, 55, 55, 0.42);
-      border-color: rgba(201, 166, 106, 0.18);
+      background: color-mix(in srgb, #c9a66a 10%, #f7f7f5);
+      border-color: rgba(201, 166, 106, 0.22);
       box-shadow: none;
     }
     [data-pasteflick="pin"][data-kind="link"] [data-pasteflick="actions"] {
@@ -225,24 +338,6 @@
     [data-pasteflick="pin"][data-kind="link"] svg {
       width: 11px;
       height: 11px;
-    }
-    :host([data-scheme="light"]) [data-pasteflick="pin"] {
-      --chip: rgba(201, 166, 106, 0.4);
-      --chip-hot: rgba(201, 166, 106, 0.55);
-      --chip-label: rgba(201, 166, 106, 0.48);
-      color: #5c4a2e;
-      background: color-mix(in srgb, #c9a66a 8%, rgba(247, 247, 245, 0.84));
-      border: 1px solid rgba(201, 166, 106, 0.22);
-      box-shadow: 0 1px 3px rgba(50, 40, 20, 0.05);
-    }
-    :host([data-scheme="light"]) [data-pasteflick="pin"][data-kind="block"] {
-      background: color-mix(in srgb, #c9a66a 6%, rgba(247, 247, 245, 0.78));
-      border-color: rgba(201, 166, 106, 0.18);
-      box-shadow: none;
-    }
-    :host([data-scheme="light"]) [data-pasteflick="pin"][data-kind="link"] {
-      background: color-mix(in srgb, #c9a66a 10%, rgba(247, 247, 245, 0.88));
-      border-color: rgba(201, 166, 106, 0.22);
     }
     [data-pasteflick="head"] {
       display: flex;
@@ -261,7 +356,7 @@
       padding: 0;
       border: 1px solid rgba(201, 166, 106, 0.28);
       border-radius: 6px;
-      background: rgba(23, 20, 16, 0.38);
+      background: rgba(23, 20, 16, 0.22);
       cursor: pointer;
       box-shadow: inset 0 1px 0 rgba(244, 226, 180, 0.12);
       transition: background-color 240ms var(--ease-out), border-color 240ms var(--ease-out), filter 240ms var(--ease-out), transform 160ms var(--ease-tap);
@@ -277,13 +372,13 @@
       width: 8px;
       height: 8px;
       border-radius: 4px;
-      background: #e4d2ae;
+      background: var(--paper);
       pointer-events: none;
       transition: left 280ms var(--ease-out), background-color 240ms var(--ease-out);
     }
     [data-pasteflick="extras"].on [data-pasteflick="extras-thumb"] {
       left: 11px;
-      background: #171410;
+      background: var(--ink);
     }
     [data-pasteflick="extras"]:hover {
       filter: brightness(1.08);
@@ -301,7 +396,7 @@
       white-space: nowrap;
       font: 650 10px/1.2 "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
       letter-spacing: -0.01em;
-      color: #171410;
+      color: var(--ink);
       text-shadow: none;
       border-radius: 6px;
       background: var(--chip-label);
@@ -316,6 +411,9 @@
       align-items: center;
       gap: 2px;
     }
+    [data-pasteflick="copy-thread"],
+    [data-pasteflick="paste-thread"],
+    [data-pasteflick="save-thread"],
     [data-pasteflick="copy-message"],
     [data-pasteflick="paste-message"],
     [data-pasteflick="save-message"],
@@ -334,7 +432,7 @@
       border-radius: 7px;
       border: 1px solid transparent;
       background: var(--chip);
-      color: #171410;
+      color: var(--ink);
       cursor: pointer;
       filter: none;
       box-shadow: inset 0 1px 0 rgba(244, 226, 180, 0.35);
@@ -342,16 +440,18 @@
     }
     [data-pasteflick="mark"].is-active {
       background: var(--chip-hot);
-      color: #171410;
+      color: var(--ink);
     }
     [data-pasteflick="mark"].is-active .scrolllog-icon {
       fill: currentColor;
     }
+    [data-pasteflick="copy-thread"].is-primary,
+    [data-pasteflick="paste-thread"].is-primary,
     [data-pasteflick="copy-message"].is-primary,
     [data-pasteflick="paste-message"].is-primary,
     [data-pasteflick="copy-block"].is-primary,
     [data-pasteflick="paste-block"].is-primary {
-      color: #171410;
+      color: var(--ink);
       background: var(--chip);
       box-shadow: inset 0 1px 0 rgba(244, 226, 180, 0.35);
     }
@@ -361,7 +461,7 @@
       top: calc(100% + 2px);
       min-height: 1em;
       font: 600 10px/1.2 "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
-      color: #171410;
+      color: var(--ink);
       text-shadow: none;
       padding: 2px 6px;
       outline: none;
@@ -373,6 +473,9 @@
     [data-pasteflick="label"][hidden] {
       display: none;
     }
+    [data-pasteflick="copy-thread"]:hover,
+    [data-pasteflick="paste-thread"]:hover,
+    [data-pasteflick="save-thread"]:hover,
     [data-pasteflick="copy-message"]:hover,
     [data-pasteflick="paste-message"]:hover,
     [data-pasteflick="save-message"]:hover,
@@ -380,13 +483,18 @@
     [data-pasteflick="paste-block"]:hover,
     [data-pasteflick="save-block"]:hover,
     [data-pasteflick="mark"]:hover,
+    [data-pasteflick="copy-thread"].is-primary:hover,
+    [data-pasteflick="paste-thread"].is-primary:hover,
     [data-pasteflick="copy-message"].is-primary:hover,
     [data-pasteflick="paste-message"].is-primary:hover,
     [data-pasteflick="copy-block"].is-primary:hover,
     [data-pasteflick="paste-block"].is-primary:hover {
-      color: #171410;
+      color: var(--ink);
       background: var(--chip-hot);
     }
+    [data-pasteflick="copy-thread"]:active,
+    [data-pasteflick="paste-thread"]:active,
+    [data-pasteflick="save-thread"]:active,
     [data-pasteflick="copy-message"]:active,
     [data-pasteflick="paste-message"]:active,
     [data-pasteflick="save-message"]:active,
@@ -397,15 +505,21 @@
     [data-pasteflick="extras"]:active {
       transform: scale(0.94);
     }
+    [data-pasteflick="copy-thread"].is-done,
+    [data-pasteflick="paste-thread"].is-done,
+    [data-pasteflick="save-thread"].is-done,
     [data-pasteflick="copy-message"].is-done,
     [data-pasteflick="paste-message"].is-done,
     [data-pasteflick="save-message"].is-done,
     [data-pasteflick="copy-block"].is-done,
     [data-pasteflick="paste-block"].is-done,
     [data-pasteflick="save-block"].is-done {
-      color: #171410;
+      color: var(--ink);
       background: var(--chip);
     }
+    [data-pasteflick="copy-thread"] svg,
+    [data-pasteflick="paste-thread"] svg,
+    [data-pasteflick="save-thread"] svg,
     [data-pasteflick="copy-message"] svg,
     [data-pasteflick="paste-message"] svg,
     [data-pasteflick="save-message"] svg,
@@ -415,6 +529,9 @@
     [data-pasteflick="mark"] svg {
       display: block;
     }
+    [data-pasteflick="copy-thread"]:focus-visible,
+    [data-pasteflick="paste-thread"]:focus-visible,
+    [data-pasteflick="save-thread"]:focus-visible,
     [data-pasteflick="copy-message"]:focus-visible,
     [data-pasteflick="paste-message"]:focus-visible,
     [data-pasteflick="save-message"]:focus-visible,
@@ -423,19 +540,14 @@
     [data-pasteflick="save-block"]:focus-visible,
     [data-pasteflick="mark"]:focus-visible,
     [data-pasteflick="label"]:focus-visible {
-      outline: 1px solid #e4d2ae;
+      outline: 1px solid var(--paper);
       outline-offset: 2px;
     }
     @media (prefers-reduced-transparency: reduce) {
       [data-pasteflick="pin"],
       [data-pasteflick="pin"][data-kind="block"],
       [data-pasteflick="pin"][data-kind="link"] {
-        background: #3a3a3a;
-      }
-      :host([data-scheme="light"]) [data-pasteflick="pin"],
-      :host([data-scheme="light"]) [data-pasteflick="pin"][data-kind="block"],
-      :host([data-scheme="light"]) [data-pasteflick="pin"][data-kind="link"] {
-        background: #f4f4f4;
+        background: #f7f7f5;
       }
     }
     [data-pasteflick="toast"] {
@@ -463,14 +575,21 @@
       [data-pasteflick="pin"],
       [data-pasteflick="extras"],
       [data-pasteflick="extras-thumb"],
+      [data-pasteflick="copy-thread"],
+      [data-pasteflick="paste-thread"],
+      [data-pasteflick="save-thread"],
       [data-pasteflick="copy-message"],
       [data-pasteflick="paste-message"],
       [data-pasteflick="save-message"],
       [data-pasteflick="copy-block"],
       [data-pasteflick="paste-block"],
       [data-pasteflick="save-block"],
-      [data-pasteflick="mark"] {
+      [data-pasteflick="mark"],
+      [data-pasteflick="highlight"],
+      [data-pasteflick="picks"],
+      [data-pasteflick="pick"] {
         transition: none;
+        animation: none;
       }
     }
   `;
@@ -493,6 +612,8 @@
   let scrolling = false;
   let heldStick = 0;
   let heldSidebar = 8;
+  let heldTitleLeft = NaN;
+  let lastPickEl = null;
   const geometryObserver =
     typeof ResizeObserver === "function"
       ? new ResizeObserver(() => {
@@ -1832,10 +1953,10 @@
     if (typeof globalThis.PasteFlickCapture === "function") {
       return globalThis.PasteFlickCapture(mode, extra);
     }
-    if (typeof globalThis.PasteFlickCapture === "function") {
-      return globalThis.PasteFlickCapture(mode, extra);
-    }
     const api = window.__transcriptCopy;
+    if (api && mode === "chip" && typeof api.captureChip === "function") {
+      return api.captureChip(extra);
+    }
     if (api && mode === "single-message" && typeof api.captureMessage === "function") {
       return api.captureMessage(extra && extra.target, extra);
     }
@@ -1876,6 +1997,26 @@
     if (dest === "file") return !!(result && (result.saved || result.path));
     if (dest === "cursor") return !!(result && result.pasted);
     return !(result && result.clipped === false);
+  }
+
+  async function copyChip(dest, btn) {
+    dest = actionDest(dest);
+    if (dest === "file") await getDestination();
+    try {
+      const marks = await getActiveMarks();
+      const result = await capture("chip", Object.assign({ marks }, captureOpts(dest)));
+      const label =
+        result && result.source === "pasteflick"
+          ? "Bookmark"
+          : result && result.source === "messages"
+            ? "Messages"
+            : "Thread";
+      const ok = actionOk(dest, result);
+      showToast(resultToast(label, result), ok);
+      if (ok) markActionDone(btn, dest);
+    } catch (err) {
+      showToast((err && err.message) || String(err), false);
+    }
   }
 
   async function copyMessage(el, dest, btn) {
@@ -1981,8 +2122,8 @@
 
   function extrasTip(on) {
     return on
-      ? "Include title and notes with Copy and Save. Send still pastes what you see."
-      : "Copy and Save just the text. Send still pastes what you see.";
+      ? "Include title and notes with Copy and Save. Fling still sends what you see."
+      : "Copy and Save just the text. Fling still sends what you see.";
   }
 
   function paintExtrasSwitch(btn, on) {
@@ -2205,16 +2346,25 @@
   }
 
   function copyTip(what) {
+    if (/transcript/i.test(what)) return "Copy the transcript.";
+    if (/bookmark/i.test(what)) return "Copy from the bookmark.";
+    if (/selected/i.test(what)) return "Copy the selected messages.";
     return "Copy " + what + ".";
   }
 
   function pasteTip(what) {
+    if (/transcript/i.test(what)) return "Fling the transcript.";
+    if (/bookmark/i.test(what)) return "Fling from the bookmark.";
+    if (/selected/i.test(what)) return "Fling the selected messages.";
     if (what === "this file") return "Send this file.";
     if (what === "this link") return "Send this link.";
-    return "Paste what you see.";
+    return "Fling what you see.";
   }
 
   function saveTip(what) {
+    if (/transcript/i.test(what)) return "Save the transcript.";
+    if (/bookmark/i.test(what)) return "Save from the bookmark.";
+    if (/selected/i.test(what)) return "Save the selected messages.";
     return "Save " + what + ".";
   }
 
@@ -2296,56 +2446,83 @@
     }
   }
 
-  async function getActivePasteFlick() {
-    const key = storageSlot();
-    const map = await readStore();
-    if (map[key] && typeof map[key] === "object") return map[key];
-    if (key !== ":pending" && map[":pending"] && typeof map[":pending"] === "object") {
-      return map[":pending"];
+  function asMarks(value) {
+    if (!value) return [];
+    if (Array.isArray(value)) return value.filter((m) => m && typeof m === "object");
+    if (value.marks && Array.isArray(value.marks)) {
+      return value.marks.filter((m) => m && typeof m === "object");
     }
-    return null;
+    if (typeof value === "object" && (value.messageId || value.fingerprint)) return [value];
+    return [];
   }
 
-  async function setActivePasteFlick(mark) {
+  async function getActiveMarks() {
     const key = storageSlot();
     const map = await readStore();
-    if (!mark) {
+    let marks = asMarks(map[key]);
+    if (!marks.length && key !== ":pending") marks = asMarks(map[":pending"]);
+    return marks;
+  }
+
+  async function getActivePasteFlick() {
+    const marks = await getActiveMarks();
+    return marks[0] || null;
+  }
+
+  async function setActiveMarks(marks) {
+    const key = storageSlot();
+    const map = await readStore();
+    const list = (marks || []).filter(Boolean);
+    if (!list.length) {
       delete map[key];
       delete map[":pending"];
+    } else if (list.length === 1) {
+      map[key] = list[0];
+      if (key !== ":pending") delete map[":pending"];
     } else {
-      map[key] = mark;
+      map[key] = { marks: list, name: namedMark(list[0]) || "" };
       if (key !== ":pending") delete map[":pending"];
     }
     await writeStore(map);
   }
 
+  async function setActivePasteFlick(mark) {
+    await setActiveMarks(mark ? [mark] : []);
+  }
+
   async function setPasteFlickName(name) {
     const trimmed = String(name || "").trim().slice(0, 40);
-    const mark = await getActivePasteFlick();
-    if (mark) {
-      mark.name = trimmed;
-      await setActivePasteFlick(mark);
+    const marks = await getActiveMarks();
+    if (marks.length) {
+      marks.forEach((mark) => {
+        mark.name = trimmed;
+      });
+      await setActiveMarks(marks);
     }
     await setDraftName(trimmed);
     await applyActiveVisuals();
-    return { name: trimmed, hasMark: !!mark };
+    return { name: trimmed, hasMark: !!marks.length };
   }
 
   function conversationScroller() {
     const msg = document.querySelector("[data-message-author-role]");
     let node = msg ? msg.parentElement : null;
+    let overflowParent = null;
     while (node && node !== document.body && node !== document.documentElement) {
       try {
         const st = window.getComputedStyle(node);
-        if (/(auto|scroll|overlay)/.test(st.overflowY) && node.scrollHeight > node.clientHeight + 24) {
-          return node;
+        if (/(auto|scroll|overlay)/.test(st.overflowY)) {
+          if (!overflowParent) overflowParent = node;
+          if (node.scrollHeight > node.clientHeight + 24) {
+            return node;
+          }
         }
       } catch (_) {
         /* keep walking */
       }
       node = node.parentElement;
     }
-    return document.scrollingElement || document.documentElement;
+    return overflowParent || msg || document.scrollingElement || document.documentElement;
   }
 
   function scrollerRect(scroller) {
@@ -2372,10 +2549,24 @@
     };
   }
 
+  function lastTurnBottom(scroller) {
+    const nodes = messageNodes();
+    let bottom = 0;
+    for (let i = 0; i < nodes.length; i++) {
+      try {
+        const box = localBox(turnRoot(nodes[i]), scroller);
+        if (rectOk(box) && box.bottom > bottom) bottom = box.bottom;
+      } catch (_) {
+        /* skip a turn that's mid-layout */
+      }
+    }
+    if (bottom >= 1) return Math.ceil(bottom);
+    return Math.max(scroller.clientHeight || 0, 1);
+  }
+
   function mountHost(host) {
     if (!host) return conversationScroller();
     const scroller = conversationScroller();
-    if (host.parentElement !== scroller) scroller.appendChild(host);
     try {
       if (window.getComputedStyle(scroller).position === "static") {
         scroller.style.position = "relative";
@@ -2383,20 +2574,23 @@
     } catch (_) {
       /* leave the scroller as-is */
     }
-    const tall = Math.max(scroller.scrollHeight || 0, scroller.clientHeight || 0, 1);
+    const tall = lastTurnBottom(scroller);
     host.style.position = "absolute";
     host.style.top = "0px";
     host.style.left = "0px";
-    host.style.right = "0px";
-    host.style.width = "100%";
+    host.style.right = "auto";
+    host.style.width = "0px";
     host.style.height = tall + "px";
     host.style.zIndex = "2147483646";
     host.style.overflow = "visible";
     host.style.pointerEvents = "none";
+    host.style.overflowAnchor = "none";
+    if (host.parentElement !== scroller) scroller.appendChild(host);
     const rails = host.shadowRoot && host.shadowRoot.querySelector('[data-pasteflick="rails"]');
     if (rails) {
       rails.style.height = tall + "px";
       rails.style.overflow = "visible";
+      rails.style.overflowAnchor = "none";
     }
     return scroller;
   }
@@ -2419,14 +2613,14 @@
     const shadow = host.attachShadow({ mode: "open" });
     const style = document.createElement("style");
     style.textContent = RAIL_CSS;
-    const highlight = document.createElement("div");
-    highlight.setAttribute("data-pasteflick", "highlight");
+    const highlights = document.createElement("div");
+    highlights.setAttribute("data-pasteflick", "highlights");
     const rails = document.createElement("div");
     rails.setAttribute("data-pasteflick", "rails");
     const toast = document.createElement("div");
     toast.setAttribute("data-pasteflick", "toast");
     shadow.appendChild(style);
-    shadow.appendChild(highlight);
+    shadow.appendChild(highlights);
     shadow.appendChild(rails);
     shadow.appendChild(toast);
     mountHost(host);
@@ -2452,7 +2646,7 @@
   function syncScheme() {
     const host = dockHost();
     if (!host) return;
-    host.setAttribute("data-scheme", pageIsLight() ? "light" : "dark");
+    host.setAttribute("data-scheme", "light");
   }
 
   function turnRoot(el) {
@@ -2460,17 +2654,27 @@
     return el.closest('[data-testid^="conversation-turn"]') || el.closest("article") || el;
   }
 
+  function isLeftRailRect(r) {
+    if (!r) return false;
+    const vw = window.innerWidth || 800;
+    const vh = window.innerHeight || 800;
+    const mid = vw / 2;
+    if (r.left > 80) return false;
+    if (r.width < 40 || r.height < 80) return false;
+    if (r.width > Math.min(420, vw * 0.38)) return false;
+    if (r.right >= mid) return false;
+    if (r.height < Math.min(160, vh * 0.25) && r.width > r.height * 1.4) return false;
+    return true;
+  }
+
   function sidebarRight(force) {
     const candidates = document.querySelectorAll("nav, aside, [class*='sidebar' i]");
     let best = 8;
-    const mid = (window.innerWidth || 0) / 2;
     candidates.forEach((el) => {
       if (!el.getBoundingClientRect) return;
       const r = el.getBoundingClientRect();
-      if (r.width < 80 || r.height < 80) return;
-      if (r.left > 80) return;
-      if (r.right >= mid) return;
-      if (r.right > best) best = r.right + 6;
+      if (!isLeftRailRect(r)) return;
+      if (r.right + 6 > best) best = r.right + 6;
     });
     heldSidebar = force ? best : holdNum(heldSidebar, best, 3);
     return heldSidebar;
@@ -2501,7 +2705,7 @@
       if (!el || isDockHost(el)) return;
       try {
         const r = el.getBoundingClientRect();
-        if (r.top > 40 || r.height < 18 || r.height > 200 || r.width < 80) return;
+        if (r.top > 40 || r.height < 18 || r.height > 280 || r.width < 80) return;
         if (r.bottom > bottom) bottom = r.bottom;
       } catch (_) {
         /* ignore */
@@ -2535,7 +2739,8 @@
 
   function headerStickTop(scroller) {
     const sr = scrollerRect(scroller);
-    const raw = headerBottom() + 6 - sr.top;
+    const hb = headerBottom();
+    const raw = (hb > 8 ? hb + 6 : 16) - sr.top;
     heldStick = holdNum(heldStick, raw, 2);
     return Math.max(0, Math.round(heldStick));
   }
@@ -2590,6 +2795,7 @@
   function dockPin(pin) {
     const rails = railsLayer();
     if (!pin || !rails) return pin;
+    if (pin.getAttribute("data-kind") === "thread") return pin;
     if (pin.getAttribute("data-kind") === "link") {
       const old = pinSilo(pin);
       if (pin.parentElement !== rails) rails.appendChild(pin);
@@ -2708,6 +2914,7 @@
   function layoutMessageStacks(rails, scroller) {
     const gap = 22;
     rails.querySelectorAll('[data-pasteflick="stack"]').forEach((stack) => {
+      if (stack.getAttribute("data-role") === "thread") return;
       const silo = stack.parentElement;
       const owner = stack._owner;
       const pins = Array.from(stack.children).filter(
@@ -2798,8 +3005,28 @@
     const stickBase = headerStickTop(scroller);
     const gap = 10;
     const items = [];
+    const parked = [];
+
+    const threadStack = rails.querySelector('[data-pasteflick="stack"][data-role="thread"]');
+    if (threadStack) {
+      const silo = threadStack.parentElement;
+      threadStack.style.setProperty("--stick-top", Math.max(0, Math.round(stickBase)) + "px");
+      threadStack._stickTop = stickBase;
+      threadStack.style.opacity = "";
+      threadStack.style.pointerEvents = "";
+      if (silo) silo.style.zIndex = "50";
+      threadStack.querySelectorAll('[data-pasteflick="pin"]').forEach((pin) => {
+        pin._stackPresent = true;
+        pin._stickTop = stickBase;
+        pin._stackShift = 0;
+        pin._headerHidden = false;
+        pin.style.opacity = "";
+        pin.style.pointerEvents = "auto";
+      });
+    }
 
     rails.querySelectorAll('[data-pasteflick="stack"]').forEach((stack) => {
+      if (stack.getAttribute("data-role") === "thread") return;
       const silo = stack.parentElement;
       if (!silo || !Number.isFinite(stack._naturalTop) || !Number.isFinite(stack._ownerBottom)) return;
       const box = stack.getBoundingClientRect();
@@ -2821,7 +3048,6 @@
     });
 
     items.sort((a, b) => a.naturalTop - b.naturalTop);
-    const parked = [];
     items.forEach((it) => {
       let stick = stickBase;
       parked.forEach((prev) => {
@@ -2905,14 +3131,18 @@
       }
     });
     layoutMessageStacks(rails, scroller);
+    placeThreadChip(scroller);
     paintPins();
     packHeaderStick();
-    const highlight = root.querySelector('[data-pasteflick="highlight"]');
-    const activeBtn = rails.querySelector('[data-pasteflick="mark"].is-active');
-    const activePin = activeBtn && activeBtn.closest('[data-pasteflick="pin"]');
-    if (highlight && highlight.classList.contains("is-on") && activePin && activePin._anchor) {
-      paintHighlight(highlight, activePin._anchor, scroller);
-    }
+    paintHighlights(root, scroller);
+  }
+
+  function paintHighlights(root, scroller) {
+    const layer = root.querySelector('[data-pasteflick="highlights"]');
+    if (!layer) return;
+    layer.querySelectorAll('[data-pasteflick="highlight"].is-on').forEach((box) => {
+      if (box._anchor && box._anchor.isConnected) paintHighlight(box, box._anchor, scroller);
+    });
   }
 
   function schedulePlace() {
@@ -2929,6 +3159,118 @@
     return layerRoot().querySelector('[data-pasteflick="rails"]');
   }
 
+  function threadTitleLeft(scroller) {
+    const sr = scrollerRect(scroller);
+    const raw = sidebarRight(false) - sr.left + (scroller.scrollLeft || 0);
+    heldTitleLeft = holdNum(heldTitleLeft, Math.round(raw), 4);
+    return Math.round(heldTitleLeft);
+  }
+
+  function threadColumnEdge(scroller) {
+    const nodes = messageNodes();
+    for (let i = 0; i < nodes.length; i++) {
+      try {
+        const box = localBox(nodes[i], scroller);
+        if (rectOk(box)) return box.left;
+      } catch (_) {
+        /* try the next mounted message */
+      }
+    }
+    const sr = scrollerRect(scroller);
+    return sidebarRight(false) - sr.left + 96;
+  }
+
+  function ensureThreadChip() {
+    const rails = railsLayer();
+    if (!rails) return null;
+    let silo = rails.querySelector('[data-pasteflick="silo"][data-role="thread"]');
+    let stack = silo && silo.querySelector('[data-pasteflick="stack"]');
+    let pin = stack && stack.querySelector('[data-pasteflick="pin"][data-kind="thread"]');
+    if (pin && pin.isConnected) return pin;
+
+    if (!silo) {
+      silo = document.createElement("div");
+      silo.setAttribute("data-pasteflick", "silo");
+      silo.setAttribute("data-role", "thread");
+      stack = document.createElement("div");
+      stack.setAttribute("data-pasteflick", "stack");
+      stack.setAttribute("data-role", "thread");
+      silo.appendChild(stack);
+      rails.appendChild(silo);
+    } else if (!stack) {
+      stack = document.createElement("div");
+      stack.setAttribute("data-pasteflick", "stack");
+      stack.setAttribute("data-role", "thread");
+      silo.appendChild(stack);
+    }
+
+    pin = document.createElement("div");
+    pin.setAttribute("data-pasteflick", "pin");
+    pin.setAttribute("data-kind", "thread");
+
+    const copyBtn = makeActionButton("copy-thread", "clipboard", "the transcript", true);
+    copyBtn.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      void copyChip("clipboard", copyBtn);
+    });
+    const pasteBtn = makeActionButton("paste-thread", "cursor", "the transcript", false);
+    pasteBtn.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      void copyChip("cursor", pasteBtn);
+    });
+    const saveBtn = makeActionButton("save-thread", "file", "the transcript", false);
+    saveBtn.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      void copyChip("file", saveBtn);
+    });
+
+    const actions = document.createElement("div");
+    actions.setAttribute("data-pasteflick", "actions");
+    actions.appendChild(copyBtn);
+    actions.appendChild(saveBtn);
+    actions.appendChild(pasteBtn);
+
+    pin.appendChild(makeHead("PasteFlick"));
+    pin.appendChild(actions);
+    const picks = document.createElement("div");
+    picks.setAttribute("data-pasteflick", "picks");
+    picks.hidden = true;
+    pin.appendChild(picks);
+    stack.appendChild(pin);
+    return pin;
+  }
+
+  function placeThreadChip(scroller) {
+    const pin = ensureThreadChip();
+    if (!pin) return;
+    const stack = pin.parentElement;
+    const silo = stack && stack.parentElement;
+    if (!stack || !silo) return;
+    scroller = scroller || conversationScroller();
+    const stackW = Math.ceil(stack.offsetWidth || 124);
+    const stackH = Math.ceil(stack.offsetHeight || 56);
+    const left = threadTitleLeft(scroller);
+    const tall = lastTurnBottom(scroller);
+    const stick = headerStickTop(scroller);
+    silo.style.top = "0px";
+    silo.style.left = Math.round(left) + "px";
+    silo.style.width = stackW + "px";
+    silo.style.height = tall + "px";
+    stack.style.setProperty("--stick-top", Math.max(0, stick) + "px");
+    stack._naturalTop = 0;
+    stack._ownerTop = 0;
+    stack._ownerBottom = tall;
+    stack._gutterRight = left + stackW;
+    stack._stackH = stackH;
+    stack._stickTop = stick;
+    pin._gutterRight = left + stackW;
+    pin._offscreen = false;
+    pin._headerHidden = false;
+  }
+
   function ensureMessagePin(el) {
     let pin = pinByTarget.get(el);
     if (pin && pin.isConnected) return pin;
@@ -2940,46 +3282,44 @@
 
     const markBtn = makeIconButton("mark", TOOLTIP, BOOKMARK_SVG);
     markBtn.setAttribute("aria-pressed", "false");
+    let pressTimer = 0;
+    let joinedByPress = false;
+    markBtn.addEventListener("pointerdown", (event) => {
+      if (event.button) return;
+      joinedByPress = false;
+      if (pressTimer) clearTimeout(pressTimer);
+      pressTimer = setTimeout(() => {
+        pressTimer = 0;
+        joinedByPress = true;
+        void onMarkClick(el, { metaKey: true, _join: true });
+      }, 380);
+    });
+    const clearPress = () => {
+      if (pressTimer) clearTimeout(pressTimer);
+      pressTimer = 0;
+    };
+    markBtn.addEventListener("pointerup", clearPress);
+    markBtn.addEventListener("pointerleave", clearPress);
+    markBtn.addEventListener("pointercancel", clearPress);
     markBtn.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
-      void onMarkClick(el);
-    });
-
-    const copyBtn = makeActionButton("copy-message", "clipboard", "this message", true);
-    copyBtn.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      void copyMessage(el, "clipboard", copyBtn);
-    });
-
-    const pasteBtn = makeActionButton("paste-message", "cursor", "this message", false);
-    pasteBtn.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      void copyMessage(el, "cursor", pasteBtn);
-    });
-
-    const saveBtn = makeActionButton("save-message", "file", "this message", false);
-    saveBtn.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      void copyMessage(el, "file", saveBtn);
+      if (joinedByPress) {
+        joinedByPress = false;
+        return;
+      }
+      void onMarkClick(el, event);
     });
 
     const actions = document.createElement("div");
     actions.setAttribute("data-pasteflick", "actions");
     actions.appendChild(markBtn);
-    actions.appendChild(copyBtn);
-    actions.appendChild(saveBtn);
-    actions.appendChild(pasteBtn);
 
     const name = document.createElement("span");
     name.setAttribute("data-pasteflick", "label");
     name.hidden = true;
     bindLabel(name);
 
-    pin.appendChild(makeHead("Message"));
     pin.appendChild(actions);
     pin.appendChild(name);
     dockPin(pin);
@@ -3059,19 +3399,53 @@
     return null;
   }
 
-  async function onMarkClick(el) {
+  async function onMarkClick(el, event) {
     const nodes = messageNodes();
     const position = nodes.indexOf(el);
-    const current = await getActivePasteFlick();
-    const kept = (current && String(current.name || "").trim()) || (await getDraftName());
+    const current = await getActiveMarks();
+    const kept = namedMark(current[0]) || (await getDraftName());
     const next = describeMessage(el, position >= 0 ? position : 0, kept);
-    if (sameMark(current, next)) {
+    const additive = !!(event && (event.metaKey || event.ctrlKey || event._join));
+    const range = !!(event && event.shiftKey && current.length);
+    let marks = current.slice();
+    const existing = marks.findIndex((m) => sameMark(m, next));
+
+    if (range) {
+      const anchor = lastPickEl && nodes.indexOf(lastPickEl) >= 0 ? lastPickEl : elForMark(current[current.length - 1], nodes);
+      const from = anchor ? nodes.indexOf(anchor) : position;
+      const lo = Math.min(from, position);
+      const hi = Math.max(from, position);
+      marks = [];
+      if (lo >= 0 && hi >= 0) {
+        for (let i = lo; i <= hi; i++) marks.push(describeMessage(nodes[i], i, kept));
+      }
+    } else if (additive) {
+      if (existing >= 0) marks.splice(existing, 1);
+      else marks.push(next);
+    } else if (existing >= 0 && marks.length === 1) {
       if (kept) await setDraftName(kept);
-      await setActivePasteFlick(null);
+      marks = [];
     } else {
-      await setActivePasteFlick(next);
+      marks = [next];
     }
+
+    lastPickEl = marks.length ? el : null;
+    await setActiveMarks(marks);
     await applyActiveVisuals();
+  }
+
+  function elForMark(mark, nodes) {
+    if (!mark || !nodes || !nodes.length) return null;
+    const records = nodes.map((el, i) => ({
+      el,
+      id: el.getAttribute("data-message-id") || "",
+      role: canonicalRole(el.getAttribute("data-message-author-role")),
+      text: messageTextForMark(el),
+      fingerprint: fingerprintText(messageTextForMark(el)),
+      position: i,
+    }));
+    const idx = resolvePasteFlickIndex(records, mark);
+    return idx >= 0 ? records[idx].el : null;
   }
 
   function editingLabel() {
@@ -3157,8 +3531,94 @@
     await setPasteFlickName(next);
   }
 
+  function chipWhat(count) {
+    if (count >= 2) return "the selected messages";
+    if (count === 1) return "the bookmark";
+    return "the transcript";
+  }
+
+  function syncChipBound(count) {
+    const pin = layerRoot().querySelector('[data-pasteflick="pin"][data-kind="thread"]');
+    if (!pin) return;
+    pin.classList.toggle("is-bound", count > 0);
+    const what = chipWhat(count);
+    pin.querySelectorAll("[data-action-what]").forEach((btn) => {
+      if (btn.classList.contains("is-done")) return;
+      btn.setAttribute("data-action-what", what);
+      restoreActionButton(btn);
+    });
+  }
+
+  function paintPickStack(activeEls) {
+    const pin = layerRoot().querySelector('[data-pasteflick="pin"][data-kind="thread"]');
+    if (!pin) return;
+    let picks = pin.querySelector('[data-pasteflick="picks"]');
+    if (!picks) {
+      picks = document.createElement("div");
+      picks.setAttribute("data-pasteflick", "picks");
+      pin.appendChild(picks);
+    }
+    const ids = activeEls.map((el, i) => el.getAttribute("data-message-id") || "#" + i).join("|");
+    if (picks._pickKey === ids) {
+      picks.hidden = activeEls.length < 2;
+      return;
+    }
+    picks._pickKey = ids;
+    picks.innerHTML = "";
+    if (activeEls.length < 2) {
+      picks.hidden = true;
+      return;
+    }
+    picks.hidden = false;
+    activeEls.forEach((el, i) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.setAttribute("data-pasteflick", "pick");
+      btn.style.animationDelay = i * 40 + "ms";
+      btn.innerHTML = BOOKMARK_SVG;
+      btn.title = "";
+      btn.setAttribute("aria-label", "Drop this bookmark");
+      btn.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        void onMarkClick(el, { metaKey: true, _join: true });
+      });
+      picks.appendChild(btn);
+    });
+  }
+
+  function syncHighlights(activeEls) {
+    const root = layerRoot();
+    let layer = root.querySelector('[data-pasteflick="highlights"]');
+    if (!layer) {
+      layer = document.createElement("div");
+      layer.setAttribute("data-pasteflick", "highlights");
+      root.insertBefore(layer, root.querySelector('[data-pasteflick="rails"]'));
+    }
+    const boxes = Array.from(layer.querySelectorAll('[data-pasteflick="highlight"]'));
+    while (boxes.length < activeEls.length) {
+      const box = document.createElement("div");
+      box.setAttribute("data-pasteflick", "highlight");
+      layer.appendChild(box);
+      boxes.push(box);
+    }
+    boxes.forEach((box, i) => {
+      const el = activeEls[i];
+      if (!el) {
+        box.classList.remove("is-on");
+        box.style.display = "none";
+        box._anchor = null;
+        return;
+      }
+      box._anchor = el;
+      box.classList.add("is-on");
+      box.style.display = "block";
+      paintHighlight(box, el);
+    });
+  }
+
   async function applyActiveVisuals() {
-    const mark = await getActivePasteFlick();
+    const marks = await getActiveMarks();
     const nodes = messageNodes();
     const records = nodes.map((el, i) => ({
       el,
@@ -3168,40 +3628,39 @@
       fingerprint: fingerprintText(messageTextForMark(el)),
       position: i,
     }));
-    const idx = resolvePasteFlickIndex(records, mark);
-    const activeEl = idx >= 0 ? records[idx].el : null;
-    const custom = namedMark(mark);
+    const activeEls = [];
+    marks.forEach((mark) => {
+      const idx = resolvePasteFlickIndex(records, mark);
+      if (idx >= 0 && activeEls.indexOf(records[idx].el) < 0) activeEls.push(records[idx].el);
+    });
+    activeEls.sort((a, b) => nodes.indexOf(a) - nodes.indexOf(b));
+    const multi = activeEls.length >= 2;
+    const custom = namedMark(marks[0]);
     const labelText = custom || "PasteFlick";
     const focused = editingLabel();
     const root = layerRoot();
-    const highlight = root.querySelector('[data-pasteflick="highlight"]');
 
     root.querySelectorAll('[data-pasteflick="pin"][data-kind="message"]').forEach((pin) => {
-      const on = !!(activeEl && pin._anchor === activeEl);
+      const on = !!(pin._anchor && activeEls.indexOf(pin._anchor) >= 0);
       const btn = pin.querySelector('[data-pasteflick="mark"]');
       const label = pin.querySelector('[data-pasteflick="label"]');
       if (btn) {
         btn.classList.toggle("is-active", on);
+        btn.classList.toggle("is-multi", on && multi);
+        btn.classList.toggle("is-joinable", !on && activeEls.length === 1);
         btn.setAttribute("aria-pressed", on ? "true" : "false");
       }
       if (label && label !== focused) {
-        label.hidden = !on;
-        label.textContent = on ? labelText : "PasteFlick";
-        if (on && custom) label.setAttribute("data-custom", "1");
+        label.hidden = !(on && !multi);
+        label.textContent = on && !multi ? labelText : "PasteFlick";
+        if (on && !multi && custom) label.setAttribute("data-custom", "1");
         else label.removeAttribute("data-custom");
       }
     });
 
-    if (highlight) {
-      if (activeEl) {
-        highlight.classList.add("is-on");
-        highlight.style.display = "block";
-        paintHighlight(highlight, activeEl);
-      } else {
-        highlight.classList.remove("is-on");
-        highlight.style.display = "none";
-      }
-    }
+    syncChipBound(activeEls.length);
+    paintPickStack(activeEls);
+    syncHighlights(activeEls);
   }
 
   function scan() {
@@ -3209,24 +3668,14 @@
     syncScheme();
     const rails = railsLayer();
     const seen = new Set();
+    const threadPin = ensureThreadChip();
+    if (threadPin) seen.add(threadPin);
     messageNodes().forEach((el) => {
-      if (!shouldHideMessagePin(el)) seen.add(ensureMessagePin(el));
-      contentBlocks(el)
-        .filter((blockEl) => !isFileTarget(blockEl) && !isInlineLink(blockEl))
-        .slice(0, 12)
-        .forEach((blockEl) => {
-          seen.add(ensureBlockPin(blockEl));
-        });
-      inlineLinks(el).forEach((linkEl) => {
-        seen.add(ensureBlockPin(linkEl));
-      });
-    });
-    detachedDocumentHosts().slice(0, 6).forEach((blockEl) => {
-      seen.add(ensureBlockPin(blockEl));
+      seen.add(ensureMessagePin(el));
     });
     if (rails) {
       rails.querySelectorAll('[data-pasteflick="pin"]').forEach((pin) => {
-        if (seen.has(pin)) {
+        if (pin.getAttribute("data-kind") === "thread" || seen.has(pin)) {
           pin._misses = 0;
           return;
         }
@@ -3260,8 +3709,8 @@
       return;
     }
     let needPlace = false;
+    ensureThreadChip();
     messageNodes().forEach((el) => {
-      if (shouldHideMessagePin(el)) return;
       const had = pinByTarget.get(el);
       if (!had || !had.isConnected) {
         ensureMessagePin(el);
@@ -3269,6 +3718,7 @@
       }
     });
     rails.querySelectorAll('[data-pasteflick="pin"]').forEach((pin) => {
+      if (pin.getAttribute("data-kind") === "thread") return;
       const live = pin._anchor && pin._anchor.isConnected;
       if (!live) {
         removePin(pin);
@@ -3291,10 +3741,15 @@
   function isDockHost(node) {
     if (!node || node === document || node === document.documentElement) return false;
     if (node.id === HOST_ID || node.id === LEGACY_HOST_ID) return true;
-    return !!(
-      node.closest &&
-      (node.closest("#" + HOST_ID) || node.closest("#" + LEGACY_HOST_ID))
-    );
+    if (node.closest && (node.closest("#" + HOST_ID) || node.closest("#" + LEGACY_HOST_ID))) return true;
+    try {
+      const root = node.getRootNode && node.getRootNode();
+      const host = root && root.host;
+      if (host && (host.id === HOST_ID || host.id === LEGACY_HOST_ID)) return true;
+    } catch (_) {
+      /* ignore */
+    }
+    return false;
   }
 
   function mutationLooksLikeNewTurn(records) {
@@ -3318,6 +3773,8 @@
     if (key === lastConvKey) return;
     const prev = lastConvKey;
     lastConvKey = key;
+    heldTitleLeft = NaN;
+    heldStick = 0;
     if (key && prev === "") await migratePending(key);
     scan();
   }
@@ -3397,6 +3854,7 @@
 
   globalThis.PasteFlick = {
     getActive: getActivePasteFlick,
+    getActives: getActiveMarks,
     setActive: setActivePasteFlick,
     setName: setPasteFlickName,
     getDraft: getDraftName,

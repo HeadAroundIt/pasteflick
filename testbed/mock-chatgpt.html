@@ -107,8 +107,8 @@
         display: none !important;
       }
       html.shot .thread {
-        padding-left: 168px;
-        max-width: 720px;
+        padding: 28px 48px 36px 228px;
+        max-width: 620px;
       }
       html.shot,
       html.shot body,
@@ -130,13 +130,37 @@
         color: #5c4a2e;
       }
       html.shot .msg {
-        max-width: 520px;
+        max-width: 400px;
         margin: 10px 0;
         padding: 12px 14px;
         border-radius: 10px;
         border: 1px solid rgba(201, 166, 106, 0.22);
         box-shadow: 0 1px 3px rgba(50, 40, 20, 0.05);
         line-height: 1.45;
+      }
+      #shot-callouts {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 2147483000;
+      }
+      #shot-callouts svg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+      }
+      .shot-ring {
+        position: absolute;
+        border-radius: 16px;
+        box-shadow:
+          0 0 0 3px #c9a66a,
+          0 0 0 6px rgba(201, 166, 106, 0.28),
+          0 10px 22px rgba(50, 40, 20, 0.18);
+      }
+      .shot-ring-mark {
+        border-radius: 12px;
       }
       html.shot .msg.user {
         background: color-mix(in srgb, #c9a66a 12%, #f7f7f5);
@@ -446,19 +470,142 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
         document.querySelectorAll(".msg.assistant .role").forEach((el) => {
           el.textContent = "Assistant";
         });
-        const markShot = (tries) => {
+        const userTurn = document.querySelector('[data-message-id="msg-user-1"]');
+        const asstTurn = document.querySelector('[data-message-id="msg-assistant-1"]');
+        let marked = false;
+        const callouts = document.createElement("div");
+        callouts.id = "shot-callouts";
+        document.body.appendChild(callouts);
+        const layoutShot = () => {
           const host = document.getElementById("pasteflick-dock-host");
-          const mark =
-            host &&
-            host.shadowRoot &&
-            host.shadowRoot.querySelector('[data-pasteflick="mark"]');
-          if (mark) {
-            mark.click();
-            return;
+          const root = host && host.shadowRoot;
+          if (!root || !userTurn || typeof PasteFlick === "undefined" || !PasteFlick.pinFor) return false;
+          const threadPin = root.querySelector('[data-pasteflick="pin"][data-kind="thread"]');
+          const userPin = PasteFlick.pinFor(userTurn);
+          const asstPin = asstTurn ? PasteFlick.pinFor(asstTurn) : null;
+          if (!threadPin || !userPin) return false;
+          const mark = userPin.querySelector('[data-pasteflick="mark"]');
+          if (mark && !marked) {
+            if (!mark.classList.contains("is-active")) mark.click();
+            marked = true;
           }
-          if (tries < 20) setTimeout(() => markShot(tries + 1), 50);
+          root.querySelectorAll('[data-pasteflick="pin"][data-kind="message"]').forEach((el) => {
+            if (el !== userPin && el !== asstPin) el.style.display = "none";
+          });
+          const userSilo = userPin.closest('[data-pasteflick="silo"]');
+          const threadSilo = threadPin.closest('[data-pasteflick="silo"]');
+          const asstSilo = asstPin && asstPin.closest('[data-pasteflick="silo"]');
+          const userBox = userTurn.getBoundingClientRect();
+          const asstBox = asstTurn ? asstTurn.getBoundingClientRect() : null;
+          const chipW = Math.ceil(threadPin.offsetWidth || 108);
+          const chipH = Math.ceil(threadPin.offsetHeight || 58);
+          const pinW = Math.ceil(userPin.offsetWidth || 30);
+          const pinH = Math.ceil(userPin.offsetHeight || 30);
+          const gap = 18;
+          const bookmarkLeft = Math.round(userBox.left - 14 - pinW);
+          const bookmarkTop = Math.round(userBox.top + 6);
+          const chipLeft = Math.round(bookmarkLeft - gap - chipW);
+          const chipTop = Math.round(bookmarkTop + (pinH - chipH) / 2);
+          if (threadSilo) {
+            threadSilo.style.position = "fixed";
+            threadSilo.style.left = chipLeft + "px";
+            threadSilo.style.top = chipTop + "px";
+            threadSilo.style.width = chipW + "px";
+            threadSilo.style.height = chipH + "px";
+            threadSilo.style.zIndex = "80";
+            threadSilo.style.transform = "none";
+          }
+          if (userSilo) {
+            userSilo.style.position = "fixed";
+            userSilo.style.left = bookmarkLeft + "px";
+            userSilo.style.top = bookmarkTop + "px";
+            userSilo.style.width = pinW + "px";
+            userSilo.style.height = pinH + "px";
+            userSilo.style.zIndex = "81";
+            userSilo.style.transform = "none";
+          }
+          if (asstSilo && asstBox) {
+            const asstW = Math.ceil(asstPin.offsetWidth || 30);
+            const asstH = Math.ceil(asstPin.offsetHeight || 30);
+            asstSilo.style.position = "fixed";
+            asstSilo.style.left = Math.round(asstBox.left - 14 - asstW) + "px";
+            asstSilo.style.top = Math.round(asstBox.top + 6) + "px";
+            asstSilo.style.width = asstW + "px";
+            asstSilo.style.height = asstH + "px";
+            asstSilo.style.opacity = "0.42";
+            asstSilo.style.filter = "saturate(0.65)";
+            asstSilo.style.transform = "none";
+          }
+          threadPin.style.boxShadow = "0 0 0 2px rgba(201,166,106,.9), 0 8px 18px rgba(50,40,20,.16)";
+          userPin.style.boxShadow = "0 0 0 2px rgba(201,166,106,.9), 0 8px 18px rgba(50,40,20,.16)";
+          const cr = threadPin.getBoundingClientRect();
+          const mr = userPin.getBoundingClientRect();
+          const x1 = cr.right + 3;
+          const y1 = cr.top + cr.height / 2;
+          const x2 = mr.left - 5;
+          const y2 = mr.top + mr.height / 2;
+          const mx = (x1 + x2) / 2;
+          const my = Math.min(y1, y2) - 16;
+          callouts.innerHTML =
+            '<div class="shot-ring" style="left:' +
+            (cr.left - 9) +
+            "px;top:" +
+            (cr.top - 9) +
+            "px;width:" +
+            (cr.width + 18) +
+            "px;height:" +
+            (cr.height + 18) +
+            'px"></div>' +
+            '<div class="shot-ring shot-ring-mark" style="left:' +
+            (mr.left - 8) +
+            "px;top:" +
+            (mr.top - 8) +
+            "px;width:" +
+            (mr.width + 16) +
+            "px;height:" +
+            (mr.height + 16) +
+            'px"></div>' +
+            '<svg viewBox="0 0 ' +
+            window.innerWidth +
+            " " +
+            window.innerHeight +
+            '" preserveAspectRatio="none">' +
+            '<defs><marker id="shot-head" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">' +
+            '<path d="M1,1 L11,6 L1,11 Z" fill="#c9a66a" stroke="#5c4a2e" stroke-width="1"/></marker></defs>' +
+            '<path d="M' +
+            x1 +
+            " " +
+            y1 +
+            " Q " +
+            mx +
+            " " +
+            my +
+            " " +
+            x2 +
+            " " +
+            y2 +
+            '" fill="none" stroke="#5c4a2e" stroke-width="6" stroke-linecap="round"/>' +
+            '<path d="M' +
+            x1 +
+            " " +
+            y1 +
+            " Q " +
+            mx +
+            " " +
+            my +
+            " " +
+            x2 +
+            " " +
+            y2 +
+            '" fill="none" stroke="#c9a66a" stroke-width="3.5" stroke-linecap="round" marker-end="url(#shot-head)"/>' +
+            "</svg>";
+          return true;
         };
-        setTimeout(() => markShot(0), 50);
+        const tick = (tries) => {
+          layoutShot();
+          if (tries < 80) setTimeout(() => tick(tries + 1), 50);
+        };
+        setTimeout(() => tick(0), 80);
       }
 
       if (document.documentElement.classList.contains("shot-chip")) {
@@ -611,13 +758,13 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
           throw new Error("thread chip needs Copy, Save, and Fling");
         }
         if (!extras) throw new Error("thread chip needs extras toggle");
-        if (copyThread.title !== "Copy the highlight, or the visible thread.") {
+        if (copyThread.title !== "Copy the transcript.") {
           throw new Error("unexpected thread copy tooltip: " + copyThread.title);
         }
-        if (pasteThread.title !== "Fling the highlight, or the visible thread.") {
+        if (pasteThread.title !== "Fling the transcript.") {
           throw new Error("unexpected thread fling tooltip: " + pasteThread.title);
         }
-        if (saveThread.title !== "Save the highlight, or the visible thread.") {
+        if (saveThread.title !== "Save the transcript.") {
           throw new Error("unexpected thread save tooltip: " + saveThread.title);
         }
         const threadActions = Array.from(
@@ -673,6 +820,14 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
           throw new Error("unexpected tooltip: " + firstBtn.title);
         }
 
+        window.getSelection().removeAllRanges();
+        copyThread.click();
+        await sleep(400);
+        const fullChip = (await overlayState()).markdown || "";
+        if (!fullChip.includes("copper lantern") || !fullChip.includes("Fourth message")) {
+          throw new Error("thread chip should copy the transcript when no bookmark is selected");
+        }
+
         firstBtn.click();
         await sleep(40);
         if (!firstBtn.classList.contains("is-active")) {
@@ -692,6 +847,58 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
         const stored = await PasteFlick.getActive();
         if (!stored || stored.messageId !== "msg-user-2") {
           throw new Error("persisted mark did not match the clicked message");
+        }
+
+        copyThread.click();
+        await sleep(400);
+        const fromChip = (await overlayState()).markdown || "";
+        if (fromChip.includes("copper lantern")) {
+          throw new Error("chip with a bookmark included text before the mark");
+        }
+        if (!fromChip.includes("Second user turn") || !fromChip.includes("Fourth message")) {
+          throw new Error("chip with a bookmark should copy from that mark");
+        }
+        if (copyThread.title !== "Copy from the bookmark.") {
+          throw new Error("bookmark chip tooltip: " + copyThread.title);
+        }
+
+        firstBtn.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, ctrlKey: true, metaKey: true }));
+        await sleep(40);
+        if (!firstBtn.classList.contains("is-active") || !secondBtn.classList.contains("is-active")) {
+          throw new Error("ctrl-click should keep both bookmarks");
+        }
+        const picks = threadPin.querySelector('[data-pasteflick="picks"]');
+        if (!picks || picks.hidden) {
+          throw new Error("multi pick popover should appear");
+        }
+        if (picks.querySelectorAll('[data-pasteflick="pick"]').length !== 2) {
+          throw new Error("popover should show both bookmarks");
+        }
+        if (!threadPin.classList.contains("is-bound")) {
+          throw new Error("chip should show it is bound to bookmarks");
+        }
+        copyThread.click();
+        await sleep(400);
+        const multiMd = (await overlayState()).markdown || "";
+        if (!multiMd.includes("copper lantern")) {
+          throw new Error("multi copy missed the first bookmark");
+        }
+        if (!multiMd.includes("Second user turn")) {
+          throw new Error("multi copy missed the second bookmark");
+        }
+        if (multiMd.includes("Fourth message")) {
+          throw new Error("multi copy should be the selected messages only");
+        }
+        secondBtn.click();
+        await sleep(40);
+        if (firstBtn.classList.contains("is-active")) {
+          throw new Error("plain click should drop back to one bookmark");
+        }
+        if (!secondBtn.classList.contains("is-active")) {
+          throw new Error("plain click should keep the clicked bookmark");
+        }
+        if (!picks.hidden) {
+          throw new Error("popover should hide when only one bookmark remains");
         }
 
         const sliced = await api.captureFromPasteFlick(stored);
@@ -985,7 +1192,18 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
           throw new Error("message cards should stay with their own turns");
         }
         assertNoPinOverlap(ui);
-        assertRightAligned([threadPin, firstPin, secondPin, assistantPin]);
+        assertRightAligned([firstPin, secondPin, assistantPin]);
+        const sideBox = document.getElementById("sidebar").getBoundingClientRect();
+        const chipBox = threadPin.getBoundingClientRect();
+        if (Math.abs(chipBox.left - sideBox.right) > 14) {
+          throw new Error(
+            "thread chip should sit just after the sidebar (chip=" +
+              chipBox.left.toFixed(1) +
+              " sidebar=" +
+              sideBox.right.toFixed(1) +
+              ")",
+          );
+        }
         assertPinsBelowHeader(ui);
         const head = document.getElementById("page-head");
         const oldHead = head.style.minHeight;
@@ -1210,11 +1428,13 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
         }
 
         window.getSelection().removeAllRanges();
+        if (secondBtn.classList.contains("is-active")) secondBtn.click();
+        await sleep(40);
         copyThread.click();
         await sleep(400);
         const chipMd = (await overlayState()).markdown || "";
-        if (!chipMd.includes("copper lantern") && !chipMd.includes("Second user turn")) {
-          throw new Error("thread chip copy missed the visible thread");
+        if (!chipMd.includes("copper lantern") || !chipMd.includes("Fourth message")) {
+          throw new Error("thread chip copy missed the transcript");
         }
 
         const one = await api.captureMessage({

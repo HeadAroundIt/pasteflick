@@ -123,7 +123,39 @@ function Test-Python {
     }
 }
 
+function Get-VenvPython {
+    param([string]$Root)
+    return (Join-Path $Root ".venv\Scripts\python.exe")
+}
+
+function Find-ExistingVenv {
+    $roots = New-Object System.Collections.Generic.List[string]
+    foreach ($root in @($RepoRoot, $InstallRoot)) {
+        if ($root -and -not $roots.Contains($root)) {
+            $roots.Add($root) | Out-Null
+        }
+    }
+    foreach ($root in $roots) {
+        $py = Get-VenvPython $root
+        if (Test-Path -LiteralPath $py) {
+            return $py
+        }
+    }
+    return $null
+}
+
+function Set-VenvPaths {
+    param([Parameter(Mandatory = $true)][string]$PythonExe)
+    $script:VenvPy = $PythonExe
+    $script:VenvPyw = Join-Path (Split-Path -Parent $PythonExe) "pythonw.exe"
+}
+
 function Ensure-Venv {
+    $existing = Find-ExistingVenv
+    if ($existing) {
+        Set-VenvPaths $existing
+    }
+
     $created = $false
     if (-not (Test-Path -LiteralPath $VenvPy)) {
         $launcher = $null
@@ -150,16 +182,20 @@ function Ensure-Venv {
         }
 
         Write-Host "Creating Python environment for Auto-paste..."
-        $venvArgs = @($prefix) + @("-m", "venv", (Join-Path $RepoRoot ".venv"))
+        $venvDir = Join-Path $RepoRoot ".venv"
+        $venvArgs = @($prefix) + @("-m", "venv", $venvDir)
         $create = Start-Process -FilePath $launcher -ArgumentList $venvArgs -Wait -PassThru -WindowStyle Hidden
-        if ($create.ExitCode -ne 0 -or -not (Test-Path -LiteralPath $VenvPy)) {
+        $createdPy = Get-VenvPython $RepoRoot
+        if ($create.ExitCode -ne 0 -or -not (Test-Path -LiteralPath $createdPy)) {
             Write-Host "Could not create the Python environment for Auto-paste."
             return $false
         }
+        Set-VenvPaths $createdPy
         $created = $true
     }
 
-    $marker = Join-Path $RepoRoot ".venv\pasteflick-requirements.sha256"
+    $venvDir = Split-Path -Parent (Split-Path -Parent $VenvPy)
+    $marker = Join-Path $venvDir "pasteflick-requirements.sha256"
     $wanted = (Get-FileHash -LiteralPath $Requirements -Algorithm SHA256).Hash.ToLowerInvariant()
     $installed = ""
     if (Test-Path -LiteralPath $marker) {

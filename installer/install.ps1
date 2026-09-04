@@ -83,6 +83,43 @@ function Get-InstalledBrowsers {
     return $found.ToArray()
 }
 
+function Get-AssocProgId([string]$RegPath) {
+    try {
+        return [string](Get-ItemProperty -LiteralPath $RegPath -ErrorAction Stop).ProgId
+    }
+    catch {
+        return ""
+    }
+}
+
+function Get-BrowserForCurrentDesktop([object[]]$Browsers) {
+    $keys = @(
+        "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.html\UserChoice",
+        "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.htm\UserChoice",
+        "HKCU:\Software\Microsoft\Windows\Shell\Associations\UrlAssociations\http\UserChoice",
+        "HKCU:\Software\Microsoft\Windows\Shell\Associations\UrlAssociations\https\UserChoice"
+    )
+    foreach ($key in $keys) {
+        $p = (Get-AssocProgId $key).ToLowerInvariant()
+        if ([string]::IsNullOrWhiteSpace($p)) { continue }
+        $name = $null
+        if ($p -like "*brave*") { $name = "Brave" }
+        elseif ($p -like "*edge*") { $name = "Edge" }
+        elseif ($p -like "*chromium*") { $name = "Chromium" }
+        elseif ($p -like "*chrome*") { $name = "Chrome" }
+        if ($null -eq $name) { continue }
+        foreach ($b in $Browsers) {
+            if ($b.Name -eq $name) { return $b }
+        }
+    }
+    return $null
+}
+
+function Write-Utf8Bom([string]$Path, [string]$Text) {
+    $enc = New-Object System.Text.UTF8Encoding $true
+    [System.IO.File]::WriteAllText($Path, $Text, $enc)
+}
+
 function Install-ExtensionFiles {
     Copy-PasteFlickPayload -SourceRoot $RepoRoot -InstallRoot $InstallRoot | Out-Null
     Remove-Item -LiteralPath (Join-Path $InstallRoot "dev-hold") -Force -ErrorAction SilentlyContinue
@@ -106,7 +143,7 @@ function Write-InstallGuide {
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>PasteFlick — finish install</title>
+  <title>PasteFlick - finish install</title>
   <style>
     body { margin: 0; background: #141312; color: #ebe6df; font-family: Segoe UI, system-ui, sans-serif; }
     main { max-width: 640px; margin: 0 auto; padding: 36px 22px 48px; }
@@ -161,27 +198,27 @@ function Write-InstallGuide {
         <li>Paste the path from step 1 and open that folder.</li>
       </ol>
 $browserBlock
-      <p class="note">Leave Developer mode on. Chrome turns unpacked extensions off if you switch it off. After this, updates come from GitHub on their own — you should not need Load unpacked again.</p>
+      <p class="note">Leave Developer mode on. Chrome turns unpacked extensions off if you switch it off. After this, updates come from GitHub on their own - you should not need Load unpacked again.</p>
     </div>
 
     <div class="card">
       <h2>3. How to use</h2>
       <p class="callout">
         The first time you copy, ChatGPT or the browser may ask if it can use the clipboard.
-        Allow it — click <strong>Copy</strong> or <strong>Allow</strong> on that chip.
+        Allow it - click <strong>Copy</strong> or <strong>Allow</strong> on that chip.
         If you skip it, PasteFlick has nowhere to put the text.
       </p>
       <h3>On the chat</h3>
       <ul>
-        <li>Each message has a <strong>Message</strong> card on its left, with <strong>Copy</strong>, <strong>Auto-paste</strong>, and <strong>Save</strong>. ChatGPT’s own buttons stay on the right.</li>
+        <li>Each message has a <strong>Message</strong> card on its left, with <strong>Copy</strong>, <strong>Auto-paste</strong>, and <strong>Save</strong>. ChatGPT's own buttons stay on the right.</li>
         <li>Code, files, and documents get their own smaller cards.</li>
         <li>The bookmark on a Message card is where <strong>Copy from PasteFlick</strong> starts.</li>
       </ul>
       <h3>From the PasteFlick popup</h3>
       <ul>
-        <li><strong>Copy selection</strong> — highlight part of the thread, then copy.</li>
-        <li><strong>Copy thread</strong> — the whole conversation.</li>
-        <li><strong>Copy from PasteFlick</strong> — from the bookmark onward.</li>
+        <li><strong>Copy selection</strong> - highlight part of the thread, then copy.</li>
+        <li><strong>Copy thread</strong> - the whole conversation.</li>
+        <li><strong>Copy from PasteFlick</strong> - from the bookmark onward.</li>
       </ul>
       <p class="note">
         Copies stay on the clipboard unless you turn on Auto-paste or File in Settings.
@@ -204,7 +241,7 @@ $browserBlock
 </body>
 </html>
 "@
-    Set-Content -LiteralPath $GuidePath -Value $html -Encoding UTF8
+    Write-Utf8Bom -Path $GuidePath -Text $html
 }
 
 function Write-UninstallFiles {
@@ -281,16 +318,10 @@ function Install-Product {
 
     Start-Process $GuidePath
 
-    $launch = $null
-    foreach ($b in $browsers) {
-        if ($b.Name -eq "Brave") { $launch = $b; break }
-    }
-    if ($null -eq $launch -and $browsers.Count -gt 0) {
-        $launch = $browsers[0]
-    }
+    $launch = Get-BrowserForCurrentDesktop $browsers
     if ($null -ne $launch) {
         Write-Step ("Opening " + $launch.Name + " extensions page")
-        Start-Process -FilePath ([string]$launch.ExePath) -ArgumentList ([string]$launch.ExtensionsUrl)
+        Start-Process -FilePath ([string]$launch.ExePath) -ArgumentList @("--new-tab", ([string]$launch.ExtensionsUrl))
     }
 
     Write-Host ""

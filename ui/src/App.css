@@ -111,8 +111,8 @@ a {
   justify-content: space-between;
   gap: 8px;
   margin: 0 calc(-1 * var(--pad-x)) var(--space-3);
-  padding: 10px var(--pad-x) 8px;
-  min-height: 44px;
+  padding: 10px var(--pad-x);
+  min-height: 52px;
   box-shadow: inset 0 -1px 0 var(--stroke);
 }
 
@@ -135,7 +135,7 @@ a {
   min-width: 0;
   flex: 1;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   font-size: 15px;
   font-weight: 650;
   letter-spacing: -0.02em;
@@ -143,9 +143,9 @@ a {
 }
 
 .brand img {
-  width: 18px;
-  height: 18px;
-  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
   display: block;
 }
 
@@ -495,6 +495,8 @@ input:focus-visible {
   border-radius: 10px;
   border: 1px solid var(--stroke);
   background: var(--well);
+  display: flex;
+  flex-direction: column;
 }
 
 .support p {
@@ -512,6 +514,7 @@ a.kofi {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  align-self: center;
   gap: 8px;
   height: 36px;
   padding: 0 16px 0 14px;

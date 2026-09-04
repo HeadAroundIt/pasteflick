@@ -854,6 +854,76 @@
     return { messages: [], text: "", skippedEmbed: false, fromCache: false };
   }
 
+  function asMarks(value) {
+    if (!value) return [];
+    if (Array.isArray(value)) return value.filter((m) => m && typeof m === "object");
+    if (value.marks && Array.isArray(value.marks)) {
+      return value.marks.filter((m) => m && typeof m === "object");
+    }
+    if (typeof value === "object" && (value.messageId || value.fingerprint)) return [value];
+    return [];
+  }
+
+  function uniqueSorted(idxs) {
+    const seen = {};
+    const out = [];
+    idxs.forEach((i) => {
+      if (!Number.isInteger(i) || i < 0 || seen[i]) return;
+      seen[i] = true;
+      out.push(i);
+    });
+    out.sort((a, b) => a - b);
+    return out;
+  }
+
+  async function extractPickedMarks(marks) {
+    const url = location.href;
+    const title = pageTitle();
+    const id = conversationIdFromUrl(url);
+    const priv = privateApi();
+    if (id && lastDestination !== "cursor" && priv) {
+      try {
+        const payload = await priv.fetchConversation(id);
+        const turns = priv.turnsFromPayload(payload);
+        const records = asMarkRecords(turns, "body");
+        const idxs = uniqueSorted(marks.map((mark) => resolvePasteFlickIndex(records, mark)));
+        if (idxs.length) {
+          const heading = (payload && payload.title) || title;
+          return payloadFromTurns(
+            heading,
+            idxs.map((i) => turns[i]),
+            url,
+            false,
+            "selected messages",
+            "messages",
+          );
+        }
+      } catch (_) {
+        /* fall through to DOM */
+      }
+    }
+    const messages = lastDestination === "cursor" ? scrapeVisibleMessages() : scrapeDomMessages();
+    const records = asMarkRecords(messages, "text");
+    const idxs = uniqueSorted(marks.map((mark) => resolvePasteFlickIndex(records, mark)));
+    if (!idxs.length) throw new Error("Couldn't find those messages.");
+    return payloadFromTurns(
+      title,
+      idxs.map((i) => ({ role: roleHeading(messages[i].role), body: messages[i].text })),
+      url,
+      true,
+      lastDestination === "cursor" ? "" : "selected messages · visible DOM, embeds skipped",
+      "messages",
+    );
+  }
+
+  async function extractChip(extra) {
+    extra = extra || {};
+    const marks = asMarks(extra.marks);
+    if (marks.length >= 2) return extractPickedMarks(marks);
+    if (marks.length === 1) return extractFromPasteFlick(marks[0]);
+    return extractFull();
+  }
+
   async function extractSelectionOrFull(preferSelection) {
     const url = location.href;
     const title = pageTitle();
@@ -1071,43 +1141,44 @@
     style.setAttribute("data-pasteflick", "style");
     style.textContent = `
       #${SELECT_VIEW_ID} {
-        --bg0:#171410;--bg1:#211c16;--well:#110e0b;--text:#efe6d4;
-        --muted:#9d8f76;--faint:#72685a;--earth:#c4a060;--paper:#e4d2ae;
-        --red:#b24c42;--pick:color-mix(in srgb,#c9a66a 11%,#171410);
-        --stroke:rgba(232,208,156,.10);--stroke-strong:rgba(201,166,106,.24);
-        --shine:rgba(244,226,180,.08);--rim:rgba(201,166,106,.32);
+        --bg0:#f7f7f5;--well:color-mix(in srgb,#c9a66a 6%,#f7f7f5);--text:#5c4a2e;
+        --muted:#8a7358;--faint:#a89478;--red:#b24c42;
+        --chip:rgba(201,166,106,.4);--chip-hot:rgba(201,166,106,.55);
+        --chip-label:rgba(201,166,106,.48);--ink:#171410;
+        --stroke:rgba(201,166,106,.22);--rim:rgba(201,166,106,.22);
+        --card:color-mix(in srgb,#c9a66a 8%,#f7f7f5);
         position:fixed;inset:0;z-index:2147483646;display:flex;
         align-items:center;justify-content:center;padding:24px;box-sizing:border-box;
         font-family:"Segoe UI Variable Text",Segoe UI,system-ui,sans-serif;
         font-weight:450;letter-spacing:-.011em;color:var(--text);
       }
       #${SELECT_VIEW_ID} .sm-back {
-        position:absolute;inset:0;background:rgba(10,8,5,.76);
+        position:absolute;inset:0;background:rgba(50,40,20,.18);
       }
       #${SELECT_VIEW_ID} .sm-panel {
         position:relative;z-index:1;width:min(860px,100%);height:min(820px,92vh);
-        display:flex;flex-direction:column;background:var(--bg0);color:var(--text);
-        border-radius:20px;box-shadow:inset 0 1px 0 var(--shine);overflow:hidden;
+        display:flex;flex-direction:column;background:var(--card);color:var(--text);
+        border-radius:10px;border:1px solid var(--rim);
+        box-shadow:0 1px 3px rgba(50,40,20,.05),0 12px 32px rgba(50,40,20,.12);overflow:hidden;
       }
-      #${SELECT_VIEW_ID} .sm-panel::after {
-        content:"";position:absolute;inset:1px;border:1px solid var(--rim);
-        border-radius:19px;pointer-events:none;
-      }
+      #${SELECT_VIEW_ID} .sm-panel::after { display:none; }
       #${SELECT_VIEW_ID} .sm-titlebar {
         display:flex;align-items:center;justify-content:space-between;gap:8px;
         padding:10px 16px 8px;min-height:44px;flex:none;
         box-shadow:inset 0 -1px 0 var(--stroke);
       }
       #${SELECT_VIEW_ID} .sm-brand {
-        font-size:15px;font-weight:650;letter-spacing:-.02em;
+        padding:3px 8px;font:650 12px/1.2 inherit;letter-spacing:-.01em;
+        color:var(--ink);border-radius:6px;background:var(--chip-label);
+        box-shadow:inset 0 1px 0 rgba(244,226,180,.35);
       }
       #${SELECT_VIEW_ID} .sm-ghost {
         appearance:none;border:0;background:transparent;color:var(--muted);
-        width:28px;height:28px;border-radius:8px;cursor:pointer;font:inherit;
-        transition:background 120ms ease,color 120ms ease;
+        width:28px;height:28px;border-radius:7px;cursor:pointer;font:inherit;
+        transition:background 280ms cubic-bezier(.16,1,.3,1),color 280ms cubic-bezier(.16,1,.3,1);
       }
       #${SELECT_VIEW_ID} .sm-ghost:hover {
-        background:rgba(232,208,156,.09);color:var(--text);
+        background:var(--chip-hot);color:var(--ink);
       }
       #${SELECT_VIEW_ID} .sm-body {
         flex:1;overflow:auto;padding:16px;background:var(--well);
@@ -1122,27 +1193,27 @@
         user-select:text;cursor:text;
       }
       #${SELECT_VIEW_ID} .sm-foot {
-        padding:12px 16px;flex:none;background:var(--bg0);
+        padding:12px 16px;flex:none;background:transparent;
         box-shadow:inset 0 1px 0 var(--stroke);
       }
       #${SELECT_VIEW_ID} .sm-row { display:flex;gap:8px; }
       #${SELECT_VIEW_ID} .sm-btn {
-        height:36px;padding:0 14px;border-radius:11px;
-        border:1px solid var(--stroke);background:var(--bg1);color:var(--text);
-        font:inherit;font-weight:600;cursor:pointer;
-        transition:background 120ms ease,border-color 120ms ease,transform 80ms ease;
+        height:34px;padding:0 14px;border-radius:7px;
+        border:1px solid var(--stroke);background:var(--well);color:var(--text);
+        font:inherit;font-weight:650;cursor:pointer;
+        transition:background 280ms cubic-bezier(.16,1,.3,1),color 280ms cubic-bezier(.16,1,.3,1),transform 160ms cubic-bezier(.32,.72,0,1);
       }
       #${SELECT_VIEW_ID} .sm-btn.primary {
-        background:color-mix(in srgb,var(--earth) 16%,var(--bg1));
-        border-color:var(--stroke-strong);
+        background:var(--chip);border-color:transparent;color:var(--ink);
+        box-shadow:inset 0 1px 0 rgba(244,226,180,.35);
       }
       #${SELECT_VIEW_ID} .sm-btn:hover:not(:disabled) {
-        background:var(--pick);border-color:var(--stroke-strong);
+        background:var(--chip-hot);border-color:transparent;color:var(--ink);
       }
       #${SELECT_VIEW_ID} .sm-btn.primary:hover:not(:disabled) {
-        background:color-mix(in srgb,var(--earth) 22%,var(--bg1));
+        background:var(--chip-hot);
       }
-      #${SELECT_VIEW_ID} .sm-btn:active:not(:disabled) { transform:translateY(1px); }
+      #${SELECT_VIEW_ID} .sm-btn:active:not(:disabled) { transform:scale(.98); }
       #${SELECT_VIEW_ID} .sm-btn:disabled { color:var(--faint);cursor:default; }
       #${SELECT_VIEW_ID} .sm-hint {
         margin-top:10px;font-size:12px;line-height:1.35;min-height:16px;color:var(--faint);
@@ -1345,6 +1416,8 @@
       payload = await extractSingleMessage(extra.target || scrollMark);
     } else if (mode === "copy-fragment") {
       payload = wrapFragment(extra.fragment);
+    } else if (mode === "chip") {
+      payload = await extractChip(extra);
     } else {
       payload = await extractSelectionOrFull(mode !== "full");
     }
@@ -1377,6 +1450,7 @@
     openSelectView: () => openSelectView(),
     captureFromPasteFlick: (mark) => runCapture("from-pasteflick", mark),
     openFromPasteFlick: (mark) => runCapture("open-from-pasteflick", mark),
+    captureChip: (extra) => runCapture("chip", null, extra || {}),
     captureMessage: (target, extra) =>
       runCapture("single-message", null, Object.assign({}, extra || {}, { target })),
     captureFragment: (fragment, extra) =>
@@ -1417,6 +1491,7 @@
       selection: "selection",
       "select-view": "select-view",
       open: "select-view",
+      "chip": "chip",
       "from-pasteflick": "from-pasteflick",
       "open-from-pasteflick": "open-from-pasteflick",
       "single-message": "single-message",
@@ -1431,6 +1506,7 @@
       destination: data.destination || "",
       fileFormat: data.fileFormat || data.format || "",
       copyExtras: data.copyExtras,
+      marks: data.marks || null,
     })
       .then((result) => {
         window.postMessage(

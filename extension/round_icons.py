@@ -7,10 +7,10 @@ from pathlib import Path
 from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 ICONS = Path(__file__).resolve().parent / "icons"
-BG = (24, 23, 22, 255)
-PAPER = (196, 168, 130, 255)
-FOLD = (158, 132, 100, 255)
-INK = (24, 23, 22, 255)
+BG = (243, 241, 234, 255)
+PAPER = (201, 166, 106, 255)
+FOLD = (156, 118, 58, 255)
+INK = (23, 20, 16, 255)
 SIZES = (16, 32, 48, 128)
 
 
@@ -79,6 +79,36 @@ def build(size: int) -> Image.Image:
     return out
 
 
+def build_master(size: int = 1024) -> Image.Image:
+    img = Image.new("RGB", (size, size), BG[:3])
+    d = ImageDraw.Draw(img)
+    s = float(size)
+    left, top, right, bottom = s * 0.30, s * 0.16, s * 0.70, s * 0.84
+    d.rounded_rectangle([left, top, right, bottom], radius=s * 0.07, fill=PAPER[:3])
+    fold = s * 0.14
+    d.polygon(
+        [(right - fold, bottom), (right, bottom - fold), (right, bottom)],
+        fill=BG[:3],
+    )
+    d.polygon(
+        [
+            (right - fold, bottom),
+            (right - fold, bottom - fold),
+            (right, bottom - fold),
+        ],
+        fill=FOLD[:3],
+    )
+    thick = s * 0.028
+    for y_frac in (0.36, 0.46, 0.56):
+        y = s * y_frac
+        d.rounded_rectangle(
+            [s * 0.38, y - thick / 2, s * 0.62, y + thick / 2],
+            radius=thick / 2,
+            fill=INK[:3],
+        )
+    return img
+
+
 def main() -> None:
     for size in SIZES:
         img = build(size)
@@ -88,6 +118,9 @@ def main() -> None:
         print(f"{path.name} edge_alpha={a}")
 
     build(256).save(ICONS / "icon256.png", format="PNG", compress_level=6)
+    master = ICONS / "icon-master.png"
+    build_master().save(master, format="PNG", compress_level=6)
+    print(f"{master.name} {build_master().size}")
     print("ok")
 
 

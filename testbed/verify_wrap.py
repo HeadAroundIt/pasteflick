@@ -106,7 +106,7 @@ def main() -> int:
             "--disable-renderer-backgrounding",
             "--window-size=1400,900",
             "--new-window",
-            f"http://127.0.0.1:{web_port}/mock-chatgpt.html?wraptest=1&v=83",
+            f"http://127.0.0.1:{web_port}/mock-chatgpt.html?wraptest=1&v=84",
         ],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.PIPE,

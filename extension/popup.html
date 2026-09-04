@@ -529,12 +529,21 @@
         color: var(--faint);
       }
 
+      html.shot,
+      html.shot body {
+        background: transparent;
+        padding: 0;
+        height: auto;
+      }
+
       .support {
         margin: 4px 0 0;
         padding: 12px;
         border-radius: 10px;
         border: 1px solid var(--stroke);
         background: var(--well);
+        display: flex;
+        flex-direction: column;
       }
 
       .support p {
@@ -552,6 +561,7 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        align-self: center;
         gap: 8px;
         height: 36px;
         padding: 0 16px 0 14px;

@@ -45,19 +45,13 @@ function loadedVersion() {
   return (chrome.runtime.getManifest().version || "").trim();
 }
 
-function badgeFromVersion(version) {
-  const parts = String(version || "").split(".");
-  return parts[parts.length - 1] || "";
-}
-
 async function markLoadedVersion() {
   const version = loadedVersion();
   try {
-    await chrome.action.setBadgeText({ text: badgeFromVersion(version) });
-    await chrome.action.setBadgeBackgroundColor({ color: "#c9a66a" });
+    await chrome.action.setBadgeText({ text: "" });
     await chrome.action.setTitle({ title: "PasteFlick " + version });
   } catch (_) {
-    /* toolbar badge is best-effort */
+    /* toolbar title is best-effort */
   }
   try {
     await chrome.storage.local.set({ loadedVersion: version, loadedAt: Date.now() });
