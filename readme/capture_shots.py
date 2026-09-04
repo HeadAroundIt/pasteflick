@@ -122,12 +122,19 @@ iframe{
             else:
                 inner, h = "/mock-chatgpt.html?shot=1", 720
             w = 316 if "chat" not in name else 920
-            page_bg = "#3a3228" if "chat" not in name else "#1a1a1a"
+            page_bg = "#3a3228"
             frame_bg = "#f7f7f5" if "chat" not in name else "#212121"
             html = f"""<!doctype html>
 <html><head><meta charset="utf-8"><style>
-html,body{{margin:0;background:{page_bg};}}
-.stage{{padding:28px;display:flex;justify-content:center;}}
+html,body{{margin:0;height:100%;background:{page_bg};}}
+.stage{{
+  min-height:100%;
+  box-sizing:border-box;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:40px 36px;
+}}
 iframe{{border:0;width:{w}px;height:{h}px;border-radius:12px;overflow:hidden;
 box-shadow:0 12px 32px rgba(20,14,8,.4);background:{frame_bg};}}
 </style></head>
@@ -225,7 +232,7 @@ def main() -> None:
         shot(f"{base}/shot-pair.html", OUT / "windows.png", 760, 740, "FF3A3228")
         shot(f"{base}/shot-popup.html", OUT / "popup.png", 380, 480, "FF3A3228")
         shot(f"{base}/shot-settings.html", OUT / "settings.png", 380, 760, "FF3A3228")
-        shot(f"{base}/shot-chat.html", OUT / "chat.png", 1000, 800, "FF1A1A1A")
+        shot(f"{base}/shot-chat.html", OUT / "chat.png", 1000, 820, "FF3A3228")
     finally:
         httpd.shutdown()
     print("ok")
