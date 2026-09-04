@@ -43,6 +43,18 @@ The first time you copy, allow clipboard access if ChatGPT or the browser asks.
 
 ---
 
+## Support
+
+PasteFlick is free to use. If it saves you time or frustration, a $5 tip helps support future updates and more useful free apps.
+
+No pressure... just genuine appreciation!
+
+<p align="center">
+  <a href="https://ko-fi.com/ryandunham"><img src="extension/icons/tip5.png" alt="Tip $5 on Ko-fi" height="32"></a>
+</p>
+
+---
+
 ## Install
 
 1. Download the latest **Windows zip** from [Releases](https://github.com/HeadAroundIt/pasteflick/releases/latest).

@@ -238,6 +238,11 @@ document.getElementById("add-browser").addEventListener("click", (event) => {
   chrome.tabs.create({ url: chrome.runtime.getURL("setup.html") });
 });
 
+document.getElementById("tip-kofi").addEventListener("click", (event) => {
+  event.preventDefault();
+  chrome.tabs.create({ url: "https://ko-fi.com/ryandunham" });
+});
+
 document.getElementById("open-settings").addEventListener("click", () => {
   viewHome.hidden = true;
   viewSettings.hidden = false;

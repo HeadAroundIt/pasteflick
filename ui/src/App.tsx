@@ -152,7 +152,7 @@ export default function App() {
                     />
                   </svg>
                 </button>
-                <span>Settings</span>
+                <span className="kicker">Settings</span>
               </div>
               <div className="chrome">
                 <button type="button" className="ghost close" title="Close" onClick={() => closeWindow()}>
@@ -216,6 +216,16 @@ export default function App() {
                 </span>
               </div>
               <p className="version">{version ? `PasteFlick ${version}` : 'PasteFlick'}</p>
+              <div className="support">
+                <p>
+                  PasteFlick is free to use. If it saves you time or frustration, a $5
+                  tip helps support future updates and more useful free apps.
+                </p>
+                <p>No pressure... just genuine appreciation!</p>
+                <a className="kofi" href="https://ko-fi.com/ryandunham" target="_blank" rel="noreferrer">
+                  Tip $5 on Ko-fi
+                </a>
+              </div>
               <p className="settings-note">{settingsNote}</p>
             </div>
           </>
@@ -224,11 +234,20 @@ export default function App() {
             <header className="titlebar">
               <div className="brand pywebview-drag-region" title="Drag to move">
                 <img src="/pasteflick-32.png" alt="" width={18} height={18} />
-                <span>PasteFlick</span>
+                <span className="kicker">PasteFlick</span>
               </div>
               <div className="chrome">
-                <button type="button" className="ghost" title="Settings" onClick={openSettings}>
-                  ⚙
+                <button type="button" className="ghost" title="Settings" aria-label="Settings" onClick={openSettings}>
+                  <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                    <circle cx="12" cy="12" r="3.05" fill="none" stroke="currentColor" strokeWidth="1.85" />
+                    <path
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.85"
+                      strokeLinecap="round"
+                      d="M12 3.7v2.15M12 18.15v2.15M3.7 12h2.15M18.15 12h2.15M6.22 6.22l1.52 1.52M16.26 16.26l1.52 1.52M6.22 17.78l1.52-1.52M16.26 7.74l1.52-1.52"
+                    />
+                  </svg>
                 </button>
                 <button type="button" className="ghost close" title="Close" onClick={() => closeWindow()}>
                   ✕

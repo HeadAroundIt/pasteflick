@@ -2,34 +2,38 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="color-scheme" content="dark" />
+    <meta name="color-scheme" content="light" />
     <title>PasteFlick</title>
     <style>
       :root {
-        color-scheme: dark;
-        --bg0: #1e1e1e;
-        --bg1: #262626;
-        --well: #161616;
-        --char: #3a3a3a;
-        --glass: rgba(201, 166, 106, 0.06);
-        --glass-2: rgba(201, 166, 106, 0.1);
-        --stroke: rgba(201, 166, 106, 0.16);
-        --stroke-strong: rgba(201, 166, 106, 0.28);
-        --text: #e4d2ae;
-        --muted: #b09a78;
-        --faint: #8a7a62;
+        color-scheme: light;
+        --bg0: #f7f7f5;
+        --bg1: color-mix(in srgb, #c9a66a 6%, #f7f7f5);
+        --well: color-mix(in srgb, #c9a66a 6%, #f7f7f5);
+        --char: #5c4a2e;
+        --glass: rgba(201, 166, 106, 0.08);
+        --glass-2: rgba(201, 166, 106, 0.14);
+        --stroke: rgba(201, 166, 106, 0.22);
+        --stroke-strong: rgba(201, 166, 106, 0.32);
+        --text: #5c4a2e;
+        --muted: #8a7358;
+        --faint: #a89478;
         --red: #b24c42;
-        --red-soft: rgba(178, 76, 66, 0.18);
+        --red-soft: rgba(178, 76, 66, 0.12);
         --paper: #e4d2ae;
         --core: #f4ead8;
         --earth: #c4a060;
         --wood: #c9a66a;
         --ink: #171410;
-        --chip: rgba(201, 166, 106, 0.48);
-        --chip-hot: rgba(228, 210, 174, 0.58);
-        --pick: color-mix(in srgb, var(--wood) 12%, var(--bg0));
-        --shine: rgba(244, 226, 180, 0.22);
-        --rim: rgba(201, 166, 106, 0.16);
+        --chip: rgba(201, 166, 106, 0.4);
+        --chip-hot: rgba(201, 166, 106, 0.55);
+        --chip-label: rgba(201, 166, 106, 0.48);
+        --pick: color-mix(in srgb, #c9a66a 10%, #f7f7f5);
+        --shine: rgba(244, 226, 180, 0.45);
+        --rim: rgba(201, 166, 106, 0.22);
+        --card: color-mix(in srgb, #c9a66a 8%, #f7f7f5);
+        --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+        --ease-tap: cubic-bezier(0.32, 0.72, 0, 1);
         --pad-x: 16px;
         --space-1: 4px;
         --space-2: 8px;
@@ -46,7 +50,7 @@
         letter-spacing: -0.011em;
         line-height: 1.35;
         color: var(--text);
-        background: #1e1e1e;
+        background: #f7f7f5;
         -webkit-font-smoothing: antialiased;
       }
 
@@ -76,12 +80,10 @@
       .shell {
         position: relative;
         padding: 0 var(--pad-x) 12px;
-        background: var(--bg0);
+        background: var(--card);
         border: 1px solid var(--rim);
-        border-radius: var(--radius-xl);
-        box-shadow:
-          inset 0 1px 0 var(--shine),
-          0 1px 6px rgba(0, 0, 0, 0.12);
+        border-radius: 10px;
+        box-shadow: 0 1px 3px rgba(50, 40, 20, 0.05);
         overflow: hidden;
       }
 
@@ -109,8 +111,22 @@
       .brand img {
         width: 18px;
         height: 18px;
-        border-radius: 5px;
+        border-radius: 6px;
         display: block;
+      }
+
+      .brand .kicker {
+        min-width: 0;
+        padding: 3px 8px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font: 650 12px/1.2 inherit;
+        letter-spacing: -0.01em;
+        color: var(--ink);
+        border-radius: 6px;
+        background: var(--chip-label);
+        box-shadow: inset 0 1px 0 rgba(244, 226, 180, 0.35);
       }
 
       .chrome {
@@ -133,7 +149,7 @@
         display: grid;
         place-items: center;
         cursor: pointer;
-        transition: background 120ms ease, color 120ms ease;
+        transition: background 280ms var(--ease-out), color 280ms var(--ease-out);
       }
 
       .ghost svg {
@@ -146,8 +162,8 @@
       }
 
       .ghost:hover {
-        background: var(--glass-2);
-        color: var(--text);
+        background: var(--chip-hot);
+        color: var(--ink);
       }
 
       .ghost:focus-visible,
@@ -207,7 +223,7 @@
         line-height: 1;
         flex: none;
         cursor: pointer;
-        transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+        transition: background 280ms var(--ease-out), border-color 280ms var(--ease-out), color 280ms var(--ease-out);
       }
 
       .chip-toggle:hover {
@@ -255,14 +271,14 @@
         width: 100%;
         height: var(--control-h);
         margin: 0 0 var(--space-2);
-        border-radius: var(--radius-md);
+        border-radius: 7px;
         border: 1px solid var(--stroke);
-        background: var(--bg1);
+        background: var(--well);
         color: var(--text);
         font-weight: 650;
         cursor: pointer;
-        box-shadow: inset 0 1px 0 rgba(244, 226, 180, 0.08);
-        transition: background 120ms ease, border-color 120ms ease, transform 80ms ease, color 120ms ease;
+        box-shadow: 0 1px 3px rgba(50, 40, 20, 0.05);
+        transition: background 280ms var(--ease-out), border-color 280ms var(--ease-out), transform 160ms var(--ease-tap), color 280ms var(--ease-out);
       }
 
       .btn.primary {
@@ -273,8 +289,10 @@
       }
 
       .btn:hover:not(:disabled) {
-        background: color-mix(in srgb, var(--wood) 10%, var(--bg1));
-        border-color: var(--stroke-strong);
+        color: var(--ink);
+        background: var(--chip-hot);
+        border-color: transparent;
+        box-shadow: inset 0 1px 0 rgba(244, 226, 180, 0.35);
       }
 
       .btn.primary:hover:not(:disabled) {
@@ -283,7 +301,7 @@
       }
 
       .btn:active:not(:disabled) {
-        transform: translateY(1px);
+        transform: scale(0.98);
       }
 
       .btn:disabled {
@@ -327,11 +345,11 @@
         align-items: center;
         justify-content: space-between;
         gap: 12px;
-        padding: 10px 12px;
+        padding: 8px 8px 8px 10px;
         border: 1px solid var(--stroke);
-        border-radius: var(--radius-lg);
-        background: var(--bg1);
-        box-shadow: inset 0 1px 0 var(--shine);
+        border-radius: 10px;
+        background: var(--card);
+        box-shadow: 0 1px 3px rgba(50, 40, 20, 0.05);
       }
 
       .paste-pref-copy {
@@ -358,18 +376,20 @@
       }
 
       .clip-switch {
+        appearance: none;
         position: relative;
         flex: 0 0 auto;
-        width: 44px;
-        height: 22px;
+        width: 32px;
+        height: 18px;
         margin: 0;
         padding: 0;
-        border: 1px solid var(--stroke);
-        border-radius: 4px;
-        background: var(--well);
+        border: 1px solid rgba(201, 166, 106, 0.28);
+        border-radius: 9px;
+        background: rgba(23, 20, 16, 0.22);
         cursor: pointer;
-        overflow: hidden;
-        transition: background 160ms ease, border-color 160ms ease;
+        box-shadow: inset 0 1px 0 rgba(244, 226, 180, 0.12);
+        overflow: visible;
+        transition: background-color 240ms var(--ease-out), border-color 240ms var(--ease-out), filter 240ms var(--ease-out);
       }
 
       .clip-switch.on {
@@ -381,74 +401,30 @@
         position: absolute;
         top: 2px;
         left: 2px;
-        width: 16px;
-        height: 16px;
-        border-radius: 2px;
-        background:
-          linear-gradient(
-            180deg,
-            color-mix(in srgb, var(--core) 22%, transparent),
-            transparent 50%,
-            color-mix(in srgb, #5c3d28 10%, transparent)
-          ),
-          repeating-linear-gradient(
-            92deg,
-            var(--wood),
-            var(--wood) 2px,
-            color-mix(in srgb, var(--wood) 88%, #6b4428) 3px,
-            var(--wood) 4px
-          );
-        box-shadow:
-          var(--thumb-shadow),
-          inset 0 0 0 1px color-mix(in srgb, #5c3d28 12%, transparent);
-        transition: transform 160ms ease;
+        width: 12px;
+        height: 12px;
+        border-radius: 6px;
+        background: var(--paper);
+        box-shadow: none;
+        transition: left 280ms var(--ease-out), background-color 240ms var(--ease-out), transform none;
       }
 
       .clip-switch-thumb::after {
-        content: "";
-        position: absolute;
-        left: 50%;
-        top: 3px;
-        bottom: 3px;
-        width: 1px;
-        background: color-mix(in srgb, #5c3d28 16%, transparent);
+        display: none;
       }
 
       .clip-switch.on .clip-switch-thumb {
-        transform: translateX(24px);
+        left: 16px;
+        transform: none;
+        background: var(--ink);
+      }
+
+      .clip-switch:hover {
+        filter: brightness(1.08);
       }
 
       .clip-switch-word {
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        display: flex;
-        align-items: center;
-        font-size: 8px;
-        font-weight: 700;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        pointer-events: none;
-      }
-
-      .clip-switch-word.on {
-        left: 5px;
-        color: var(--ink);
-        opacity: 0;
-      }
-
-      .clip-switch-word.off {
-        right: 4px;
-        color: var(--faint);
-        opacity: 1;
-      }
-
-      .clip-switch.on .clip-switch-word.on {
-        opacity: 1;
-      }
-
-      .clip-switch.on .clip-switch-word.off {
-        opacity: 0;
+        display: none;
       }
 
       .field {
@@ -475,20 +451,22 @@
         height: var(--control-h);
         margin: 0;
         padding: 0 10px;
-        border-radius: var(--radius-md);
+        border-radius: 7px;
         border: 1px solid var(--stroke);
-        background: var(--bg1);
+        background: var(--well);
         color: var(--text);
         font-size: 12px;
         font-weight: 450;
         text-align: left;
         cursor: pointer;
-        box-shadow: inset 0 1px 0 var(--shine);
+        box-shadow: 0 1px 3px rgba(50, 40, 20, 0.05);
       }
 
       .path-row:hover:not(:disabled) {
-        background: var(--pick);
-        border-color: var(--stroke-strong);
+        color: var(--ink);
+        background: var(--chip-hot);
+        border-color: transparent;
+        box-shadow: inset 0 1px 0 rgba(244, 226, 180, 0.35);
       }
 
       .path-row:disabled {
@@ -521,14 +499,14 @@
         height: 28px;
         margin: 0;
         padding: 0 6px;
-        border-radius: var(--radius-sm);
-        border: 1px solid var(--stroke);
-        background: var(--bg1);
-        color: var(--muted);
+        border-radius: 7px;
+        border: 1px solid transparent;
+        background: var(--well);
+        color: var(--text);
         font-size: 11px;
         font-weight: 650;
         cursor: pointer;
-        transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+        transition: background 280ms var(--ease-out), border-color 280ms var(--ease-out), color 280ms var(--ease-out);
       }
 
       .seg button:hover {
@@ -551,6 +529,44 @@
         color: var(--faint);
       }
 
+      .support {
+        margin: 4px 0 0;
+        padding: 12px;
+        border-radius: 10px;
+        border: 1px solid var(--stroke);
+        background: var(--well);
+      }
+
+      .support p {
+        margin: 0 0 8px;
+        font-size: 12px;
+        line-height: 1.45;
+        color: var(--muted);
+      }
+
+      .support p:last-of-type {
+        margin-bottom: 10px;
+      }
+
+      a.kofi {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        height: 28px;
+        padding: 0 10px;
+        border-radius: 7px;
+        background: var(--chip-label);
+        color: var(--ink);
+        font: 650 12px/1 inherit;
+        letter-spacing: -0.01em;
+        text-decoration: none;
+        box-shadow: inset 0 1px 0 rgba(244, 226, 180, 0.35);
+      }
+
+      a.kofi:hover {
+        background: var(--chip-hot);
+      }
+
       @media (prefers-reduced-motion: reduce) {
         .clip-switch-thumb,
         .btn,
@@ -567,7 +583,7 @@
         <header class="titlebar">
           <div class="brand">
             <img src="icons/icon48.png" alt="" width="18" height="18" />
-            <span>PasteFlick</span>
+            <span class="kicker">PasteFlick</span>
           </div>
           <div class="chrome">
             <button type="button" class="ghost" id="open-settings" title="Settings" aria-label="Settings">
@@ -619,7 +635,7 @@
               <path d="M10.25 3.25 5.5 8l4.75 4.75" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
             </svg>
           </button>
-          <span class="brand">Settings</span>
+          <span class="brand"><span class="kicker">Settings</span></span>
         </header>
         <p class="lede">How copies leave the chat.</p>
         <div class="page-form">
@@ -656,6 +672,11 @@
           </div>
 
           <button type="button" id="add-browser" class="btn">Add to a browser</button>
+          <div class="support">
+            <p>PasteFlick is free to use. If it saves you time or frustration, a $5 tip helps support future updates and more useful free apps.</p>
+            <p>No pressure... just genuine appreciation!</p>
+            <a class="kofi" id="tip-kofi" href="https://ko-fi.com/ryandunham">Tip $5 on Ko-fi</a>
+          </div>
           <p class="version" id="version"></p>
         </div>
       </div>
