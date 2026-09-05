@@ -22,9 +22,6 @@
   const DRAFT_KEY = "pasteflickDrafts";
   const HOST_ID = "pasteflick-dock-host";
   const LEGACY_HOST_ID = "pasteflick-dock-host";
-  const PAGE = "pasteflick-page";
-  const EXTENSION = "pasteflick-extension";
-  const LEGACY_PAGE = "pasteflick-page";
   const TOOLTIP = "Start PasteFlick here.";
   const COPY_MESSAGE_TIP = "Copy this message.";
   const BOOKMARK_SVG =
@@ -338,7 +335,7 @@
       place-items: center;
       border-radius: 9px;
       background: var(--chip-hot);
-      font: 650 11px/1 "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+      font: 600 11px/1 "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
       font-variant-numeric: tabular-nums;
       letter-spacing: -0.03em;
       color: var(--ink);
@@ -456,11 +453,13 @@
     [data-pasteflick="kicker"] {
       min-width: 0;
       flex: 1;
+      display: inline-flex;
+      align-items: center;
       padding: 2px 6px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      font: 650 10px/1.2 "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+      font: 600 10px/1 "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
       letter-spacing: -0.01em;
       color: var(--ink);
       text-shadow: none;
@@ -530,7 +529,7 @@
       width: max-content;
       min-width: 34px;
       padding: 2px 5px;
-      font: 650 10px/1.2 "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+      font: 600 10px/1 "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
       font-variant-numeric: tabular-nums;
       letter-spacing: -0.01em;
       color: var(--ink);
@@ -557,7 +556,7 @@
       display: inline-flex;
     }
     [data-pasteflick="ordinal"] {
-      font-weight: 650;
+      font-weight: 600;
       color: var(--ink);
     }
     [data-pasteflick="count-sep"],
@@ -704,9 +703,6 @@
   let lastPrefs = { dest: "clipboard", format: "md" };
   let lastCopyExtras = true;
 
-  function privateApi() {
-    return globalThis.PasteFlickPrivate || null;
-  }
   const doneTimers = new WeakMap();
   const pinByTarget = new WeakMap();
   const stackByOwner = new WeakMap();
@@ -928,13 +924,6 @@
     if (chip && chip !== el) {
       const nested = fileHref(chip);
       if (nested) return nested;
-    }
-    const fileId =
-      (el.getAttribute && (el.getAttribute("data-file-id") || el.getAttribute("data-id"))) || "";
-    if (fileId && /^[a-zA-Z0-9_-]+$/.test(fileId)) {
-      const p = privateApi();
-      const path = p && p.fileDownloadPath && p.fileDownloadPath(fileId);
-      return path ? absUrl(path) : "";
     }
     return "";
   }
@@ -1276,76 +1265,6 @@
     }
   }
 
-  function grabFileViaPage(el, nameHint, mimeHint) {
-    return new Promise((resolve) => {
-      if (!el || !el.setAttribute) {
-        resolve(null);
-        return;
-      }
-      const requestId = "grab-file-" + Date.now() + "-" + Math.random().toString(16).slice(2);
-      el.setAttribute("data-pasteflick-file", requestId);
-      const btn = findDownloadControl(el);
-      if (btn && btn.setAttribute) btn.setAttribute("data-pasteflick-dl", requestId);
-      const done = (result) => {
-        try {
-          el.removeAttribute("data-pasteflick-file");
-          if (btn) btn.removeAttribute("data-pasteflick-dl");
-        } catch (_) {
-          /* ignore */
-        }
-        resolve(result);
-      };
-      const timer = setTimeout(() => {
-        window.removeEventListener("message", onMsg);
-        done(null);
-      }, 12000);
-      function onMsg(event) {
-        if (event.source !== window) return;
-        const data = event.data;
-        if (!data || (data.source !== PAGE && data.source !== LEGACY_PAGE) || data.requestId !== requestId) return;
-        window.removeEventListener("message", onMsg);
-        clearTimeout(timer);
-        const hit = data.result;
-        if (!hit || (!hit.data && !hit.url)) {
-          done(null);
-          return;
-        }
-        if (hit.data) {
-          done({
-            name: hit.name || nameHint,
-            mime: hit.mime || mimeHint,
-            data: hit.data,
-          });
-          return;
-        }
-        void blobFromUrl(hit.url)
-          .then(async (blob) => {
-            if (!blob || !blob.size) {
-              done(null);
-              return;
-            }
-            if (blob.size > 40 * 1024 * 1024) throw new Error("That file is too big to send this way.");
-            done({
-              name: hit.name || nameHint,
-              mime: blob.type || hit.mime || mimeHint,
-              data: await blobToBase64(blob),
-            });
-          })
-          .catch(() => done(null));
-      }
-      window.addEventListener("message", onMsg);
-      window.postMessage(
-        {
-          source: EXTENSION,
-          type: "grab-file",
-          requestId: requestId,
-          nameHint: nameHint || "",
-        },
-        "*",
-      );
-    });
-  }
-
   function namesMatch(a, b) {
     const x = String(a || "").trim().toLowerCase();
     const y = String(b || "").trim().toLowerCase();
@@ -1399,7 +1318,7 @@
         data: await blobToBase64(blob),
       };
     }
-    if (href && href.indexOf("/backend-api/") < 0 && /^https?:/i.test(href)) {
+    if (href && /^https?:/i.test(href)) {
       try {
         const blob = await blobFromUrl(href);
         if (blob && blob.size && blob.type.indexOf("application/json") < 0) {
@@ -1410,23 +1329,9 @@
           };
         }
       } catch (_) {
-        /* ChatGPT chips often have no usable href — try the file API */
+        /* ChatGPT chips often have no usable href — try the download control */
       }
     }
-    const p = privateApi();
-    if (p && p.tryUnofficialFileBytes) {
-      try {
-        const fromApi = await p.tryUnofficialFileBytes(el, nameHint, mimeHint, {
-          blobFromUrl: blobFromUrl,
-          blobToBase64: blobToBase64,
-        });
-        if (fromApi && fromApi.data) return fromApi;
-      } catch (_) {
-        /* try the download chip */
-      }
-    }
-    const fromPage = await grabFileViaPage(el, nameHint, mimeHint);
-    if (fromPage && fromPage.data) return fromPage;
     const fromClick = await loadByClickingDownload(el, nameHint, mimeHint);
     if (fromClick && fromClick.data) return fromClick;
     return null;
@@ -1482,27 +1387,6 @@
   async function loadDocumentAsFile(el, fragment, nameHint) {
     let text = nearbyDocumentText(el, nameHint);
     let title = (fragment && (fragment.name || fragment.title)) || nameHint || "";
-    if (!text || looksLikeChipLabel(text, nameHint)) {
-      const p = privateApi();
-      if (p && p.conversationPayload && p.textdocsFromConversation) {
-        let payload = null;
-        try {
-          payload = await p.conversationPayload();
-        } catch (_) {
-          payload = null;
-        }
-        const docs = payload ? p.textdocsFromConversation(payload) : [];
-        const match = p.namesMatch || namesMatch;
-        const named = nameHint
-          ? docs.filter((d) => match(d.title, nameHint) || match(d.title + ".md", nameHint))
-          : [];
-        const pick = named.length ? named[named.length - 1] : docs.length === 1 ? docs[0] : null;
-        if (pick && pick.content) {
-          text = pick.content;
-          title = pick.title || title;
-        }
-      }
-    }
     if (!text || looksLikeChipLabel(text, nameHint)) return null;
     const name = fileNameForDoc(nameHint, title);
     return {
@@ -3982,8 +3866,104 @@
     return false;
   }
 
+  function frontNodeAt(x, y) {
+    const stack = document.elementsFromPoint ? document.elementsFromPoint(x, y) : [];
+    if (!stack || !stack.length) return null;
+    for (let i = 0; i < stack.length; i++) {
+      const node = stack[i];
+      if (!node || node.nodeType !== 1 || isDockHost(node) || inTopChrome(node)) continue;
+      if (node.closest && node.closest("nav, aside, [class*='sidebar' i]")) continue;
+      return node;
+    }
+    return null;
+  }
+
+  function hitIsThread(node) {
+    if (!node || !node.closest) return false;
+    if (node.closest("[data-message-author-role], [data-testid^='conversation-turn']")) return true;
+    return isComposer(node);
+  }
+
+  function looksLikeEditorSurface(el) {
+    if (!el || el.nodeType !== 1) return false;
+    if (isComposer(el)) return false;
+    if (el.closest && el.closest("[data-message-author-role]")) return false;
+    if (el.tagName === "IFRAME") return true;
+    const blob =
+      String(el.getAttribute("data-testid") || "") +
+      " " +
+      String(el.getAttribute("aria-label") || "") +
+      " " +
+      String(el.className || "") +
+      " " +
+      String(el.getAttribute("role") || "");
+    if (/canvas|textdoc|text-doc|text_doc|document-editor|code-editor|code-view|file-editor|monaco|cm-editor|ProseMirror|ace_editor|ace-editor/i.test(blob)) {
+      return true;
+    }
+    if (el.getAttribute("contenteditable") === "true" || el.getAttribute("contenteditable") === "") return true;
+    if (el.getAttribute("role") === "textbox") return true;
+    return false;
+  }
+
+  function wrapperHasVisibleMessages(el) {
+    const nodes = messageNodes();
+    for (let i = 0; i < nodes.length; i++) {
+      if (el.contains(nodes[i]) && nodeShown(nodes[i])) return true;
+    }
+    return false;
+  }
+
+  function hitIsForeignPanel(node, scroller) {
+    if (!node || hitIsThread(node)) return false;
+    let el = node;
+    for (let i = 0; i < 8 && el && el !== document.body && el !== document.documentElement; i++) {
+      if (el === scroller) return false;
+      if (hitIsThread(el)) return false;
+      if (wrapperHasVisibleMessages(el)) return false;
+      try {
+        const r = el.getBoundingClientRect();
+        const vw = window.innerWidth || 0;
+        const vh = window.innerHeight || 0;
+        const large = r.width >= vw * 0.4 && r.height >= vh * 0.35;
+        if (large) {
+          const st = window.getComputedStyle(el);
+          if (st.position === "fixed" || st.position === "absolute") return true;
+          if (looksLikeEditorSurface(el)) return true;
+          const text = String(el.innerText || "").replace(/\s+/g, " ").trim();
+          if (text.length > 80) return true;
+        }
+      } catch (_) {
+        /* keep walking */
+      }
+      el = el.parentElement;
+    }
+    return false;
+  }
+
+  function readingAreaIsForeignView() {
+    const vw = window.innerWidth || 0;
+    const vh = window.innerHeight || 0;
+    if (vw < 200 || vh < 200) return false;
+    const scroller = conversationScroller();
+    const points = [
+      [Math.round(vw * 0.56), Math.round(vh * 0.4)],
+      [Math.round(vw * 0.62), Math.round(vh * 0.52)],
+      [Math.round(vw * 0.5), Math.round(vh * 0.48)],
+    ];
+    let foreign = 0;
+    let thread = 0;
+    for (let i = 0; i < points.length; i++) {
+      const node = frontNodeAt(points[i][0], points[i][1]);
+      if (!node) continue;
+      if (hitIsThread(node)) thread++;
+      else if (hitIsForeignPanel(node, scroller)) foreign++;
+    }
+    return foreign >= 2 && thread === 0;
+  }
+
   function conversationIsInView() {
     if (coveringEditorTakesPage()) return false;
+    if (readingAreaIsForeignView()) return false;
     const nodes = messageNodes();
     let hitMessage = false;
     let unknownHit = false;
@@ -4206,7 +4186,7 @@
       if (!host || !started) return;
       const inView = conversationIsInView();
       if (inView === (host.getAttribute("data-hidden") === "1")) scan();
-    }, 800);
+    }, 400);
 
     const api = storageApi();
     if (api && api.onChanged) {

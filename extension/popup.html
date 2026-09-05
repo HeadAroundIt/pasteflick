@@ -103,10 +103,10 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 8px;
+        gap: 4px;
         margin: 0 calc(-1 * var(--pad-x)) var(--space-3);
-        padding: 10px var(--pad-x) 8px;
-        min-height: 44px;
+        padding: 8px 12px 8px;
+        min-height: 40px;
         box-shadow: inset 0 -1px 0 var(--stroke);
       }
 
@@ -114,9 +114,9 @@
         display: flex;
         min-width: 0;
         align-items: center;
-        gap: 8px;
+        gap: 4px;
         font-size: 15px;
-        font-weight: 650;
+        font-weight: 600;
         letter-spacing: -0.02em;
       }
 
@@ -129,11 +129,13 @@
 
       .brand .kicker {
         min-width: 0;
-        padding: 3px 8px;
+        display: inline-flex;
+        align-items: center;
+        padding: 3px 7px 2px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        font: 650 12px/1.2 inherit;
+        font: 600 12px/1 inherit;
         letter-spacing: -0.01em;
         color: var(--ink);
         border-radius: 6px;
@@ -235,7 +237,7 @@
         background: transparent;
         color: var(--muted);
         font-size: 11px;
-        font-weight: 650;
+        font-weight: 600;
         line-height: 1;
         flex: none;
         cursor: pointer;
@@ -283,15 +285,19 @@
       }
 
       .btn {
-        display: block;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         width: 100%;
         height: var(--control-h);
         margin: 0 0 var(--space-2);
+        padding: 1px 12px 2px;
         border-radius: 7px;
         border: 1px solid var(--stroke);
         background: var(--well);
         color: var(--text);
-        font-weight: 650;
+        font-weight: 600;
+        line-height: 1;
         cursor: pointer;
         box-shadow: 0 1px 3px rgba(50, 40, 20, 0.05);
         transition: background 280ms var(--ease-out), border-color 280ms var(--ease-out), transform 160ms var(--ease-tap), color 280ms var(--ease-out);
@@ -389,7 +395,7 @@
         margin-bottom: 2px;
         color: var(--text);
         font-size: 13px;
-        font-weight: 650;
+        font-weight: 600;
       }
 
       .paste-pref-copy p {
@@ -522,16 +528,20 @@
 
       .seg button {
         flex: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         width: auto;
         height: 28px;
         margin: 0;
-        padding: 0 6px;
+        padding: 1px 6px 2px;
         border-radius: 7px;
         border: 1px solid transparent;
         background: var(--well);
         color: var(--text);
-        font-size: 11px;
-        font-weight: 650;
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 1;
         cursor: pointer;
         transition: background 280ms var(--ease-out), border-color 280ms var(--ease-out), color 280ms var(--ease-out);
       }
@@ -550,10 +560,12 @@
         box-shadow: inset 0 1px 0 rgba(244, 226, 180, 0.35);
       }
 
-      .version-value {
-        color: var(--text);
-        font-size: 12px;
-        font-weight: 650;
+      .version {
+        margin: 10px 0 0;
+        font-size: 11px;
+        font-weight: 450;
+        color: var(--faint);
+        text-align: left;
       }
 
       html.shot,
@@ -562,6 +574,7 @@
         padding: 0;
         height: auto;
         overflow: visible;
+        font-synthesis: none;
       }
 
       .support {
@@ -592,11 +605,11 @@
         align-self: center;
         gap: 8px;
         height: 32px;
-        padding: 0 16px 0 14px;
+        padding: 1px 16px 2px 14px;
         border-radius: 7px;
         background: var(--wood);
         color: var(--ink);
-        font: 650 13px/1 inherit;
+        font: 600 13px/1 inherit;
         letter-spacing: -0.018em;
         text-decoration: none;
         box-shadow: inset 0 1px 0 rgba(244, 226, 180, 0.45);
@@ -697,11 +710,6 @@
             </button>
           </div>
 
-          <div class="field">
-            <span>Version</span>
-            <span id="version" class="version-value"></span>
-          </div>
-
           <button type="button" id="add-browser" class="btn">Add to a browser</button>
           <div class="support">
             <p>Help me keep creating useful apps and sharing them freely.</p>
@@ -714,6 +722,7 @@
               Leave a tip
             </a>
           </div>
+          <p class="version" id="version"></p>
         </div>
       </div>
     </div>

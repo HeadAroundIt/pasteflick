@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import base64
 import json
 import os
 import re
@@ -18,6 +19,26 @@ TESTBED = ROOT / "testbed"
 OUT = ROOT / "readme" / "shots"
 CHROME = Path(os.environ.get("PROGRAMFILES", r"C:\Program Files")) / "Google/Chrome/Application/chrome.exe"
 EXT_JS = (EXT / "pasteflick.js").read_text(encoding="utf-8")
+WIN_FONTS = Path(os.environ.get("WINDIR", r"C:\Windows")) / "Fonts"
+SHOT_FONT_REGULAR = WIN_FONTS / "segoeui.ttf"
+SHOT_FONT_SEMIBOLD = WIN_FONTS / "seguisb.ttf"
+
+
+def _face(family: str, path: Path, weights: str) -> str:
+    payload = base64.b64encode(path.read_bytes()).decode("ascii")
+    return (
+        f'@font-face{{font-family:"{family}";'
+        f'src:url(data:font/ttf;base64,{payload}) format("truetype");'
+        f"font-weight:{weights};font-style:normal;font-display:block;}}"
+    )
+
+
+SHOT_FONT_CSS = (
+    _face("Segoe UI Variable Text", SHOT_FONT_REGULAR, "100 599")
+    + _face("Segoe UI Variable Text", SHOT_FONT_SEMIBOLD, "600 1000")
+    + _face("Segoe UI", SHOT_FONT_REGULAR, "100 599")
+    + _face("Segoe UI", SHOT_FONT_SEMIBOLD, "600 1000")
+)
 
 
 def _js_concat(name: str) -> str:
@@ -134,6 +155,24 @@ class Handler(SimpleHTTPRequestHandler):
     def do_GET(self) -> None:  # noqa: N802
         raw = self.path.split("?", 1)[0]
         name = raw.lstrip("/")
+        if name == "shot-font-regular.ttf" and SHOT_FONT_REGULAR.is_file():
+            data = SHOT_FONT_REGULAR.read_bytes()
+            self.send_response(200)
+            self.send_header("Content-Type", "font/ttf")
+            self.send_header("Cache-Control", "no-store")
+            self.send_header("Content-Length", str(len(data)))
+            self.end_headers()
+            self.wfile.write(data)
+            return
+        if name == "shot-font-semibold.ttf" and SHOT_FONT_SEMIBOLD.is_file():
+            data = SHOT_FONT_SEMIBOLD.read_bytes()
+            self.send_response(200)
+            self.send_header("Content-Type", "font/ttf")
+            self.send_header("Cache-Control", "no-store")
+            self.send_header("Content-Length", str(len(data)))
+            self.end_headers()
+            self.wfile.write(data)
+            return
         if name in {"extractor.js", "pasteflick.js"}:
             data = (EXT / name).read_bytes()
             self.send_response(200)
@@ -144,56 +183,61 @@ class Handler(SimpleHTTPRequestHandler):
             self.wfile.write(data)
             return
         if name == "shot-select-panel.html":
-            html = """<!doctype html>
+            html = f"""<!doctype html>
 <html><head><meta charset="utf-8"><style>
-html,body{margin:0;background:transparent;}
-.panel{
+{SHOT_FONT_CSS}
+html,body{{margin:0;background:transparent;}}
+.panel{{
   box-sizing:border-box;width:420px;height:480px;
   display:flex;flex-direction:column;
   background:color-mix(in srgb,#c9a66a 8%,#f7f7f5);color:#5c4a2e;
   border-radius:10px;border:1px solid rgba(201,166,106,.22);
   font-family:"Segoe UI Variable Text",Segoe UI,system-ui,sans-serif;
   font-weight:450;letter-spacing:-.011em;overflow:hidden;
-}
-.titlebar{
+  -webkit-font-smoothing:antialiased;
+  font-synthesis:none;
+}}
+.titlebar{{
   display:flex;align-items:center;justify-content:space-between;gap:8px;
-  padding:10px 16px 8px;min-height:44px;flex:none;
+  padding:8px 16px 8px;min-height:40px;flex:none;
   box-shadow:inset 0 -1px 0 rgba(201,166,106,.22);
-}
-.brand{
-  padding:3px 8px;font:650 12px/1.2 inherit;letter-spacing:-.01em;
+}}
+.brand{{
+  display:inline-flex;align-items:center;
+  padding:3px 7px 2px;font:600 12px/1 inherit;letter-spacing:-.01em;
   color:#171410;border-radius:6px;background:rgba(201,166,106,.48);
   box-shadow:inset 0 1px 0 rgba(244,226,180,.35);
-}
-.chrome{display:flex;align-items:center;gap:2px;}
-.ghost{
+}}
+.chrome{{display:flex;align-items:center;gap:2px;}}
+.ghost{{
   width:28px;height:28px;border:0;border-radius:7px;background:transparent;
   color:#8a7358;display:grid;place-items:center;
-}
-.body{
+}}
+.body{{
   flex:1;overflow:hidden;padding:16px;
   background:color-mix(in srgb,#c9a66a 6%,#f7f7f5);
-}
-.meta{margin:0 0 12px;font-size:11px;color:#8a7358;}
-.pre{
+}}
+.meta{{margin:0 0 12px;font-size:11px;color:#8a7358;}}
+.pre{{
   margin:0;white-space:pre-wrap;font-family:ui-monospace,Cascadia Mono,Consolas,monospace;
   font-size:12.5px;line-height:1.45;color:#5c4a2e;
-}
-.foot{
+}}
+.foot{{
   padding:12px 16px;flex:none;
   box-shadow:inset 0 1px 0 rgba(201,166,106,.22);
-}
-.row{display:flex;flex-wrap:wrap;gap:8px;}
-.btn{
-  height:34px;padding:0 14px;border-radius:7px;
+}}
+.row{{display:flex;flex-wrap:wrap;gap:8px;}}
+.btn{{
+  display:inline-flex;align-items:center;justify-content:center;
+  height:34px;padding:1px 14px 2px;border-radius:7px;
   border:1px solid rgba(201,166,106,.22);
   background:color-mix(in srgb,#c9a66a 6%,#f7f7f5);color:#5c4a2e;
-  font:650 13px/1 inherit;
-}
-.btn.primary{
+  font:inherit;font-weight:600;line-height:1;cursor:default;
+}}
+.btn.primary{{
   background:rgba(201,166,106,.4);border-color:transparent;color:#171410;
   box-shadow:inset 0 1px 0 rgba(244,226,180,.35);
-}
+}}
 </style></head>
 <body>
   <div class="panel">
@@ -217,9 +261,9 @@ Make it two sentences, and keep the Friday deadline.</pre>
     </div>
     <div class="foot">
       <div class="row">
-        <span class="btn primary">Copy selection</span>
-        <span class="btn">Copy all</span>
-        <span class="btn">Save .md</span>
+        <button type="button" class="btn primary">Copy selection</button>
+        <button type="button" class="btn">Copy all</button>
+        <button type="button" class="btn">Save .md</button>
       </div>
     </div>
   </div>
@@ -291,6 +335,7 @@ iframe{
         if name == "shot-chip.html":
             html = f"""<!doctype html>
 <html><head><meta charset="utf-8"><style>
+{SHOT_FONT_CSS}
 html,body{{margin:0;width:152px;height:96px;background:transparent;}}
 .stage{{
   box-sizing:border-box;
@@ -365,6 +410,7 @@ iframe{{border:0;width:{w}px;height:{h}px;border-radius:10px;overflow:hidden;bac
         if name == "shot-chat.html":
             html = f"""<!doctype html>
 <html><head><meta charset="utf-8"><style>
+{SHOT_FONT_CSS}
 html,body{{margin:0;width:840px;height:520px;background:transparent;}}
 .stage{{
   box-sizing:border-box;
@@ -394,7 +440,7 @@ html,body{{margin:0;width:840px;height:520px;background:transparent;}}
 .title{{
   grid-column:4;grid-row:1;
   margin:0 0 2px;
-  font:650 15px/1.2 inherit;
+  font:600 15px/1.2 inherit;
   letter-spacing:-0.02em;
   color:#5c4a2e;
 }}
@@ -474,7 +520,7 @@ html,body{{margin:0;width:840px;height:520px;background:transparent;}}
   padding:0 8px;
   margin:0;
   background:#f8f8f8;
-  font:650 11px/1 inherit;
+  font:600 11px/1 inherit;
   letter-spacing:-0.02em;
   color:#171410;
   white-space:nowrap;
@@ -530,8 +576,8 @@ html,body{{margin:0;width:840px;height:520px;background:transparent;}}
   border-radius:10px;
 }}
 .role{{
-  display:inline-block;margin:0 0 8px;padding:2px 6px;
-  font:650 10px/1.2 inherit;
+  display:inline-flex;align-items:center;margin:0 0 8px;padding:2px 6px;
+  font:600 10px/1 inherit;
   color:#171410;border-radius:6px;
   background:rgba(201,166,106,.48);
   box-shadow:inset 0 1px 0 rgba(244,226,180,.35);
@@ -592,6 +638,7 @@ html,body{{margin:0;width:840px;height:520px;background:transparent;}}
             html = html.replace('id="view-settings" hidden', 'id="view-settings"', 1)
             ver = json.loads((EXT / "manifest.json").read_text(encoding="utf-8")).get("version", "")
             html = html.replace('id="version"></p>', f'id="version">PasteFlick {ver}</p>', 1)
+            html = html.replace("<style>", "<style>\n" + SHOT_FONT_CSS, 1)
             data = html.encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
@@ -625,6 +672,7 @@ html,body{{margin:0;width:840px;height:520px;background:transparent;}}
             html = path.read_text(encoding="utf-8")
             if name == "popup.html" and "shot=1" in self.path:
                 html = html.replace("<html lang=\"en\">", "<html lang=\"en\" class=\"shot\">", 1)
+                html = html.replace("<style>", "<style>\n" + SHOT_FONT_CSS, 1)
             data = html.encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
@@ -673,11 +721,11 @@ def main() -> None:
     base = f"http://127.0.0.1:{port}"
     try:
         # New filenames so GitHub doesn't serve stale shots.
-        shot(f"{base}/shot-chip.html?v=22", OUT / "the-chip.png", 152, 96, "00000000")
-        shot(f"{base}/shot-pair.html?v=19", OUT / "view-and-settings-foot.png", 840, 680, "00000000")
-        shot(f"{base}/shot-popup.html?v=17", OUT / "panel-main.png", 332, 240, "00000000")
-        shot(f"{base}/shot-settings.html?v=19", OUT / "panel-settings-foot.png", 332, 700, "00000000")
-        shot(f"{base}/shot-chat.html?v=40", OUT / "marks-deselect.png", 840, 560, "00000000")
+        shot(f"{base}/shot-chip.html?v=24", OUT / "the-chip-type.png", 152, 96, "00000000")
+        shot(f"{base}/shot-pair.html?v=21", OUT / "view-and-settings-type.png", 840, 680, "00000000")
+        shot(f"{base}/shot-popup.html?v=19", OUT / "panel-main-type.png", 332, 240, "00000000")
+        shot(f"{base}/shot-settings.html?v=21", OUT / "panel-settings-type.png", 332, 700, "00000000")
+        shot(f"{base}/shot-chat.html?v=42", OUT / "marks-type.png", 840, 560, "00000000")
     finally:
         httpd.shutdown()
     print("ok")

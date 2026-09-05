@@ -96,7 +96,7 @@ def kicker(label: str, size: int = 12) -> Image.Image:
     probe = Image.new("RGBA", (8, 8))
     d = ImageDraw.Draw(probe)
     tw, th = measure(d, label, fnt)
-    pad_x, pad_y = 10 * SCALE, 5 * SCALE
+    pad_x, pad_y = 7 * SCALE, 2 * SCALE
     img = Image.new("RGBA", (tw + pad_x * 2, th + pad_y * 2), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
     d.rounded_rectangle([0, 0, img.width - 1, img.height - 1], radius=6 * SCALE, fill=CHIP)
@@ -117,9 +117,9 @@ def draw_rule(img: Image.Image, x: int, y: int, width: int) -> int:
 
 
 def section_head(img: Image.Image, eyebrow: str, title: str, x: int, y: int, inner: int) -> int:
-    chip = kicker(eyebrow, 11)
+    chip = kicker(eyebrow, 12)
     img.alpha_composite(chip, (x, y))
-    y += chip.height + 14 * SCALE
+    y += chip.height + 4 * SCALE
     y = draw_paragraph(img, title, font("seguisb.ttf", 28), x, y, inner, INK, 1.12)
     y += 12 * SCALE
     y = draw_rule(img, x, y, inner)
@@ -242,11 +242,19 @@ def make_button(label: str, size: int = 16, cup: bool = False) -> Image.Image:
     return chip
 
 
-def make_tip_button(label: str, size: int = 17) -> Image.Image:
+def make_tip_button(label: str, size: int = 13) -> Image.Image:
     if not CHROME.is_file():
         raise RuntimeError("Chrome not found")
+    semibold = Path(os.environ.get("WINDIR", r"C:\\Windows")) / "Fonts" / "seguisb.ttf"
     html = f"""<!doctype html>
 <html><head><meta charset="utf-8"><style>
+@font-face {{
+  font-family: "Segoe UI Variable Text";
+  src: url("seguisb.ttf") format("truetype");
+  font-weight: 600 1000;
+  font-style: normal;
+  font-display: block;
+}}
 html,body{{margin:0;background:transparent;}}
 a{{
   box-sizing:border-box;
@@ -254,29 +262,31 @@ a{{
   align-items:center;
   justify-content:center;
   gap:8px;
-  height:45px;
-  padding:0 20px 0 16px;
-  border-radius:10px;
+  height:32px;
+  padding:1px 16px 2px 14px;
+  border-radius:7px;
   background:#c9a66a;
   color:#171410;
-  font:650 {size}px/1 "Segoe UI Semibold","Segoe UI",sans-serif;
+  font:600 13px/1 "Segoe UI Variable Text","Segoe UI Semibold","Segoe UI",sans-serif;
   letter-spacing:-0.018em;
   text-decoration:none;
+  box-shadow:inset 0 1px 0 rgba(244,226,180,.45);
 }}
 svg{{display:block;flex:none;}}
-span{{display:block;line-height:1;transform:translateY(-1px);}}
 </style></head>
 <body>
 <a>
-  <svg viewBox="3.2 5.4 10.6 7.3" width="17" height="12" aria-hidden="true">
+  <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true">
     <path fill="none" stroke="currentColor" stroke-width="1.55" stroke-linejoin="round" d="M3.4 5.6h7.2v4.3A2.6 2.6 0 0 1 8 12.5H6a2.6 2.6 0 0 1-2.6-2.6V5.6z"/>
     <path fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" d="M10.6 6.4h1.15a1.7 1.7 0 1 1 0 3.4H10.6"/>
   </svg>
-  <span>{label}</span>
+  {label}
 </a>
 </body></html>"""
     with tempfile.TemporaryDirectory() as tmp:
         folder = Path(tmp)
+        if semibold.is_file():
+            (folder / "seguisb.ttf").write_bytes(semibold.read_bytes())
         page = folder / "tip.html"
         dest = folder / "tip.png"
         page.write_text(html, encoding="utf-8")
@@ -368,7 +378,7 @@ def build_hero() -> None:
         MUTED,
         1.4,
     )
-    finish(img, "intro.png")
+    finish(img, "intro-type.png")
 
 
 def build_what() -> None:
@@ -440,7 +450,7 @@ def build_what() -> None:
         MUTED,
         1.4,
     )
-    finish(img, "what-you-get-clear.png")
+    finish(img, "what-you-get-type.png")
 
 
 def build_support() -> None:
@@ -460,7 +470,7 @@ def build_support() -> None:
         1.45,
     )
     y += 20 * SCALE
-    btn = make_button("Leave a tip", 17, cup=True)
+    btn = make_button("Leave a tip", 13, cup=True)
     note_f = font("segoeui.ttf", 14)
     note = "No pressure—just genuine appreciation!"
     well_pad = 18 * SCALE
@@ -485,7 +495,7 @@ def build_support() -> None:
         font=note_f,
         fill=MUTED,
     )
-    finish(img, "appreciate.png")
+    finish(img, "appreciate-type.png")
 
 
 def build_privacy() -> None:
@@ -504,7 +514,7 @@ def build_privacy() -> None:
         TEXT,
         1.45,
     )
-    finish(img, "on-device.png")
+    finish(img, "on-device-type.png")
 
 
 def build_install() -> None:
@@ -596,9 +606,9 @@ def build_install() -> None:
         MUTED,
         1.4,
     )
-    finish(img, "setup.png")
-    save_button("Get the Windows zip", "windows-zip.png", 16)
-    save_button("Leave a tip", "tip-btn.png", 17, cup=True)
+    finish(img, "setup-type.png")
+    save_button("Get the Windows zip", "windows-zip-type.png", 16)
+    save_button("Leave a tip", "tip-btn-type.png", 13, cup=True)
 
 
 def main() -> None:

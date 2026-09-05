@@ -69,11 +69,6 @@
     return String(t).replace(/\s*[—–-]\s*ChatGPT\s*$/i, "").trim() || "Chat";
   }
 
-  function conversationIdFromUrl(url) {
-    const m = String(url || location.href).match(/\/c\/([a-zA-Z0-9-]+)/);
-    return m ? m[1] : null;
-  }
-
   function isDiagramNode(el) {
     if (!el || typeof el.closest !== "function") return false;
     try {
@@ -278,11 +273,6 @@
     return String(role || "Unknown");
   }
 
-  function privateApi() {
-    const p = globalThis.PasteFlickPrivate;
-    return p && p.fetchConversation ? p : null;
-  }
-
   function copyHeader(title, url, note) {
     if (!lastCopyExtras) return "";
     const heading = String(title || "Chat").trim() || "Chat";
@@ -462,29 +452,6 @@
     if (!target) throw new Error("No message selected.");
     const url = location.href;
     const title = pageTitle();
-    const id = conversationIdFromUrl(url);
-
-    const priv = privateApi();
-    if (id && lastDestination !== "cursor" && priv) {
-      try {
-        const payload = await priv.fetchConversation(id);
-        const turns = priv.turnsFromPayload(payload);
-        const idx = resolvePasteFlickIndex(asMarkRecords(turns, "body"), target);
-        if (idx >= 0) {
-          const heading = (payload && payload.title) || title;
-          return payloadFromTurns(
-            heading,
-            [turns[idx]],
-            url,
-            false,
-            "single message",
-            "message",
-          );
-        }
-      } catch (_) {
-        /* fall through to DOM */
-      }
-    }
 
     const nodes = document.querySelectorAll("[data-message-author-role]");
     const messages = [];
@@ -665,45 +632,6 @@
     };
   }
 
-  /**
-   * When message ids are available, reuse the working full-thread API and
-   * keep only the highlighted messages.
-   */
-  async function extractSelectionViaApi(title, url, selectedMessages) {
-    const priv = privateApi();
-    const id = conversationIdFromUrl(url);
-    if (!priv || !id) return null;
-    const wanted = new Set(
-      selectedMessages.map((m) => m.id).filter((x) => x && String(x).length > 4),
-    );
-    if (!wanted.size) return null;
-    try {
-      const payload = await priv.fetchConversation(id);
-      const turns = priv.selectionTurns(payload, wanted);
-      if (!turns.length) return null;
-      const heading = (payload && payload.title) || title;
-      const markdown = formatMarkdown(
-        heading,
-        turns,
-        url,
-        false,
-        "selection via API; document embeds omitted",
-      );
-      return {
-        title: heading,
-        markdown,
-        turn_count: turns.length,
-        character_count: markdown.length,
-        partial: false,
-        source: "selection",
-        url,
-        status_note: "selection via API; document embeds omitted",
-      };
-    } catch (_) {
-      return null;
-    }
-  }
-
   function payloadFromTurns(title, turns, url, partial, note, source) {
     const markdown = formatMarkdown(title, turns, url, !!partial, note || "");
     return {
@@ -722,29 +650,6 @@
     if (!mark) throw new Error(PASTEFLICK_NONE);
     const url = location.href;
     const title = pageTitle();
-    const id = conversationIdFromUrl(url);
-
-    const priv = privateApi();
-    if (id && lastDestination !== "cursor" && priv) {
-      try {
-        const payload = await priv.fetchConversation(id);
-        const turns = priv.turnsFromPayload(payload);
-        const idx = resolvePasteFlickIndex(asMarkRecords(turns, "body"), mark);
-        if (idx >= 0) {
-          const heading = (payload && payload.title) || title;
-          return payloadFromTurns(
-            heading,
-            turns.slice(idx),
-            url,
-            false,
-            "from PasteFlick",
-            "pasteflick",
-          );
-        }
-      } catch (_) {
-        /* API unavailable or unusable — try visible DOM next. */
-      }
-    }
 
     const messages =
       lastDestination === "cursor" ? scrapeVisibleMessages() : scrapeDomMessages();
@@ -770,32 +675,7 @@
     if (lastDestination === "cursor") {
       return fromVisibleDom(title, url);
     }
-    const id = conversationIdFromUrl(url);
-    if (!id) throw new Error("Open a chat first.");
-    const priv = privateApi();
-    if (!priv) {
-      return fromDom(title, url);
-    }
-    try {
-      const payload = await priv.fetchConversation(id);
-      const turns = priv.turnsFromPayload(payload);
-      const heading = (payload && payload.title) || title;
-      const markdown = formatMarkdown(heading, turns, url, false, "");
-      return {
-        title: heading,
-        markdown,
-        turn_count: turns.length,
-        character_count: markdown.length,
-        partial: false,
-        source: "api",
-        url,
-      };
-    } catch (err) {
-      const fallback = fromDom(title, url);
-      fallback.status_note =
-        "API failed (" + ((err && err.message) || err) + "); used visible DOM, embeds skipped";
-      return fallback;
-    }
+    return fromDom(title, url);
   }
 
   function captureSelectionSnapshot() {
@@ -881,29 +761,6 @@
   async function extractPickedMarks(marks) {
     const url = location.href;
     const title = pageTitle();
-    const id = conversationIdFromUrl(url);
-    const priv = privateApi();
-    if (id && lastDestination !== "cursor" && priv) {
-      try {
-        const payload = await priv.fetchConversation(id);
-        const turns = priv.turnsFromPayload(payload);
-        const records = asMarkRecords(turns, "body");
-        const idxs = uniqueSorted(marks.map((mark) => resolvePasteFlickIndex(records, mark)));
-        if (idxs.length) {
-          const heading = (payload && payload.title) || title;
-          return payloadFromTurns(
-            heading,
-            idxs.map((i) => turns[i]),
-            url,
-            false,
-            "selected messages",
-            "messages",
-          );
-        }
-      } catch (_) {
-        /* fall through to DOM */
-      }
-    }
     const messages = lastDestination === "cursor" ? scrapeVisibleMessages() : scrapeDomMessages();
     const records = asMarkRecords(messages, "text");
     const idxs = uniqueSorted(marks.map((mark) => resolvePasteFlickIndex(records, mark)));
@@ -946,13 +803,6 @@
         }
       }
 
-      const viaApi = await extractSelectionViaApi(title, url, pick.messages);
-      if (viaApi) {
-        if (pick.fromCache) {
-          viaApi.status_note = (viaApi.status_note || "") + " (from cached highlight)";
-        }
-        return viaApi;
-      }
       const out = fromSelectedMessages(title, url, pick.messages);
       if (pick.fromCache) {
         out.status_note = (out.status_note || "") + " (from cached highlight)";
@@ -1202,14 +1052,15 @@
       #${SELECT_VIEW_ID} .sm-panel::after { display:none; }
       #${SELECT_VIEW_ID} .sm-titlebar {
         display:flex;align-items:center;justify-content:space-between;gap:8px;
-        padding:10px 16px 8px;min-height:44px;flex:none;
+        padding:8px 16px 8px;min-height:40px;flex:none;
         box-shadow:inset 0 -1px 0 var(--stroke);
       }
       #${SELECT_VIEW_ID} .sm-chrome {
         display:flex;align-items:center;gap:2px;flex:none;
       }
       #${SELECT_VIEW_ID} .sm-brand {
-        padding:3px 8px;font:650 12px/1.2 inherit;letter-spacing:-.01em;
+        display:inline-flex;align-items:center;
+        padding:3px 7px 2px;font:600 12px/1 inherit;letter-spacing:-.01em;
         color:var(--ink);border-radius:6px;background:var(--chip-label);
         box-shadow:inset 0 1px 0 rgba(244,226,180,.35);
       }
@@ -1241,9 +1092,10 @@
       }
       #${SELECT_VIEW_ID} .sm-row { display:flex;flex-wrap:wrap;gap:8px; }
       #${SELECT_VIEW_ID} .sm-btn {
-        height:34px;padding:0 14px;border-radius:7px;
+        display:inline-flex;align-items:center;justify-content:center;
+        height:34px;padding:1px 14px 2px;border-radius:7px;
         border:1px solid var(--stroke);background:var(--well);color:var(--text);
-        font:inherit;font-weight:650;cursor:pointer;
+        font:inherit;font-weight:600;line-height:1;cursor:pointer;
         transition:background 280ms cubic-bezier(.16,1,.3,1),color 280ms cubic-bezier(.16,1,.3,1),transform 160ms cubic-bezier(.32,.72,0,1);
       }
       #${SELECT_VIEW_ID} .sm-btn.primary {
@@ -1571,21 +1423,6 @@
     if (event.source !== window) return;
     const data = event.data;
     if (!fromExtension(data)) return;
-    if (data.type === "grab-file") {
-      const grab = globalThis.PasteFlickPrivate && globalThis.PasteFlickPrivate.grabChatFile;
-      if (!grab) {
-        window.postMessage({ source: PAGE, requestId: data.requestId, result: null }, "*");
-        return;
-      }
-      void grab(data)
-        .then((result) => {
-          window.postMessage({ source: PAGE, requestId: data.requestId, result: result }, "*");
-        })
-        .catch(() => {
-          window.postMessage({ source: PAGE, requestId: data.requestId, result: null }, "*");
-        });
-      return;
-    }
     if (data.type) return;
     const modes = {
       full: "full",
