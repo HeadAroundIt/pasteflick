@@ -1,4 +1,4 @@
-# Start the headless Auto-paste helper on 127.0.0.1:8768 if it is not already up.
+# Start the headless Flick helper on 127.0.0.1:8768 if it is not already up.
 # Official installs use the bundled helper. Dev copies can still use .venv.
 param(
     [switch]$SkipUpdate
@@ -183,18 +183,18 @@ function Ensure-Venv {
             }
         }
         if (-not $launcher) {
-            Write-Host "This copy has no bundled Auto-paste helper, and Python 3.12 (or 3.11) is not installed."
+            Write-Host "This copy has no bundled Flick helper, and Python 3.12 (or 3.11) is not installed."
             Write-Host "Install from the official Windows zip, or install Python and run Setup again."
             return $false
         }
 
-        Write-Host "Creating Python environment for Auto-paste..."
+        Write-Host "Creating Python environment for the Flick helper..."
         $venvDir = Join-Path $RepoRoot ".venv"
         $venvArgs = @($prefix) + @("-m", "venv", $venvDir)
         $create = Start-Process -FilePath $launcher -ArgumentList $venvArgs -Wait -PassThru -WindowStyle Hidden
         $createdPy = Get-VenvPython $RepoRoot
         if ($create.ExitCode -ne 0 -or -not (Test-Path -LiteralPath $createdPy)) {
-            Write-Host "Could not create the Python environment for Auto-paste."
+            Write-Host "Could not create the Python environment for the Flick helper."
             return $false
         }
         Set-VenvPaths $createdPy
@@ -236,7 +236,7 @@ Stop-PasteHost
 Start-Sleep -Milliseconds 250
 
 if (Test-HelperUp) {
-    Write-Host "PasteFlick Auto-paste already running"
+    Write-Host "PasteFlick Flick helper already running"
     exit 0
 }
 
@@ -262,10 +262,10 @@ else {
 for ($i = 0; $i -lt 40; $i++) {
     Start-Sleep -Milliseconds 250
     if (Test-HelperUp) {
-        Write-Host "PasteFlick Auto-paste helper started"
+        Write-Host "PasteFlick Flick helper started"
         exit 0
     }
 }
 
-Write-Host "Started Auto-paste helper, but it is not answering yet"
+Write-Host "Started Flick helper, but it is not answering yet"
 exit 0

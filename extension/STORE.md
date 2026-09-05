@@ -1,6 +1,8 @@
-# PasteFlick — browser store publish
+# PasteFlick — browser store notes
 
-Store listing copy for Chrome Web Store / Edge Add-ons. Until a listing is live, people install from the repo: [github.com/HeadAroundIt/pasteflick](https://github.com/HeadAroundIt/pasteflick).
+Do not submit this to Chrome Web Store or Edge Add-ons for the first public cut. As of 1 Aug 2026 those stores disallow extensions meant to circumvent restrictions on AI services. People install from the [GitHub zip](https://github.com/HeadAroundIt/pasteflick/releases/latest).
+
+Listing copy below is for a later date, if the rules ever fit.
 
 **Name:** PasteFlick
 
@@ -17,20 +19,3 @@ The toolbar icon opens the thread as a document. Highlight, copy, or save as Mar
 Windows only. Not affiliated with OpenAI.
 
 Privacy: runs in your browser. Copied text stays on your device.
-
-## Chrome Web Store
-
-1. Create a [Chrome Web Store developer account](https://chrome.google.com/webstore/devconsole) ($5 one-time).
-2. **New item** → upload a zip of the `extension/` folder (manifest, scripts, popup, icons).
-3. Paste the listing copy above.
-4. Screenshots: a chat page + extension popup (at least 1280×800 recommended).
-5. Category: Productivity.
-6. Single purpose: Copy conversation text to the clipboard.
-7. Submit for review.
-
-## Edge Add-ons
-
-1. [Partner Center](https://partner.microsoft.com/dashboard) → Edge extensions.
-2. Upload the same zip (Chrome MV3 packages are accepted).
-3. Reuse the listing text above.
-4. Submit.

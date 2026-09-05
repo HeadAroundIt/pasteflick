@@ -1,4 +1,4 @@
-"""Frozen Auto-paste helper entry. Bundles its own Python; friends never install one."""
+"""Frozen Flick helper entry. Bundles its own Python; friends never install one."""
 
 from __future__ import annotations
 

@@ -248,12 +248,12 @@ folderPick.addEventListener("click", () => {
 async function showVersion() {
   const local = chrome.runtime.getManifest().version || "";
   const el = document.getElementById("version");
-  el.textContent = local;
+  el.textContent = "PasteFlick " + local;
   reportFrameHeight();
   try {
     const data = await updateStatus();
     const disk = data && data.version;
-    if (disk && disk !== local) el.textContent = local + " · updating";
+    if (disk && disk !== local) el.textContent = "PasteFlick " + local + " · updating";
   } catch (_) {
     /* helper not up */
   }

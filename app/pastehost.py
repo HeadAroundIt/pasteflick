@@ -1,4 +1,4 @@
-"""Headless Auto-paste helper — no overlay window."""
+"""Headless Flick helper — no overlay window."""
 
 from __future__ import annotations
 

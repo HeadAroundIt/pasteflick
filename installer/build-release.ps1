@@ -106,7 +106,7 @@ try {
         Copy-Item -LiteralPath $helperSrc -Destination (Join-Path $stage "helper") -Recurse -Force
     }
     elseif (-not $SkipHelper) {
-        throw "Bundled Auto-paste helper was not built"
+        throw "Bundled Flick helper was not built"
     }
 
     Remove-Item -LiteralPath $zipPath -Force -ErrorAction SilentlyContinue

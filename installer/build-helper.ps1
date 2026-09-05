@@ -64,7 +64,7 @@ if (Test-Path -LiteralPath $icon) {
 }
 $args += $entry
 
-Write-Host "Building bundled Auto-paste helper..."
+Write-Host "Building bundled Flick helper..."
 $build = Start-Process -FilePath $py -ArgumentList $args -WorkingDirectory $RepoRoot -Wait -PassThru -NoNewWindow
 if ($build.ExitCode -ne 0) {
     throw "PyInstaller failed"

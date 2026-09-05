@@ -994,6 +994,8 @@
     textEl: null,
     metaEl: null,
     extrasBtn: null,
+    pickHint: null,
+    onPick: null,
   };
 
   function extrasCaption(on) {
@@ -1081,10 +1083,12 @@
   }
 
   function removeSelectView() {
+    unbindSelectPickHint();
     selectViewState.payload = null;
     selectViewState.textEl = null;
     selectViewState.metaEl = null;
     selectViewState.extrasBtn = null;
+    selectViewState.pickHint = null;
     const el = document.getElementById(SELECT_VIEW_ID);
     if (el) el.remove();
     document.documentElement.style.overflow = "";
@@ -1097,6 +1101,36 @@
     const range = sel.getRangeAt(0);
     if (!el.contains(range.commonAncestorContainer)) return "";
     return normalizeText(sel.toString());
+  }
+
+  function highlightInside(el) {
+    const selected = selectionInside(el);
+    if (!selected) return "";
+    const whole = normalizeText(el.textContent || "");
+    if (whole && selected === whole) return "";
+    return selected;
+  }
+
+  function paintSelectPickHint() {
+    const hint = selectViewState.pickHint;
+    if (!hint) return;
+    const el = selectViewState.textEl;
+    const selected = el ? highlightInside(el) : "";
+    hint.textContent = selected ? "Saving highlight" : "";
+  }
+
+  function bindSelectPickHint() {
+    unbindSelectPickHint();
+    const onPick = () => paintSelectPickHint();
+    selectViewState.onPick = onPick;
+    document.addEventListener("selectionchange", onPick);
+  }
+
+  function unbindSelectPickHint() {
+    if (selectViewState.onPick) {
+      document.removeEventListener("selectionchange", selectViewState.onPick);
+      selectViewState.onPick = null;
+    }
   }
 
   function showToast(host, message, ok) {
@@ -1189,6 +1223,10 @@
         box-shadow:inset 0 1px 0 var(--stroke);
       }
       #${SELECT_VIEW_ID} .sm-row { display:flex;flex-wrap:wrap;align-items:center;gap:8px; }
+      #${SELECT_VIEW_ID} .sm-pick {
+        margin-left:auto;font-size:12px;font-weight:500;color:var(--muted);
+        letter-spacing:-.01em;white-space:nowrap;
+      }
       #${SELECT_VIEW_ID} .sm-btn {
         display:inline-flex;align-items:center;justify-content:center;
         height:34px;padding:1px 14px 2px;border-radius:7px;
@@ -1289,12 +1327,20 @@
     copySelBtn.disabled = true;
     copyAllBtn.disabled = true;
     saveMdBtn.disabled = true;
+    const pickHint = document.createElement("span");
+    pickHint.className = "sm-pick";
+    pickHint.setAttribute("data-pasteflick", "pick-hint");
+    pickHint.setAttribute("role", "status");
+    pickHint.setAttribute("aria-live", "polite");
+
     row.appendChild(copySelBtn);
     row.appendChild(copyAllBtn);
     row.appendChild(saveMdBtn);
     row.appendChild(extrasBtn);
+    row.appendChild(pickHint);
     footer.appendChild(row);
     selectViewState.extrasBtn = extrasBtn;
+    selectViewState.pickHint = pickHint;
 
     const closeBtn = header.querySelector("[data-close]");
     const gearBtn = header.querySelector("[data-gear]");
@@ -1344,6 +1390,8 @@
       selectViewState.textEl = textEl;
       selectViewState.metaEl = meta;
       paintSelectExtras(extrasBtn, lastCopyExtras);
+      bindSelectPickHint();
+      paintSelectPickHint();
       copySelBtn.disabled = false;
       copyAllBtn.disabled = false;
       saveMdBtn.disabled = false;
@@ -1407,7 +1455,7 @@
 
     saveMdBtn.addEventListener("click", async () => {
       try {
-        const selected = textEl ? selectionInside(textEl) : "";
+        const selected = textEl ? highlightInside(textEl) : "";
         let payload = fullPayload;
         let label = "Thread";
         if (selected && selected.length > 0) {

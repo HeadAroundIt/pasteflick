@@ -106,15 +106,3 @@ def linearize_dom_messages(
         "source": "dom",
         "url": url or "",
     }
-
-
-try:
-    from app.private.conversation_payload import (
-        linearize_conversation,
-        turns_from_payload,
-        walk_active_branch,
-    )
-except ImportError:  # PasteFlick / no unofficial payload
-    linearize_conversation = None  # type: ignore[misc, assignment]
-    turns_from_payload = None  # type: ignore[misc, assignment]
-    walk_active_branch = None  # type: ignore[misc, assignment]

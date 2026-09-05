@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from app.linearize import (
     conversation_id_from_url,
     format_markdown,
-    linearize_conversation,
     linearize_dom_messages,
     linearize_selection,
 )
+
+ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_conversation_id_from_url() -> None:
@@ -19,8 +22,9 @@ def test_conversation_id_from_url() -> None:
     assert conversation_id_from_url("https://chatgpt.com/") is None
 
 
-def test_unofficial_payload_helpers_are_absent() -> None:
-    assert linearize_conversation is None
+def test_private_payload_module_is_absent() -> None:
+    assert not (ROOT / "app" / "private").exists()
+    assert not (ROOT / "extension" / "private").exists()
 
 
 def test_linearize_selection() -> None:

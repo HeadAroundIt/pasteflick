@@ -1795,6 +1795,49 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
         if (viewPre && !/^## User$/m.test(viewPre.textContent || "")) {
           throw new Error("select view With notes should show speaker headings");
         }
+        const pickHint = view.querySelector('[data-pasteflick="pick-hint"]');
+        if (!pickHint) throw new Error("select view needs highlight note");
+        if ((pickHint.textContent || "").trim()) {
+          throw new Error("highlight note should be empty until selected");
+        }
+        if (viewPre && (viewPre.textContent || "").trim()) {
+          const selectPartial = (el) => {
+            const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+            let node = walker.nextNode();
+            while (node && !String(node.data || "").trim()) node = walker.nextNode();
+            if (!node) return false;
+            const start = String(node.data).search(/\S/);
+            if (start < 0) return false;
+            const end = Math.min(node.data.length, start + 8);
+            if (end <= start) return false;
+            const range = document.createRange();
+            range.setStart(node, start);
+            range.setEnd(node, end);
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+            return true;
+          };
+          if (!selectPartial(viewPre)) throw new Error("could not highlight a slice");
+          await sleep(40);
+          if ((pickHint.textContent || "").trim() !== "Saving highlight") {
+            throw new Error("highlight note should say saving highlight");
+          }
+          const all = document.createRange();
+          all.selectNodeContents(viewPre);
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(all);
+          await sleep(40);
+          if ((pickHint.textContent || "").trim()) {
+            throw new Error("selecting the whole document should not warn about a highlight");
+          }
+          sel.removeAllRanges();
+          await sleep(40);
+          if ((pickHint.textContent || "").trim()) {
+            throw new Error("highlight note should clear when selection is gone");
+          }
+        }
         const closeView = view.querySelector("[data-close]");
         if (closeView) closeView.click();
         await sleep(40);

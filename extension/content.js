@@ -234,7 +234,6 @@ function deliverFileIfNeeded(result, extra) {
 }
 
 globalThis.PasteFlickCapture = requestCapture;
-globalThis.PasteFlickCapture = requestCapture;
 
 function markName(mark) {
   return mark && String(mark.name || "").trim() ? String(mark.name).trim() : "";

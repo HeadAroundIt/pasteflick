@@ -181,7 +181,7 @@ function Write-InstallGuide {
       <img src="extension/icons/icon48.png" alt="" width="48" height="48" />
       <h1>PasteFlick</h1>
     </div>
-    <p class="sub">Files are installed. Brave, Chrome, Edge, and Chromium all use this same extension. Load it once in each browser you use.</p>
+    <p class="sub">Files are installed. Same extension for Brave, Chrome, Edge, Chromium, and Arc. Load it once in each browser you use.</p>
 
     <div class="card">
       <h2>1. Copy the extension folder path</h2>
@@ -210,19 +210,17 @@ $browserBlock
       </p>
       <h3>On the chat</h3>
       <ul>
-        <li>Each message has a <strong>Message</strong> card on its left, with <strong>Copy</strong>, <strong>Auto-paste</strong>, and <strong>Save</strong>. ChatGPT's own buttons stay on the right.</li>
-        <li>Code, files, and documents get their own smaller cards.</li>
-        <li>The bookmark on a Message card is where <strong>Copy from PasteFlick</strong> starts.</li>
+        <li>One <strong>PasteFlick</strong> chip sits under the chat title. Use <strong>Copy</strong>, <strong>Save</strong>, or <strong>Flick</strong> for the highlight if you have one, otherwise the visible thread. It copies what is already on the page. The extras toggle is on that chip.</li>
+        <li>Each message has a small <strong>bookmark pin</strong>. Click one to start there, or add more - each selected pin shows <strong>1 of 3</strong>. <strong>Deselect</strong> slides out under the chip with the count, and clears the set.</li>
       </ul>
-      <h3>From the PasteFlick popup</h3>
+      <h3>From the toolbar icon</h3>
       <ul>
-        <li><strong>Copy selection</strong> - highlight part of the thread, then copy.</li>
-        <li><strong>Copy thread</strong> - the whole conversation.</li>
-        <li><strong>Copy from PasteFlick</strong> - from the bookmark onward.</li>
+        <li>On a ChatGPT tab, the icon opens the thread as a document. Highlight inside it, then <strong>Copy selection</strong>, <strong>Copy all</strong>, or <strong>Save .md</strong>. The switch next to Save picks notes or just the text. Settings is the gear.</li>
+        <li>Off a chat, the icon asks you to open one. The chip on the page is still the fast path for Copy, Save, and Flick.</li>
       </ul>
       <p class="note">
-        Copies stay on the clipboard unless you turn on Auto-paste or File in Settings.
-        Auto-paste puts the copy into the last app you were using.
+        Copies stay on the clipboard unless you turn on Flick or File in Settings.
+        Flick puts the copy into the last app you were using - Word, Notes, Cursor, wherever you just were.
         Closed this page? After the extension is loaded, open the PasteFlick popup and choose <strong>Add to a browser</strong>.
       </p>
     </div>
@@ -289,14 +287,14 @@ function Install-Product {
         }
         & $startScript -SkipUpdate
         if ($LASTEXITCODE -eq 0) {
-            Write-Step "Auto-paste helper ready"
+            Write-Step "Flick helper ready"
         }
         else {
-            Write-Host "  ! Auto-paste helper did not start. Clipboard copy still works." -ForegroundColor Yellow
+            Write-Host "  ! Flick helper did not start. Clipboard copy still works." -ForegroundColor Yellow
         }
     }
     catch {
-        Write-Host "  ! Auto-paste helper did not start. Clipboard copy still works." -ForegroundColor Yellow
+        Write-Host "  ! Flick helper did not start. Clipboard copy still works." -ForegroundColor Yellow
     }
 
     $desktop = [Environment]::GetFolderPath("Desktop")

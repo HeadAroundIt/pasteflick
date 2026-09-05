@@ -215,7 +215,6 @@ export default function App() {
                   {shortPath(exportInfo?.dir || '')}
                 </span>
               </div>
-              <p className="version">{version ? `PasteFlick ${version}` : 'PasteFlick'}</p>
               <div className="support">
                 <p>
                   Help me keep creating useful apps and sharing them freely. A
@@ -249,6 +248,7 @@ export default function App() {
                   Leave a tip
                 </a>
               </div>
+              <p className="version">{version ? `PasteFlick ${version}` : 'PasteFlick'}</p>
               <p className="settings-note">{settingsNote}</p>
             </div>
           </>
