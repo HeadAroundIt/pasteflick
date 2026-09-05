@@ -159,6 +159,9 @@
       --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
       --ease-tap: cubic-bezier(0.32, 0.72, 0, 1);
     }
+    :host([data-hidden="1"]) {
+      display: none !important;
+    }
     [data-pasteflick="highlights"] {
       position: absolute;
       top: 0;
@@ -206,6 +209,7 @@
       width: max-content;
       pointer-events: none;
       box-sizing: border-box;
+      overflow: visible;
     }
     [data-pasteflick="pin"] {
       position: absolute;
@@ -241,12 +245,21 @@
       padding: 0;
       max-width: none;
       width: max-content;
-      gap: 4px;
+      min-width: 34px;
+      gap: 0;
       align-items: center;
       background: transparent;
       border: none;
       box-shadow: none;
       overflow: visible;
+      isolation: auto;
+    }
+    [data-pasteflick="pin"][data-kind="message"] [data-pasteflick="actions"] {
+      box-sizing: border-box;
+      padding: 3px;
+      border-radius: 10px;
+      background: #fff;
+      border: 1px solid rgba(201, 166, 106, 0.7);
     }
     [data-pasteflick="silo"][data-role="thread"] {
       z-index: 50;
@@ -365,9 +378,6 @@
     [data-pasteflick="mark"].is-joinable.is-hint::after {
       opacity: 1;
       transform: scale(1);
-    }
-    [data-pasteflick="mark"].is-active.is-multi {
-      box-shadow: 0 0 0 2px rgba(201, 166, 106, 0.55);
     }
     [data-pasteflick="pin"][data-kind="link"] {
       flex-direction: row;
@@ -516,7 +526,9 @@
       display: inline-flex;
       align-items: baseline;
       justify-content: center;
+      box-sizing: border-box;
       width: max-content;
+      min-width: 34px;
       padding: 2px 5px;
       font: 650 10px/1.2 "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
       font-variant-numeric: tabular-nums;
@@ -528,8 +540,21 @@
       background: var(--chip-label);
       box-shadow: inset 0 1px 0 rgba(244, 226, 180, 0.35);
     }
+    [data-pasteflick="label"]:not(.is-on) {
+      visibility: hidden;
+      height: 0;
+      overflow: hidden;
+      padding-top: 0;
+      padding-bottom: 0;
+      margin: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+    [data-pasteflick="label"].is-on {
+      margin-top: 4px;
+    }
     [data-pasteflick="label"][hidden] {
-      display: none;
+      display: inline-flex;
     }
     [data-pasteflick="ordinal"] {
       font-weight: 650;
@@ -624,6 +649,9 @@
       }
       [data-pasteflick="pin"][data-kind="message"] {
         background: transparent;
+      }
+      [data-pasteflick="pin"][data-kind="message"] [data-pasteflick="actions"] {
+        background: #fff;
       }
     }
     [data-pasteflick="toast"] {
@@ -3111,7 +3139,8 @@
 
   function packHeaderStick() {
     const host = dockHost();
-    const rails = host && host.shadowRoot && host.shadowRoot.querySelector('[data-pasteflick="rails"]');
+    if (!host || host.getAttribute("data-hidden") === "1") return;
+    const rails = host.shadowRoot && host.shadowRoot.querySelector('[data-pasteflick="rails"]');
     if (!rails) return;
     const scroller = conversationScroller();
     const sr = scrollerRect(scroller);
@@ -3215,13 +3244,43 @@
     });
   }
 
-  function paintHighlight(highlight, el, scroller) {
-    if (!highlight || !el) return;
+  const HIGHLIGHT_PAD = 4;
+  const HIGHLIGHT_GAP = 8;
+
+  function highlightBoxFor(el, scroller) {
     const rect = localBox(turnRoot(el), scroller || conversationScroller());
-    highlight.style.top = Math.round(rect.top - 4) + "px";
-    highlight.style.left = Math.round(rect.left - 4) + "px";
-    highlight.style.width = Math.round(rect.width + 8) + "px";
-    highlight.style.height = Math.round(rect.height + 8) + "px";
+    return {
+      top: rect.top - HIGHLIGHT_PAD,
+      left: rect.left - HIGHLIGHT_PAD,
+      width: rect.width + HIGHLIGHT_PAD * 2,
+      height: rect.height + HIGHLIGHT_PAD * 2,
+      minTop: rect.top,
+      maxBottom: rect.bottom,
+    };
+  }
+
+  function separateHighlightBoxes(boxes) {
+    boxes.sort((a, b) => a.top - b.top);
+    for (let i = 0; i < boxes.length - 1; i++) {
+      const curr = boxes[i];
+      const next = boxes[i + 1];
+      const overlap = curr.top + curr.height + HIGHLIGHT_GAP - next.top;
+      if (overlap <= 0) continue;
+      const push = overlap / 2;
+      const currFloor = curr.maxBottom - curr.top;
+      const nextCeil = next.minTop;
+      curr.height = Math.max(currFloor, curr.height - push);
+      const lifted = Math.min(nextCeil, next.top + (overlap - push));
+      next.height -= lifted - next.top;
+      next.top = lifted;
+    }
+  }
+
+  function applyHighlightBox(highlight, box) {
+    highlight.style.top = Math.round(box.top) + "px";
+    highlight.style.left = Math.round(box.left) + "px";
+    highlight.style.width = Math.round(Math.max(0, box.width)) + "px";
+    highlight.style.height = Math.round(Math.max(0, box.height)) + "px";
   }
 
   function placeAllPins(relayout) {
@@ -3257,9 +3316,13 @@
   function paintHighlights(root, scroller) {
     const layer = root.querySelector('[data-pasteflick="highlights"]');
     if (!layer) return;
-    layer.querySelectorAll('[data-pasteflick="highlight"].is-on').forEach((box) => {
-      if (box._anchor && box._anchor.isConnected) paintHighlight(box, box._anchor, scroller);
+    const items = [];
+    layer.querySelectorAll('[data-pasteflick="highlight"].is-on').forEach((el) => {
+      if (!el._anchor || !el._anchor.isConnected) return;
+      items.push({ el, box: highlightBoxFor(el._anchor, scroller) });
     });
+    separateHighlightBoxes(items.map((it) => it.box));
+    items.forEach((it) => applyHighlightBox(it.el, it.box));
   }
 
   function schedulePlace() {
@@ -3470,7 +3533,8 @@
 
     const name = document.createElement("span");
     name.setAttribute("data-pasteflick", "label");
-    name.hidden = true;
+    name.setAttribute("aria-hidden", "true");
+    paintCountLabel(name, 1, 1, false);
     pin.appendChild(actions);
     pin.appendChild(name);
     dockPin(pin);
@@ -3603,11 +3667,18 @@
     return n + " of " + total;
   }
 
-  function paintCountLabel(label, n, total) {
+  function paintCountLabel(label, n, total, visible) {
     const text = countLabelText(n, total);
-    label.hidden = false;
-    label.setAttribute("aria-label", "Bookmark " + text + ".");
-    label.title = text;
+    label.classList.toggle("is-on", !!visible);
+    if (visible) {
+      label.removeAttribute("aria-hidden");
+      label.setAttribute("aria-label", "Bookmark " + text + ".");
+      label.title = text;
+    } else {
+      label.setAttribute("aria-hidden", "true");
+      label.removeAttribute("aria-label");
+      label.title = "";
+    }
     if (label.getAttribute("data-count") === text && label.childElementCount) return;
     label.setAttribute("data-count", text);
     const ordinal = document.createElement("span");
@@ -3734,8 +3805,8 @@
       box._anchor = el;
       box.classList.add("is-on");
       box.style.display = "block";
-      paintHighlight(box, el);
     });
+    paintHighlights(root);
   }
 
   async function applyActiveVisuals() {
@@ -3781,12 +3852,8 @@
         }
       }
       if (label) {
-        if (on) paintCountLabel(label, rank + 1, total);
-        else {
-          label.hidden = true;
-          label.removeAttribute("data-count");
-          label.replaceChildren();
-        }
+        if (on) paintCountLabel(label, rank + 1, total, true);
+        else paintCountLabel(label, 1, Math.max(total, 1), false);
       }
     });
 
@@ -3796,9 +3863,165 @@
     hintJoinableNeighbors(root, activeEls, nodes);
   }
 
+  function ancestorHidesNode(el) {
+    let node = el;
+    for (let i = 0; i < 16 && node && node !== document.body && node !== document.documentElement; i++) {
+      if (node.hasAttribute && (node.hasAttribute("hidden") || node.hasAttribute("inert"))) return true;
+      if (node.getAttribute && node.getAttribute("aria-hidden") === "true") return true;
+      node = node.parentElement;
+    }
+    return false;
+  }
+
+  function nodeShown(el) {
+    if (!el || !el.isConnected) return false;
+    if (ancestorHidesNode(el)) return false;
+    try {
+      if (typeof el.checkVisibility === "function") {
+        if (!el.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true })) return false;
+      }
+      const r = el.getBoundingClientRect();
+      if (r.width < 24 || r.height < 12) return false;
+      const vw = window.innerWidth || 0;
+      const vh = window.innerHeight || 0;
+      if (r.bottom < 4 || r.top > vh - 4 || r.right < 4 || r.left > vw - 4) return false;
+      const st = window.getComputedStyle(el);
+      if (st.display === "none" || st.visibility === "hidden") return false;
+      if (Number(st.opacity) === 0) return false;
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function messageHitCovered(el) {
+    try {
+      const r = el.getBoundingClientRect();
+      const x = Math.min(r.right - 8, r.left + Math.max(24, r.width * 0.35));
+      const y = Math.min(r.bottom - 8, r.top + Math.max(16, r.height * 0.35));
+      const stack = document.elementsFromPoint ? document.elementsFromPoint(x, y) : [];
+      if (!stack || !stack.length) return null;
+      for (let i = 0; i < stack.length; i++) {
+        const node = stack[i];
+        if (!node || isDockHost(node)) continue;
+        if (inTopChrome(node)) continue;
+        if (el.contains(node)) return false;
+        if (node.closest && node.closest("[data-message-author-role]")) return false;
+        return true;
+      }
+    } catch (_) {
+      /* hit-testing can fail in a background tab */
+    }
+    return null;
+  }
+
+  function coveringEditorTakesPage() {
+    const vw = window.innerWidth || 0;
+    const vh = window.innerHeight || 0;
+    if (vw < 200 || vh < 200) return false;
+    const nodes = document.querySelectorAll(
+      [
+        "[data-testid*='canvas' i]",
+        "[data-testid*='textdoc' i]",
+        "[data-testid*='text-doc' i]",
+        "[data-testid*='text_doc' i]",
+        "[data-testid*='document-editor' i]",
+        "[data-testid*='document-panel' i]",
+        "[data-testid*='code-editor' i]",
+        "[data-testid*='code-view' i]",
+        "[data-testid*='file-editor' i]",
+        "[data-testid='editor']",
+        "[aria-label='Editor']",
+        "[aria-label*='code editor' i]",
+        "[aria-label*='text editor' i]",
+        ".ProseMirror",
+        "[class*='DocumentEditor']",
+        "[class*='doc-editor' i]",
+        "[class*='cm-editor' i]",
+        "[class*='monaco-editor' i]",
+        "[class*='ace_editor' i]",
+        "[class*='ace-editor' i]",
+      ].join(","),
+    );
+    for (let i = 0; i < nodes.length; i++) {
+      const el = nodes[i];
+      if (!el || isDockHost(el) || isComposer(el)) continue;
+      try {
+        const r = el.getBoundingClientRect();
+        if (r.width < vw * 0.45 || r.height < vh * 0.45) continue;
+      } catch (_) {
+        continue;
+      }
+      const inThread = !!(
+        el.closest &&
+        (el.closest("[data-message-author-role]") || el.closest('[data-testid^="conversation-turn"]'))
+      );
+      if (inThread && !pageOverlayAround(el)) continue;
+      return true;
+    }
+    return false;
+  }
+
+  function pageOverlayAround(el) {
+    let node = el;
+    for (let i = 0; i < 8 && node && node !== document.body && node !== document.documentElement; i++) {
+      try {
+        const st = window.getComputedStyle(node);
+        if (st.position === "fixed") return true;
+        if (st.position === "absolute" || st.position === "sticky") {
+          const r = node.getBoundingClientRect();
+          const vw = window.innerWidth || 0;
+          const vh = window.innerHeight || 0;
+          if (r.width >= vw * 0.45 && r.height >= vh * 0.45) return true;
+        }
+      } catch (_) {
+        /* keep walking */
+      }
+      node = node.parentElement;
+    }
+    return false;
+  }
+
+  function conversationIsInView() {
+    if (coveringEditorTakesPage()) return false;
+    const nodes = messageNodes();
+    let hitMessage = false;
+    let unknownHit = false;
+    for (let i = 0; i < nodes.length; i++) {
+      const el = nodes[i];
+      if (!nodeShown(el)) continue;
+      const covered = messageHitCovered(el);
+      if (covered === true) continue;
+      if (covered === false) {
+        hitMessage = true;
+        break;
+      }
+      unknownHit = true;
+    }
+    if (hitMessage) return true;
+    return unknownHit;
+  }
+
+  function setDockHidden(hidden) {
+    const host = dockHost();
+    if (!host) return;
+    if (hidden) {
+      host.setAttribute("data-hidden", "1");
+      host.setAttribute("aria-hidden", "true");
+      return;
+    }
+    host.removeAttribute("data-hidden");
+    host.removeAttribute("aria-hidden");
+  }
+
   function scan() {
     layerRoot();
     syncScheme();
+    if (!conversationIsInView()) {
+      setDockHidden(true);
+      return;
+    }
+    setDockHidden(false);
     const rails = railsLayer();
     const seen = new Set();
     const threadPin = ensureThreadChip();
@@ -3836,6 +4059,11 @@
   function settleAfterScroll() {
     scrolling = false;
     scrollIdle = 0;
+    if (!conversationIsInView()) {
+      setDockHidden(true);
+      return;
+    }
+    setDockHidden(false);
     const rails = railsLayer();
     if (!rails) {
       scan();
@@ -3940,13 +4168,18 @@
       }
       scheduleScan();
     });
-    observer.observe(document.documentElement, { childList: true, subtree: true });
+    observer.observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["hidden", "inert", "aria-hidden"],
+    });
 
     window.addEventListener(
       "scroll",
       () => {
         const host = dockHost();
-        if (host) {
+        if (host && conversationIsInView()) {
           const scroller = conversationScroller();
           if (host.parentElement !== scroller) mountHost(host);
         }
@@ -3967,7 +4200,13 @@
         return ret;
       };
     });
-    setInterval(() => void onNavigate(), 800);
+    setInterval(() => {
+      void onNavigate();
+      const host = dockHost();
+      if (!host || !started) return;
+      const inView = conversationIsInView();
+      if (inView === (host.getAttribute("data-hidden") === "1")) scan();
+    }, 800);
 
     const api = storageApi();
     if (api && api.onChanged) {

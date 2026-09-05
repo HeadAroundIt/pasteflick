@@ -108,7 +108,7 @@ MARK_OFF = f'<button type="button" data-pasteflick="mark" aria-pressed="false">{
 
 
 def _count_chip(n: int, total: int) -> str:
-    return f'<span data-pasteflick="label">{n} of {total}</span>'
+    return f'<span data-pasteflick="label" class="is-on">{n} of {total}</span>'
 
 
 def _mark_pin(btn: str, count: str = "") -> str:
@@ -655,7 +655,7 @@ def main() -> None:
         shot(f"{base}/shot-pair.html?v=16", OUT / "view-and-settings.png", 840, 620, "00000000")
         shot(f"{base}/shot-popup.html?v=17", OUT / "panel-main.png", 332, 240, "00000000")
         shot(f"{base}/shot-settings.html?v=16", OUT / "panel-settings.png", 332, 656, "00000000")
-        shot(f"{base}/shot-chat.html?v=33", OUT / "marks-fit.png", 840, 560, "00000000")
+        shot(f"{base}/shot-chat.html?v=36", OUT / "marks-ring.png", 840, 560, "00000000")
     finally:
         httpd.shutdown()
     print("ok")
