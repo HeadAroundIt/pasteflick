@@ -61,12 +61,14 @@
       html {
         margin: 0;
         background: var(--bg0);
+        overflow: hidden;
       }
 
       body {
         margin: 0;
         width: 300px;
         padding: 8px;
+        overflow: hidden;
         background: var(--bg0);
         color: var(--text);
       }
@@ -187,8 +189,8 @@
       }
 
       #view-settings .lede {
-        font-size: 14px;
-        margin-bottom: 16px;
+        font-size: 13px;
+        margin-bottom: 10px;
       }
 
       .mode-row {
@@ -337,7 +339,11 @@
       .page-form {
         display: flex;
         flex-direction: column;
-        gap: 14px;
+        gap: 8px;
+      }
+
+      .page-form > .btn {
+        margin-bottom: 0;
       }
 
       .paste-pref {
@@ -534,11 +540,12 @@
         background: transparent;
         padding: 0;
         height: auto;
+        overflow: visible;
       }
 
       .support {
-        margin: 4px 0 0;
-        padding: 12px;
+        margin: 0;
+        padding: 8px 10px;
         border-radius: 10px;
         border: 1px solid var(--stroke);
         background: var(--well);
@@ -547,14 +554,14 @@
       }
 
       .support p {
-        margin: 0 0 8px;
+        margin: 0 0 6px;
         font-size: 12px;
-        line-height: 1.45;
+        line-height: 1.35;
         color: var(--muted);
       }
 
       .support p:last-of-type {
-        margin-bottom: 10px;
+        margin-bottom: 8px;
       }
 
       a.kofi {
@@ -563,7 +570,7 @@
         justify-content: center;
         align-self: center;
         gap: 8px;
-        height: 36px;
+        height: 32px;
         padding: 0 16px 0 14px;
         border-radius: 7px;
         background: var(--wood);
@@ -695,7 +702,7 @@
 
           <button type="button" id="add-browser" class="btn">Add to a browser</button>
           <div class="support">
-            <p>Help me keep creating useful apps and sharing them freely. A contribution supports new ideas, continued development, and more tools for everyone.</p>
+            <p>Help me keep creating useful apps and sharing them freely.</p>
             <p>No pressure—just genuine appreciation!</p>
             <a class="kofi" id="tip-kofi" href="https://ko-fi.com/ryandunham" title="Opens Ko-fi">
               <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true">

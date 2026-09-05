@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import re
 import socket
@@ -141,12 +142,12 @@ iframe{
   background:transparent;
 }
 .home{height:336px;}
-.settings{height:584px;}
+.settings{height:560px;}
 </style></head>
 <body>
   <div class="stage">
-    <iframe class="home" src="/popup.html?shot=1" title="Popup"></iframe>
-    <iframe class="settings" src="/popup-settings.html?shot=1" title="Settings"></iframe>
+    <iframe class="home" src="/popup.html?shot=1" title="Popup" scrolling="no"></iframe>
+    <iframe class="settings" src="/popup-settings.html?shot=1" title="Settings" scrolling="no"></iframe>
   </div>
   <script>
     function fit(frame) {
@@ -208,7 +209,7 @@ html,body{{margin:0;width:152px;height:96px;background:transparent;}}
             if name == "shot-popup.html":
                 inner, w, h, pad = "/popup.html?shot=1", 300, 336, 16
             else:
-                inner, w, h, pad = "/popup-settings.html?shot=1", 300, 584, 16
+                inner, w, h, pad = "/popup-settings.html?shot=1", 300, 560, 16
             html = f"""<!doctype html>
 <html><head><meta charset="utf-8"><style>
 html,body{{margin:0;height:100%;background:transparent;}}
@@ -226,7 +227,7 @@ html,body{{margin:0;height:100%;background:transparent;}}
 iframe{{border:0;width:{w}px;height:{h}px;border-radius:10px;overflow:hidden;background:transparent;}}
 </style></head>
 <body>
-  <div class="stage"><iframe src="{inner}"></iframe></div>
+  <div class="stage"><iframe src="{inner}" scrolling="no"></iframe></div>
   <script>
     function fit() {{
       const frame = document.querySelector("iframe");
@@ -456,6 +457,8 @@ html,body{{margin:0;width:840px;height:520px;background:transparent;}}
             html = html.replace("<html lang=\"en\">", "<html lang=\"en\" class=\"shot\">", 1)
             html = html.replace('id="view-home"', 'id="view-home" hidden', 1)
             html = html.replace('id="view-settings" hidden', 'id="view-settings"', 1)
+            ver = json.loads((EXT / "manifest.json").read_text(encoding="utf-8")).get("version", "")
+            html = html.replace('id="version"></p>', f'id="version">PasteFlick {ver}</p>', 1)
             data = html.encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
@@ -538,9 +541,9 @@ def main() -> None:
     try:
         # New filenames so GitHub doesn't serve stale shots.
         shot(f"{base}/shot-chip.html?v=22", OUT / "the-chip.png", 152, 96, "00000000")
-        shot(f"{base}/shot-pair.html?v=13", OUT / "the-panels.png", 688, 616, "00000000")
-        shot(f"{base}/shot-popup.html?v=13", OUT / "panel-main.png", 332, 368, "00000000")
-        shot(f"{base}/shot-settings.html?v=13", OUT / "panel-settings.png", 332, 616, "00000000")
+        shot(f"{base}/shot-pair.html?v=15", OUT / "home-and-settings.png", 688, 656, "00000000")
+        shot(f"{base}/shot-popup.html?v=15", OUT / "panel-main.png", 332, 368, "00000000")
+        shot(f"{base}/shot-settings.html?v=15", OUT / "panel-settings.png", 332, 656, "00000000")
         shot(f"{base}/shot-chat.html?v=27", OUT / "one-or-more.png", 840, 520, "00000000")
     finally:
         httpd.shutdown()

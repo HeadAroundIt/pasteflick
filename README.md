@@ -23,7 +23,7 @@
 <p align="center"><br></p>
 
 <p align="center">
-  <img src="readme/shots/the-panels.png" width="760" alt="PasteFlick popup and settings">
+  <img src="readme/shots/home-and-settings.png" width="760" alt="PasteFlick popup and settings">
 </p>
 
 <p align="center"><br></p>
