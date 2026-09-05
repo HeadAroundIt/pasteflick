@@ -11,7 +11,7 @@
 <p align="center"><br></p>
 
 <p align="center">
-  <img src="readme/shots/marks-count.png" width="760" alt="Bookmark messages — each pin shows 1 of 2, Deselect slides out under PasteFlick">
+  <img src="readme/shots/marks-fit.png" width="760" alt="Bookmark messages — each pin shows 1 of 2, Deselect slides out under PasteFlick">
 </p>
 
 <p align="center"><br></p>

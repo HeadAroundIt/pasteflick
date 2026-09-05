@@ -516,12 +516,11 @@
       display: inline-flex;
       align-items: baseline;
       justify-content: center;
-      min-width: 36px;
-      min-height: 1em;
-      padding: 3px 8px;
+      width: max-content;
+      padding: 2px 5px;
       font: 650 10px/1.2 "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
       font-variant-numeric: tabular-nums;
-      letter-spacing: -0.02em;
+      letter-spacing: -0.01em;
       color: var(--ink);
       white-space: nowrap;
       pointer-events: none;
@@ -538,8 +537,8 @@
     }
     [data-pasteflick="count-sep"],
     [data-pasteflick="total"] {
-      font-weight: 500;
-      opacity: 0.72;
+      font-weight: 600;
+      opacity: 0.78;
     }
     @media (prefers-reduced-motion: reduce) {
       [data-pasteflick="drawer"],
