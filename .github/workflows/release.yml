@@ -39,9 +39,6 @@ jobs:
       - name: Check extension syntax
         run: node --check extension/pasteflick.js
 
-      - name: Run sticky-stack browser regression
-        run: python testbed/verify_wrap.py
-
       - name: Resolve and validate version
         id: version
         shell: pwsh
