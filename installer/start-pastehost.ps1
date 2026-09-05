@@ -46,6 +46,12 @@ function Get-BundledHelper {
 
 function Install-StartupShortcut {
     $startup = [Environment]::GetFolderPath("Startup")
+    foreach ($stale in @("PasteFlick Auto-paste.lnk")) {
+        $old = Join-Path $startup $stale
+        if (Test-Path -LiteralPath $old) {
+            Remove-Item -LiteralPath $old -Force -ErrorAction SilentlyContinue
+        }
+    }
     $installStart = Join-Path $InstallRoot "installer\start-pastehost.ps1"
     $target = $PSCommandPath
     $work = $RepoRoot
@@ -53,13 +59,14 @@ function Install-StartupShortcut {
         $target = $installStart
         $work = $InstallRoot
     }
-    $lnk = Join-Path $startup "PasteFlick Auto-paste.lnk"
+    $lnk = Join-Path $startup "PasteFlick.lnk"
     $wsh = New-Object -ComObject WScript.Shell
     $sc = $wsh.CreateShortcut($lnk)
     $sc.TargetPath = "powershell.exe"
     $sc.Arguments = '-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File "' + $target + '"'
     $sc.WorkingDirectory = $work
     $sc.WindowStyle = 7
+    $sc.Description = "PasteFlick"
     $sc.Save()
 }
 

@@ -250,6 +250,7 @@ $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $desktop = [Environment]::GetFolderPath('Desktop')
 $startup = [Environment]::GetFolderPath('Startup')
 Remove-Item -LiteralPath (Join-Path $desktop 'PasteFlick Install Guide.lnk') -Force -ErrorAction SilentlyContinue
+Remove-Item -LiteralPath (Join-Path $startup 'PasteFlick.lnk') -Force -ErrorAction SilentlyContinue
 Remove-Item -LiteralPath (Join-Path $startup 'PasteFlick Auto-paste.lnk') -Force -ErrorAction SilentlyContinue
 Remove-Item -LiteralPath $root -Recurse -Force
 Write-Host 'PasteFlick files removed.'
@@ -342,9 +343,11 @@ function Uninstall-Product {
     if (Test-Path -LiteralPath $shortcutPath) {
         Remove-Item -LiteralPath $shortcutPath -Force
     }
-    $startupLnk = Join-Path ([Environment]::GetFolderPath("Startup")) "PasteFlick Auto-paste.lnk"
-    if (Test-Path -LiteralPath $startupLnk) {
-        Remove-Item -LiteralPath $startupLnk -Force
+    foreach ($name in @("PasteFlick.lnk", "PasteFlick Auto-paste.lnk")) {
+        $startupLnk = Join-Path ([Environment]::GetFolderPath("Startup")) $name
+        if (Test-Path -LiteralPath $startupLnk) {
+            Remove-Item -LiteralPath $startupLnk -Force
+        }
     }
     if (Test-Path -LiteralPath $InstallRoot) {
         Remove-Item -LiteralPath $InstallRoot -Recurse -Force
