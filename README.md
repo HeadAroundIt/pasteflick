@@ -23,7 +23,13 @@
 <p align="center"><br></p>
 
 <p align="center">
-  <img src="readme/shots/view-and-settings-plain.png" width="760" alt="PasteFlick selection view and settings">
+  <img src="readme/keep-a-copy-plain-type.png" width="760" alt="Keep a copy. Markdown or PDF, just the text or with notes">
+</p>
+
+<p align="center"><br></p>
+
+<p align="center">
+  <img src="readme/shots/view-and-settings-plain.png" width="760" alt="PasteFlick document view: Copy selection, Copy all, Save .md, and settings for Markdown or PDF">
 </p>
 
 <p align="center"><br></p>
@@ -54,7 +60,9 @@
 
 PasteFlick is a Windows browser extension for ChatGPT. Copy a highlight or the visible thread, then Flick it into the last app you were using: Word, Notes, Cursor, wherever you just were.
 
-It copies what is already on the page, not turns ChatGPT has not rendered. One chip on the chat: Copy, Save, or Flick. Bookmark messages with pins. Works in Brave, Chrome, Edge, Chromium, and Arc. Not affiliated with OpenAI.
+It copies what is already on the page, not turns ChatGPT has not rendered. One chip on the chat: Copy, Save, or Flick. Bookmark messages with pins. Save as Markdown or PDF. Copy and Save can be just the text, or with notes. Flick still sends what you see. Code and tables come along.
+
+Works in Brave, Chrome, Edge, Chromium, and Arc. Not affiliated with OpenAI.
 
 **Install.** Download the [Windows zip](https://github.com/HeadAroundIt/pasteflick/releases/latest), extract it, run `Install PasteFlick.bat`, then Load unpacked in the browser.
 

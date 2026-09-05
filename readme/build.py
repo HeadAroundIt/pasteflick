@@ -453,6 +453,50 @@ def build_what() -> None:
     finish(img, "what-you-get-plain-type.png")
 
 
+def build_keep() -> None:
+    img = sheet()
+    x = PAD
+    y = PAD
+    inner = WIDTH - PAD * 2
+    y = section_head(img, "The transcript", "Keep a copy", x, y, inner)
+    body = font("segoeui.ttf", 16)
+    small = font("segoeui.ttf", 13)
+    y = draw_paragraph(
+        img,
+        "Keep the visible thread, a highlight, or the messages you bookmarked. A file you can open later, or the words in the last app.",
+        body,
+        x,
+        y,
+        inner,
+        TEXT,
+        1.45,
+    )
+    y += 24 * SCALE
+    y = draw_tiles(
+        img,
+        [
+            ("Markdown", "For Cursor, notes, and anything that reads .md."),
+            ("PDF", "A copy you can send or print."),
+            ("Text", "Just the words, or with notes. Flick still sends what you see."),
+        ],
+        x,
+        y,
+        inner,
+    )
+    y += 16 * SCALE
+    draw_paragraph(
+        img,
+        "Code and tables come along in the transcript.",
+        small,
+        x,
+        y,
+        inner,
+        MUTED,
+        1.4,
+    )
+    finish(img, "keep-a-copy-plain-type.png")
+
+
 def draw_paras(
     img: Image.Image,
     paras: list[str],
@@ -649,6 +693,7 @@ def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     build_hero()
     build_what()
+    build_keep()
     build_support()
     build_install()
     build_privacy()
