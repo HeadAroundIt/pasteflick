@@ -69,8 +69,7 @@ SEND_SVG = _js_concat("SEND_SVG")
 BOOKMARK_SVG = _js_concat("BOOKMARK_SVG")
 
 # Same live chip in the close-up and the how-to.
-CHIP_HTML = f"""
-    <div class="pf-host">
+CHIP_PIN = f"""
       <div data-pasteflick="pin" data-kind="thread">
         <div data-pasteflick="head">
           <span data-pasteflick="kicker">PasteFlick</span>
@@ -82,6 +81,24 @@ CHIP_HTML = f"""
           <button type="button" data-pasteflick="copy-thread" class="is-primary">{COPY_SVG}</button>
           <button type="button" data-pasteflick="save-thread">{SAVE_SVG}</button>
           <button type="button" data-pasteflick="paste-thread">{SEND_SVG}</button>
+        </div>
+      </div>
+"""
+
+CHIP_HTML = f"""
+    <div class="pf-host">
+{CHIP_PIN}
+    </div>
+"""
+CHIP_BOUND_HTML = f"""
+    <div class="pf-host">
+{CHIP_PIN}
+      <div data-pasteflick="drawer" class="is-on">
+        <div data-pasteflick="drawer-inner">
+          <button type="button" data-pasteflick="clear">
+            <span data-pasteflick="clear-count">2</span>
+            <span data-pasteflick="clear-word">Deselect</span>
+          </button>
         </div>
       </div>
     </div>
@@ -386,14 +403,13 @@ html,body{{margin:0;width:840px;height:520px;background:transparent;}}
   align-items:center;
   z-index:2;
 }}
-.chip-slot .pf-host{{zoom:1.62;flex:none;}}
-.stem{{
+.chip-slot .pf-host{{
+  zoom:1.62;
   flex:none;
-  width:20px;
-  height:2px;
-  margin-left:4px;
-  background:#c9a66a;
-  border-radius:1px;
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  width:max-content;
 }}
 {RAIL_SHOT_CSS}
 .guide{{
@@ -509,8 +525,7 @@ html,body{{margin:0;width:840px;height:520px;background:transparent;}}
     <div class="chat pf-host">
       <p class="title">Friday update</p>
       <div class="chip-slot">
-{CHIP_HTML}
-        <span class="stem" aria-hidden="true"></span>
+{CHIP_BOUND_HTML}
       </div>
       <div class="guide one" aria-hidden="true">
         <span class="v"></span>
@@ -640,7 +655,7 @@ def main() -> None:
         shot(f"{base}/shot-pair.html?v=16", OUT / "view-and-settings.png", 840, 620, "00000000")
         shot(f"{base}/shot-popup.html?v=17", OUT / "panel-main.png", 332, 240, "00000000")
         shot(f"{base}/shot-settings.html?v=16", OUT / "panel-settings.png", 332, 656, "00000000")
-        shot(f"{base}/shot-chat.html?v=28", OUT / "marks-in-order.png", 840, 540, "00000000")
+        shot(f"{base}/shot-chat.html?v=31", OUT / "marks-stack.png", 840, 560, "00000000")
     finally:
         httpd.shutdown()
     print("ok")

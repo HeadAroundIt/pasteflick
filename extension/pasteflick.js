@@ -234,61 +234,103 @@
     }
     [data-pasteflick="pin"][data-kind="thread"] {
       max-width: 148px;
+      width: 100%;
+      box-sizing: border-box;
     }
     [data-pasteflick="pin"][data-kind="message"] {
-      padding: 3px;
+      padding: 3px 3px 4px;
       max-width: none;
-      gap: 2px;
+      gap: 3px;
+      align-items: center;
     }
     [data-pasteflick="silo"][data-role="thread"] {
       z-index: 50;
     }
     [data-pasteflick="stack"][data-role="thread"] {
-      align-items: flex-start;
+      align-items: stretch;
+      overflow-x: clip;
+      width: max-content;
+      max-width: 148px;
+    }
+    [data-pasteflick="picks"],
+    [data-pasteflick="pick"] {
+      display: none !important;
     }
     [data-pasteflick="pin"][data-kind="thread"].is-bound {
       box-shadow: 0 0 0 2px rgba(201, 166, 106, 0.5), 0 1px 3px rgba(50, 40, 20, 0.05);
     }
-    [data-pasteflick="picks"] {
-      position: absolute;
-      left: calc(100% + 8px);
-      top: 50%;
+    [data-pasteflick="pin"][data-kind="thread"] {
+      position: relative;
+      z-index: 2;
+    }
+    [data-pasteflick="drawer"] {
+      display: grid;
+      grid-template-rows: 0fr;
+      position: relative;
+      z-index: 1;
+      margin-top: -8px;
+      pointer-events: none;
+      transition: grid-template-rows 420ms var(--ease-out), margin-top 420ms var(--ease-out);
+    }
+    [data-pasteflick="drawer"].is-on {
+      grid-template-rows: 1fr;
+      margin-top: 4px;
+      pointer-events: auto;
+    }
+    [data-pasteflick="drawer-inner"] {
+      min-height: 0;
+      overflow: hidden;
+    }
+    [data-pasteflick="clear"] {
+      appearance: none;
       display: flex;
       align-items: center;
-      padding: 4px 6px 4px 8px;
+      justify-content: space-between;
+      gap: 8px;
+      width: 100%;
+      margin: 0;
+      padding: 5px 7px;
+      border: 1px solid var(--rim);
       border-radius: 10px;
       background: var(--card);
-      border: 1px solid var(--rim);
-      box-shadow: 0 1px 3px rgba(50, 40, 20, 0.08);
-      pointer-events: auto;
-      transform: translateY(-50%);
-      transform-origin: left center;
-      animation: pasteflick-pop 320ms var(--ease-out);
-      z-index: 6;
-    }
-    [data-pasteflick="picks"][hidden] {
-      display: none;
-    }
-    [data-pasteflick="pick"] {
-      appearance: none;
-      width: 22px;
-      height: 22px;
-      margin: 0 0 0 -7px;
-      padding: 0;
-      display: grid;
-      place-items: center;
-      border: 1px solid rgba(201, 166, 106, 0.35);
-      border-radius: 6px;
-      background: var(--chip-hot);
       color: var(--ink);
       cursor: pointer;
-      animation: pasteflick-pick-in 280ms var(--ease-out) both;
+      box-shadow: 0 1px 3px rgba(50, 40, 20, 0.05);
+      transition: background-color 240ms var(--ease-out), border-color 240ms var(--ease-out), transform 160ms var(--ease-tap);
     }
-    [data-pasteflick="pick"]:first-child {
-      margin-left: 0;
+    [data-pasteflick="clear"]:hover {
+      background: color-mix(in srgb, #c9a66a 12%, #f7f7f5);
     }
-    [data-pasteflick="pick"] .scrolllog-icon {
-      fill: currentColor;
+    [data-pasteflick="clear"]:active {
+      transform: scale(0.98);
+    }
+    [data-pasteflick="clear"]:focus-visible {
+      outline: 2px solid rgba(201, 166, 106, 0.7);
+      outline-offset: 1px;
+    }
+    [data-pasteflick="clear"]:disabled {
+      pointer-events: none;
+    }
+    [data-pasteflick="clear-count"] {
+      flex: none;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 5px;
+      display: grid;
+      place-items: center;
+      border-radius: 9px;
+      background: var(--chip-hot);
+      font: 650 11px/1 "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.03em;
+      color: var(--ink);
+    }
+    [data-pasteflick="clear-word"] {
+      flex: 1;
+      text-align: right;
+      font: 600 11px/1.2 "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+      letter-spacing: -0.02em;
+      color: var(--text);
     }
     [data-pasteflick="mark"] {
       position: relative;
@@ -319,27 +361,8 @@
       opacity: 1;
       transform: scale(1);
     }
-    [data-pasteflick="mark"].is-joinable.is-hint::after {
-      animation: pasteflick-join-pulse 1.15s var(--ease-out) 2;
-    }
     [data-pasteflick="mark"].is-active.is-multi {
-      box-shadow: 0 0 0 2px rgba(201, 166, 106, 0.7);
-    }
-    @keyframes pasteflick-pop {
-      from { opacity: 0; transform: translateY(-50%) scale(0.7); }
-      to { opacity: 1; transform: translateY(-50%) scale(1); }
-    }
-    @keyframes pasteflick-pick-in {
-      from { opacity: 0; transform: translateX(-8px) scale(0.6); }
-      to { opacity: 1; transform: none; }
-    }
-    @keyframes pasteflick-join-pulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.2); }
-    }
-    @keyframes pasteflick-more-hint {
-      0%, 100% { opacity: 0.38; transform: scale(1); }
-      40% { opacity: 0.95; transform: scale(1.12); }
+      box-shadow: 0 0 0 2px rgba(201, 166, 106, 0.55);
     }
     [data-pasteflick="pin"][data-kind="link"] {
       flex-direction: row;
@@ -485,48 +508,34 @@
       box-shadow: inset 0 1px 0 rgba(244, 226, 180, 0.35);
     }
     [data-pasteflick="label"] {
-      position: absolute;
-      left: 50%;
-      top: calc(100% + 2px);
-      transform: translateX(-50%);
       display: inline-flex;
       align-items: baseline;
+      justify-content: center;
       min-height: 1em;
-      font: 650 10px/1.2 "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+      padding: 0 1px;
+      font: 590 9px/1.15 "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
       font-variant-numeric: tabular-nums;
-      letter-spacing: -0.02em;
-      color: var(--ink);
-      text-shadow: none;
-      padding: 2px 6px;
-      outline: none;
+      letter-spacing: -0.03em;
+      color: var(--text);
       white-space: nowrap;
       pointer-events: none;
-      border-radius: 6px;
-      background: var(--chip-label);
-      box-shadow: inset 0 1px 0 rgba(244, 226, 180, 0.35);
     }
     [data-pasteflick="label"][hidden] {
       display: none;
     }
+    [data-pasteflick="ordinal"] {
+      font-weight: 650;
+      color: var(--ink);
+    }
     [data-pasteflick="count-sep"],
     [data-pasteflick="total"] {
-      font-weight: 600;
+      font-weight: 500;
       opacity: 0.72;
     }
-    [data-pasteflick="label"].is-open::after {
-      content: "+";
-      margin-left: 3px;
-      font-weight: 700;
-      opacity: 0.38;
-      animation: pasteflick-more-hint 2.2s var(--ease-out) 2;
-    }
     @media (prefers-reduced-motion: reduce) {
-      [data-pasteflick="mark"].is-joinable.is-hint::after,
-      [data-pasteflick="label"].is-open::after {
-        animation: none;
-      }
-      [data-pasteflick="label"].is-open::after {
-        opacity: 0.55;
+      [data-pasteflick="drawer"],
+      [data-pasteflick="clear"] {
+        transition: none;
       }
     }
     [data-pasteflick="copy-thread"]:hover,
@@ -642,8 +651,8 @@
       [data-pasteflick="save-block"],
       [data-pasteflick="mark"],
       [data-pasteflick="highlight"],
-      [data-pasteflick="picks"],
-      [data-pasteflick="pick"] {
+      [data-pasteflick="drawer"],
+      [data-pasteflick="clear"] {
         transition: none;
         animation: none;
       }
@@ -3283,7 +3292,7 @@
     let silo = rails.querySelector('[data-pasteflick="silo"][data-role="thread"]');
     let stack = silo && silo.querySelector('[data-pasteflick="stack"]');
     let pin = stack && stack.querySelector('[data-pasteflick="pin"][data-kind="thread"]');
-    if (pin && pin.isConnected) return pin;
+    if (pin && pin.isConnected) return tidyThreadChip(pin);
 
     if (!silo) {
       silo = document.createElement("div");
@@ -3332,12 +3341,48 @@
 
     pin.appendChild(makeHead("PasteFlick"));
     pin.appendChild(actions);
-    const picks = document.createElement("div");
-    picks.setAttribute("data-pasteflick", "picks");
-    picks.hidden = true;
-    pin.appendChild(picks);
     stack.appendChild(pin);
+    stack.appendChild(makeClearDrawer());
+    return tidyThreadChip(pin);
+  }
+
+  function tidyThreadChip(pin) {
+    if (!pin) return pin;
+    const stack = pin.parentElement;
+    const root = stack || pin;
+    root.querySelectorAll('[data-pasteflick="picks"]').forEach((el) => el.remove());
+    if (stack && !stack.querySelector('[data-pasteflick="drawer"]')) {
+      stack.appendChild(makeClearDrawer());
+    }
     return pin;
+  }
+
+  function makeClearDrawer() {
+    const drawer = document.createElement("div");
+    drawer.setAttribute("data-pasteflick", "drawer");
+    const inner = document.createElement("div");
+    inner.setAttribute("data-pasteflick", "drawer-inner");
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.setAttribute("data-pasteflick", "clear");
+    btn.disabled = true;
+    btn.setAttribute("aria-label", "Deselect bookmarks");
+    const count = document.createElement("span");
+    count.setAttribute("data-pasteflick", "clear-count");
+    count.textContent = "0";
+    const word = document.createElement("span");
+    word.setAttribute("data-pasteflick", "clear-word");
+    word.textContent = "Deselect";
+    btn.appendChild(count);
+    btn.appendChild(word);
+    btn.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      void clearMarks();
+    });
+    inner.appendChild(btn);
+    drawer.appendChild(inner);
+    return drawer;
   }
 
   function placeThreadChip(scroller) {
@@ -3500,7 +3545,6 @@
     const current = await getActiveMarks();
     const kept = namedMark(current[0]) || (await getDraftName());
     const next = describeMessage(el, position >= 0 ? position : 0, kept);
-    const additive = !!(event && (event.metaKey || event.ctrlKey || event._join));
     const range = !!(event && event.shiftKey && current.length);
     let marks = current.slice();
     const existing = marks.findIndex((m) => sameMark(m, next));
@@ -3514,14 +3558,11 @@
       if (lo >= 0 && hi >= 0) {
         for (let i = lo; i <= hi; i++) marks.push(describeMessage(nodes[i], i, kept));
       }
-    } else if (additive) {
-      if (existing >= 0) marks.splice(existing, 1);
-      else marks.push(next);
-    } else if (existing >= 0 && marks.length === 1) {
-      if (kept) await setDraftName(kept);
-      marks = [];
+    } else if (existing >= 0) {
+      marks.splice(existing, 1);
+      if (!marks.length && kept) await setDraftName(kept);
     } else {
-      marks = [next];
+      marks.push(next);
     }
 
     lastPickEl = marks.length ? el : null;
@@ -3551,19 +3592,11 @@
     return n + " of " + total;
   }
 
-  function paintCountLabel(label, n, total, canAdd) {
+  function paintCountLabel(label, n, total) {
     const text = countLabelText(n, total);
-    const open = total === 1 && canAdd;
-    const spoken =
-      total === 1
-        ? open
-          ? "Bookmark 1 of 1. Bookmark another message to add it."
-          : "Bookmark 1 of 1."
-        : "Bookmark " + n + " of " + total + ".";
     label.hidden = false;
-    label.classList.toggle("is-open", open);
-    label.setAttribute("aria-label", spoken);
-    label.title = open ? text + " — bookmark another to add it" : text;
+    label.setAttribute("aria-label", "Bookmark " + text + ".");
+    label.title = text;
     if (label.getAttribute("data-count") === text && label.childElementCount) return;
     label.setAttribute("data-count", text);
     const ordinal = document.createElement("span");
@@ -3631,42 +3664,37 @@
     });
   }
 
-  function paintPickStack(activeEls) {
+  async function clearMarks() {
+    lastPickEl = null;
+    await setActiveMarks([]);
+    await applyActiveVisuals();
+  }
+
+  function paintClearTray(count) {
     const pin = layerRoot().querySelector('[data-pasteflick="pin"][data-kind="thread"]');
     if (!pin) return;
-    let picks = pin.querySelector('[data-pasteflick="picks"]');
-    if (!picks) {
-      picks = document.createElement("div");
-      picks.setAttribute("data-pasteflick", "picks");
-      pin.appendChild(picks);
+    const stack = pin.parentElement;
+    if (!stack) return;
+    let drawer = stack.querySelector('[data-pasteflick="drawer"]');
+    if (!drawer) {
+      drawer = makeClearDrawer();
+      stack.appendChild(drawer);
     }
-    const ids = activeEls.map((el, i) => el.getAttribute("data-message-id") || "#" + i).join("|");
-    if (picks._pickKey === ids) {
-      picks.hidden = activeEls.length < 2;
-      return;
+    const on = count > 0;
+    const wasOn = drawer.classList.contains("is-on");
+    drawer.classList.toggle("is-on", on);
+    const btn = drawer.querySelector('[data-pasteflick="clear"]');
+    const n = drawer.querySelector('[data-pasteflick="clear-count"]');
+    if (n) n.textContent = String(count);
+    if (btn) {
+      btn.disabled = !on;
+      btn.title = count <= 1 ? "Deselect" : "Deselect " + count;
+      btn.setAttribute(
+        "aria-label",
+        count <= 1 ? "Deselect bookmark" : "Deselect " + count + " bookmarks",
+      );
     }
-    picks._pickKey = ids;
-    picks.innerHTML = "";
-    if (activeEls.length < 2) {
-      picks.hidden = true;
-      return;
-    }
-    picks.hidden = false;
-    activeEls.forEach((el, i) => {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.setAttribute("data-pasteflick", "pick");
-      btn.style.animationDelay = i * 40 + "ms";
-      btn.innerHTML = BOOKMARK_SVG;
-      btn.title = "";
-      btn.setAttribute("aria-label", "Drop this bookmark");
-      btn.addEventListener("click", (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        void onMarkClick(el, { metaKey: true, _join: true });
-      });
-      picks.appendChild(btn);
-    });
+    if (wasOn !== on) schedulePlace();
   }
 
   function syncHighlights(activeEls) {
@@ -3718,7 +3746,6 @@
     activeEls.sort((a, b) => nodes.indexOf(a) - nodes.indexOf(b));
     const multi = activeEls.length >= 2;
     const total = activeEls.length;
-    const canAdd = nodes.length > 1;
     const root = layerRoot();
 
     root.querySelectorAll('[data-pasteflick="pin"][data-kind="message"]').forEach((pin) => {
@@ -3729,16 +3756,12 @@
       if (btn) {
         btn.classList.toggle("is-active", on);
         btn.classList.toggle("is-multi", on && multi);
-        btn.classList.toggle("is-joinable", !on && total === 1);
+        btn.classList.toggle("is-joinable", !on && total >= 1);
         btn.setAttribute("aria-pressed", on ? "true" : "false");
         if (on) {
-          btn.title = total === 1 && canAdd
-            ? "1 of 1 — bookmark another message to add it."
-            : countLabelText(rank + 1, total) + " in this chat.";
-          btn.setAttribute("aria-label", total === 1 && canAdd
-            ? "Bookmark 1 of 1. Bookmark another message to add it."
-            : "Bookmark " + countLabelText(rank + 1, total) + ".");
-        } else if (total === 1) {
+          btn.title = countLabelText(rank + 1, total) + " in this chat.";
+          btn.setAttribute("aria-label", "Bookmark " + countLabelText(rank + 1, total) + ".");
+        } else if (total >= 1) {
           btn.title = "Add this bookmark.";
           btn.setAttribute("aria-label", "Add this bookmark.");
         } else {
@@ -3747,10 +3770,9 @@
         }
       }
       if (label) {
-        if (on) paintCountLabel(label, rank + 1, total, canAdd);
+        if (on) paintCountLabel(label, rank + 1, total);
         else {
           label.hidden = true;
-          label.classList.remove("is-open");
           label.removeAttribute("data-count");
           label.replaceChildren();
         }
@@ -3758,7 +3780,7 @@
     });
 
     syncChipBound(activeEls.length);
-    paintPickStack(activeEls);
+    paintClearTray(activeEls.length);
     syncHighlights(activeEls);
     hintJoinableNeighbors(root, activeEls, nodes);
   }

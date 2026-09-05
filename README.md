@@ -11,13 +11,13 @@
 <p align="center"><br></p>
 
 <p align="center">
-  <img src="readme/shots/marks-in-order.png" width="760" alt="Bookmark one message or several — each selected pin shows 1 of 2 in chat order">
+  <img src="readme/shots/marks-stack.png" width="760" alt="Bookmark messages — each pin shows 1 of 2, Deselect slides out under PasteFlick">
 </p>
 
 <p align="center"><br></p>
 
 <p align="center">
-  <img src="readme/what-you-get-marks.png" width="760" alt="What you get — the chip, the toolbar icon, and where copies go">
+  <img src="readme/what-you-get-clear.png" width="760" alt="What you get — the chip, the toolbar icon, and where copies go">
 </p>
 
 <p align="center"><br></p>

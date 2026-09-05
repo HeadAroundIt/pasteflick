@@ -392,7 +392,7 @@ def build_what() -> None:
     y += 14 * SCALE
     y = draw_paragraph(
         img,
-        "Bookmark a message, or a few in chat order. Each selected pin shows 1 of 3, so any one of them tells you the set. Copy takes that stretch.",
+        "Bookmark a message, or a few. Each pin shows 1 of 3. Deselect slides out under the chip with the count, so you can clear the set in one tap.",
         body,
         x,
         y,
@@ -440,7 +440,7 @@ def build_what() -> None:
         MUTED,
         1.4,
     )
-    finish(img, "what-you-get-marks.png")
+    finish(img, "what-you-get-clear.png")
 
 
 def build_support() -> None:

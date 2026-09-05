@@ -840,8 +840,13 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
               (firstCount && firstCount.textContent),
           );
         }
-        if (!firstCount.classList.contains("is-open")) {
-          throw new Error("a single bookmark should hint that more can be added");
+        const drawer = threadPin.parentElement && threadPin.parentElement.querySelector('[data-pasteflick="drawer"]');
+        const clearCount = drawer && drawer.querySelector('[data-pasteflick="clear-count"]');
+        if (!drawer || !drawer.classList.contains("is-on")) {
+          throw new Error("Deselect should slide out when a bookmark is selected");
+        }
+        if (!clearCount || clearCount.textContent !== "1") {
+          throw new Error("Deselect should show 1, got " + (clearCount && clearCount.textContent));
         }
         const secondPin = PasteFlick.pinFor(user2);
         const secondBtn = secondPin && secondPin.querySelector('[data-pasteflick="mark"]');
@@ -851,57 +856,21 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
         }
         secondBtn.click();
         await sleep(40);
-        if (firstBtn.classList.contains("is-active")) {
-          throw new Error("expected only one active PasteFlick");
-        }
-        if (!secondBtn.classList.contains("is-active")) {
-          throw new Error("replacement mark was not shown");
-        }
-        const secondCount = secondPin.querySelector('[data-pasteflick="label"]');
-        if (!secondCount || secondCount.hidden || secondCount.textContent.replace(/\s+/g, " ").trim() !== "1 of 1") {
-          throw new Error(
-            "replacement bookmark should read 1 of 1, got " +
-              (secondCount && secondCount.textContent),
-          );
-        }
-        if (firstCount && !firstCount.hidden) {
-          throw new Error("the old bookmark should hide its count");
-        }
-        const stored = await PasteFlick.getActive();
-        if (!stored || stored.messageId !== "msg-user-2") {
-          throw new Error("persisted mark did not match the clicked message");
-        }
-
-        copyThread.click();
-        await sleep(400);
-        const fromChip = (await overlayState()).markdown || "";
-        if (fromChip.includes("copper lantern")) {
-          throw new Error("chip with a bookmark included text before the mark");
-        }
-        if (!fromChip.includes("Second user turn") || !fromChip.includes("Fourth message")) {
-          throw new Error("chip with a bookmark should copy from that mark");
-        }
-        if (copyThread.title !== "Copy from the bookmark.") {
-          throw new Error("bookmark chip tooltip: " + copyThread.title);
-        }
-
-        firstBtn.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, ctrlKey: true, metaKey: true }));
-        await sleep(40);
         if (!firstBtn.classList.contains("is-active") || !secondBtn.classList.contains("is-active")) {
-          throw new Error("ctrl-click should keep both bookmarks");
+          throw new Error("clicking another bookmark should keep both selected");
         }
         if (firstCount.textContent.replace(/\s+/g, " ").trim() !== "1 of 2") {
           throw new Error("earlier bookmark should read 1 of 2, got " + firstCount.textContent);
         }
-        if (secondCount.textContent.replace(/\s+/g, " ").trim() !== "2 of 2") {
+        const secondCount = secondPin.querySelector('[data-pasteflick="label"]');
+        if (!secondCount || secondCount.hidden || secondCount.textContent.replace(/\s+/g, " ").trim() !== "2 of 2") {
           throw new Error("later bookmark should read 2 of 2, got " + secondCount.textContent);
         }
-        const picks = threadPin.querySelector('[data-pasteflick="picks"]');
-        if (!picks || picks.hidden) {
-          throw new Error("multi pick popover should appear");
+        if (!drawer.classList.contains("is-on") || clearCount.textContent !== "2") {
+          throw new Error("Deselect should show 2, got " + (clearCount && clearCount.textContent));
         }
-        if (picks.querySelectorAll('[data-pasteflick="pick"]').length !== 2) {
-          throw new Error("popover should show both bookmarks");
+        if (threadPin.querySelector('[data-pasteflick="picks"]')) {
+          throw new Error("bookmark stack beside the chip should be gone");
         }
         if (!threadPin.classList.contains("is-bound")) {
           throw new Error("chip should show it is bound to bookmarks");
@@ -918,16 +887,39 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
         if (multiMd.includes("Fourth message")) {
           throw new Error("multi copy should be the selected messages only");
         }
-        secondBtn.click();
+        firstBtn.click();
         await sleep(40);
         if (firstBtn.classList.contains("is-active")) {
-          throw new Error("plain click should drop back to one bookmark");
+          throw new Error("clicking a selected bookmark should drop it");
         }
         if (!secondBtn.classList.contains("is-active")) {
-          throw new Error("plain click should keep the clicked bookmark");
+          throw new Error("the other bookmark should stay selected");
         }
-        if (!picks.hidden) {
-          throw new Error("popover should hide when only one bookmark remains");
+        if (secondCount.textContent.replace(/\s+/g, " ").trim() !== "1 of 1") {
+          throw new Error("remaining bookmark should read 1 of 1, got " + secondCount.textContent);
+        }
+        if (firstCount && !firstCount.hidden) {
+          throw new Error("the dropped bookmark should hide its count");
+        }
+        if (!drawer.classList.contains("is-on") || clearCount.textContent !== "1") {
+          throw new Error("Deselect should stay out while a bookmark remains");
+        }
+        const stored = await PasteFlick.getActive();
+        if (!stored || stored.messageId !== "msg-user-2") {
+          throw new Error("persisted mark did not match the remaining message");
+        }
+
+        copyThread.click();
+        await sleep(400);
+        const fromChip = (await overlayState()).markdown || "";
+        if (fromChip.includes("copper lantern")) {
+          throw new Error("chip with a bookmark included text before the mark");
+        }
+        if (!fromChip.includes("Second user turn") || !fromChip.includes("Fourth message")) {
+          throw new Error("chip with a bookmark should copy from that mark");
+        }
+        if (copyThread.title !== "Copy from the bookmark.") {
+          throw new Error("bookmark chip tooltip: " + copyThread.title);
         }
 
         const sliced = await api.captureFromPasteFlick(stored);
@@ -969,6 +961,16 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
         });
         if (!byFingerprint || !byFingerprint.ok) {
           throw new Error("fingerprint recovery failed");
+        }
+        const clearBtn = drawer.querySelector('[data-pasteflick="clear"]');
+        if (!clearBtn) throw new Error("Deselect button missing");
+        clearBtn.click();
+        await sleep(40);
+        if (secondBtn.classList.contains("is-active") || firstBtn.classList.contains("is-active")) {
+          throw new Error("Deselect should clear every bookmark");
+        }
+        if (drawer.classList.contains("is-on")) {
+          throw new Error("Deselect should slide away when nothing is selected");
         }
 
         const dup = api.resolvePasteFlickIndex(
