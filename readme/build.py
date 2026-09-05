@@ -359,7 +359,7 @@ def build_hero() -> None:
     y += 20 * SCALE
     y = draw_paragraph(
         img,
-        "Long chats fight the clipboard. PasteFlick sits on the conversation as one chip: take a highlight, or the thread you can see, then Copy, Save, or Flick it into Word, Notes, Cursor — wherever you just were.",
+        "Long chats fight the clipboard. PasteFlick sits on the conversation as one chip: take a highlight, or the thread you can see, then Copy, Save, or Flick it into Word, Notes, Cursor, or wherever you just were.",
         font("segoeui.ttf", 16),
         x,
         y,
@@ -370,7 +370,7 @@ def build_hero() -> None:
     y += 12 * SCALE
     draw_paragraph(
         img,
-        "It copies what is already on the page — not turns ChatGPT has not rendered yet.",
+        "It copies what is already on the page, not turns ChatGPT has not rendered yet.",
         font("segoeui.ttf", 13),
         x,
         y,
@@ -378,7 +378,7 @@ def build_hero() -> None:
         MUTED,
         1.4,
     )
-    finish(img, "intro-type.png")
+    finish(img, "intro-plain-type.png")
 
 
 def build_what() -> None:
@@ -391,7 +391,7 @@ def build_what() -> None:
     small = font("segoeui.ttf", 13)
     y = draw_paragraph(
         img,
-        "One chip under the chat title. Highlight a passage, or take the visible thread — then Copy, Save, or Flick. ChatGPT’s own buttons stay where they are.",
+        "One chip under the chat title. Highlight a passage, or take the visible thread, then Copy, Save, or Flick. ChatGPT’s own buttons stay where they are.",
         body,
         x,
         y,
@@ -450,7 +450,7 @@ def build_what() -> None:
         MUTED,
         1.4,
     )
-    finish(img, "what-you-get-type.png")
+    finish(img, "what-you-get-plain-type.png")
 
 
 def draw_paras(
@@ -480,8 +480,9 @@ def build_support() -> None:
     y = draw_paras(
         img,
         [
-            "I'm Ryan Dunham, a Louisiana entrepreneur. I've worked in IT and consulting, run the Pie Eyed food business, and helped operate a brewery. Now I'm making software with AI coding agents — I describe the idea, they help write it, and I decide what ships. PasteFlick is my first public release.",
-            "If this helped you, consider supporting my work. A $5 tip helps pay for my development time, fixes, testing, and future tools. I'm earning a living from this work.",
+            "I'm Ryan Dunham, from Louisiana. I created Pie Eyed Handpies: the recipes, a truck I built out, a kitchen I put together. That truck is at Le Chien Brewing Co now, where I helped get things going and still pitch in. I'm trying to make it again with software.",
+            "I work with AI coding agents. I describe the idea, they help write it, and I decide what ships. PasteFlick is my first public release.",
+            "If this helped you, consider supporting my work. A $5 tip helps pay for my development time, fixes, testing, and future tools.",
         ],
         font("segoeui.ttf", 16),
         x,
@@ -492,7 +493,7 @@ def build_support() -> None:
     y += 20 * SCALE
     btn = make_button("Leave a tip", 13, cup=True)
     note_f = font("segoeui.ttf", 14)
-    note = "Optional — other amounts are welcome."
+    note = "Optional. Other amounts are welcome."
     well_pad = 18 * SCALE
     note_h = int(note_f.size * 1.4)
     well_h = well_pad + btn.height + 12 * SCALE + note_h + well_pad - int(note_f.size * 0.28)
@@ -526,7 +527,7 @@ def build_support() -> None:
         MUTED,
         1.4,
     )
-    finish(img, "support-type.png")
+    finish(img, "support-plain-type.png")
 
 
 def build_privacy() -> None:
@@ -631,7 +632,7 @@ def build_install() -> None:
     y += 8 * SCALE
     draw_paragraph(
         img,
-        r"Then remove the extension from the browser if it is still listed. Share the latest release or a clone of this repo — not a working folder, and not %LOCALAPPDATA%\PasteFlick.",
+        r"Then remove the extension from the browser if it is still listed. Share the latest release or a clone of this repo, not a working folder, and not %LOCALAPPDATA%\PasteFlick.",
         small,
         x,
         y,
@@ -639,7 +640,7 @@ def build_install() -> None:
         MUTED,
         1.4,
     )
-    finish(img, "setup-type.png")
+    finish(img, "setup-plain-type.png")
     save_button("Get the Windows zip", "windows-zip-type.png", 16)
     save_button("Leave a tip", "tip-btn-type.png", 13, cup=True)
 
