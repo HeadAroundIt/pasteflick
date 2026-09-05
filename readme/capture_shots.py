@@ -750,7 +750,7 @@ def main() -> None:
         shot(f"{base}/shot-pair.html?v=23", OUT / "view-and-settings-plain.png", 940, 680, "00000000")
         shot(f"{base}/shot-popup.html?v=19", OUT / "panel-main-type.png", 332, 240, "00000000")
         shot(f"{base}/shot-settings.html?v=21", OUT / "panel-settings-type.png", 332, 700, "00000000")
-        shot(f"{base}/shot-chat.html?v=44", OUT / "marks-fit.png", 840, 540, "00000000")
+        shot(f"{base}/shot-chat.html?v=45", OUT / "marks-open-ring.png", 840, 540, "00000000")
     finally:
         httpd.shutdown()
     print("ok")

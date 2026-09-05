@@ -11,7 +11,7 @@
 <p align="center"><br></p>
 
 <p align="center">
-  <img src="readme/shots/marks-fit.png" width="760" alt="Bookmark messages. Compact PasteFlick chip with Deselect underneath, gold ring, 1 of 2 under a selected mark">
+  <img src="readme/shots/marks-open-ring.png" width="760" alt="Bookmark messages. Compact PasteFlick chip with Deselect underneath, gold ring, 1 of 2 under a selected mark">
 </p>
 
 <p align="center"><br></p>

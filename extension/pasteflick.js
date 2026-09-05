@@ -255,7 +255,7 @@
       box-sizing: border-box;
       padding: 3px;
       border-radius: 10px;
-      background: #fff;
+      background: transparent;
       border: 1px solid rgba(201, 166, 106, 0.7);
     }
     [data-pasteflick="silo"][data-role="thread"] {
@@ -650,7 +650,7 @@
         background: transparent;
       }
       [data-pasteflick="pin"][data-kind="message"] [data-pasteflick="actions"] {
-        background: #fff;
+        background: var(--card);
       }
     }
     [data-pasteflick="toast"] {
