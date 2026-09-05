@@ -94,6 +94,12 @@ window.addEventListener("message", (event) => {
     );
     return;
   }
+  if (data.type === "set-copy-extras") {
+    if (chrome.storage && chrome.storage.local) {
+      void chrome.storage.local.set({ copyExtras: !!data.copyExtras });
+    }
+    return;
+  }
   if (data.type !== "ingest") return;
   void ingestViaBackground(data.payload).then((result) => {
     window.postMessage(
@@ -123,7 +129,7 @@ function requestCapture(mode, extra) {
       const needExtras = extra.copyExtras == null;
       if (!needDest && !needExtras) return extra;
       if (!chrome.storage || !chrome.storage.local) {
-        if (needExtras) extra.copyExtras = true;
+        if (needExtras) extra.copyExtras = false;
         return extra;
       }
       return chrome.storage.local
@@ -134,7 +140,7 @@ function requestCapture(mode, extra) {
             extra.fileFormat = data.fileFormat === "pdf" ? "pdf" : "md";
             extra.autoPaste = extra.destination === "cursor";
           }
-          if (needExtras) extra.copyExtras = data.copyExtras !== false;
+          if (needExtras) extra.copyExtras = data.copyExtras === true;
           return extra;
         });
     })
@@ -143,8 +149,14 @@ function requestCapture(mode, extra) {
       extra.destination = extra.destination || "clipboard";
       extra.fileFormat = extra.fileFormat === "pdf" ? "pdf" : "md";
       extra.autoPaste = extra.destination === "cursor";
-      if (extra.destination === "cursor") extra.copyExtras = false;
-      else if (extra.copyExtras == null) extra.copyExtras = true;
+      if (
+        mode !== "select-view" &&
+        mode !== "open" &&
+        mode !== "open-from-pasteflick" &&
+        extra.destination === "cursor"
+      ) {
+        extra.copyExtras = false;
+      } else if (extra.copyExtras == null) extra.copyExtras = false;
       return new Promise((resolve, reject) => {
         const timer = setTimeout(() => {
           window.removeEventListener("message", onMessage);
@@ -175,7 +187,7 @@ function requestCapture(mode, extra) {
             autoPaste: extra.autoPaste,
             destination: extra.destination,
             fileFormat: extra.fileFormat,
-            copyExtras: extra.copyExtras !== false,
+            copyExtras: extra.copyExtras === true,
           },
           "*",
         );
@@ -306,6 +318,20 @@ function keepWorker() {
 
 keepWorker();
 
+if (chrome.storage && chrome.storage.onChanged) {
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area !== "local" || !changes.copyExtras) return;
+    window.postMessage(
+      {
+        source: EXTENSION,
+        type: "copy-extras-changed",
+        copyExtras: changes.copyExtras.newValue === true,
+      },
+      "*",
+    );
+  });
+}
+
 const SETTINGS_FRAME_ID = "pasteflick-settings-frame";
 
 function closeSettingsFrame() {
@@ -335,7 +361,7 @@ function toggleSettingsFrame(open) {
   frame.title = "PasteFlick settings";
   frame.src = chrome.runtime.getURL("popup.html?settings=1");
   frame.style.cssText =
-    "width:300px;height:min(580px,90vh);border:0;border-radius:10px;background:transparent;box-shadow:0 12px 32px rgba(50,40,20,.18);";
+    "width:300px;height:0;visibility:hidden;border:0;border-radius:10px;background:transparent;box-shadow:0 12px 32px rgba(50,40,20,.18);";
   wrap.appendChild(frame);
   document.documentElement.appendChild(wrap);
 }
@@ -344,6 +370,15 @@ window.addEventListener("message", (event) => {
   const data = event.data;
   if (!data || data.source !== "pasteflick-settings") return;
   if (data.type === "close") closeSettingsFrame();
+  if (data.type === "height") {
+    const wrap = document.getElementById(SETTINGS_FRAME_ID);
+    const iframe = wrap && wrap.querySelector("iframe");
+    if (!iframe) return;
+    const cap = Math.max(200, Math.floor(window.innerHeight * 0.9));
+    const next = Math.max(200, Math.min(Number(data.height) || 0, cap));
+    iframe.style.height = next + "px";
+    iframe.style.visibility = "visible";
+  }
 });
 }
 

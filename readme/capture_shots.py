@@ -94,7 +94,7 @@ CHIP_PIN = f"""
       <div data-pasteflick="pin" data-kind="thread">
         <div data-pasteflick="head">
           <span data-pasteflick="kicker">PasteFlick</span>
-          <button type="button" data-pasteflick="extras" class="on" role="switch">
+          <button type="button" data-pasteflick="extras" role="switch">
             <span data-pasteflick="extras-thumb"></span>
           </button>
         </div>
@@ -188,7 +188,7 @@ class Handler(SimpleHTTPRequestHandler):
 {SHOT_FONT_CSS}
 html,body{{margin:0;background:transparent;}}
 .panel{{
-  box-sizing:border-box;width:420px;height:480px;
+  box-sizing:border-box;width:520px;height:480px;
   display:flex;flex-direction:column;
   background:color-mix(in srgb,#c9a66a 8%,#f7f7f5);color:#5c4a2e;
   border-radius:10px;border:1px solid rgba(201,166,106,.22);
@@ -226,7 +226,7 @@ html,body{{margin:0;background:transparent;}}
   padding:12px 16px;flex:none;
   box-shadow:inset 0 1px 0 rgba(201,166,106,.22);
 }}
-.row{{display:flex;flex-wrap:wrap;gap:8px;}}
+.row{{display:flex;flex-wrap:wrap;align-items:center;gap:8px;}}
 .btn{{
   display:inline-flex;align-items:center;justify-content:center;
   height:34px;padding:1px 14px 2px;border-radius:7px;
@@ -237,6 +237,21 @@ html,body{{margin:0;background:transparent;}}
 .btn.primary{{
   background:rgba(201,166,106,.4);border-color:transparent;color:#171410;
   box-shadow:inset 0 1px 0 rgba(244,226,180,.35);
+}}
+.extras{{
+  display:inline-flex;align-items:center;gap:8px;
+  margin:0 0 0 4px;color:#8a7358;font:600 12px/1 inherit;letter-spacing:-.01em;
+  white-space:nowrap;
+}}
+.extras-track{{
+  position:relative;flex:none;width:36px;height:20px;
+  border:1px solid rgba(201,166,106,.28);border-radius:10px;
+  background:rgba(23,20,16,.22);
+  box-shadow:inset 0 1px 0 rgba(244,226,180,.12);
+}}
+.extras-thumb{{
+  position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:7px;
+  background:#e4d2ae;
 }}
 </style></head>
 <body>
@@ -250,13 +265,10 @@ html,body{{margin:0;background:transparent;}}
     </div>
     <div class="body">
       <p class="meta">Friday note · 3 turns · 1,240 chars</p>
-      <pre class="pre">You
-Can you draft the Friday note?
+      <pre class="pre">Can you draft the Friday note?
 
-Assistant
 Here's a first pass you can drop in as-is.
 
-You
 Make it two sentences, and keep the Friday deadline.</pre>
     </div>
     <div class="foot">
@@ -264,6 +276,10 @@ Make it two sentences, and keep the Friday deadline.</pre>
         <button type="button" class="btn primary">Copy selection</button>
         <button type="button" class="btn">Copy all</button>
         <button type="button" class="btn">Save .md</button>
+        <span class="extras">
+          <span class="extras-track" aria-hidden="true"><span class="extras-thumb"></span></span>
+          Just the text
+        </span>
       </div>
     </div>
   </div>
@@ -298,7 +314,7 @@ iframe{
   overflow:hidden;
   background:transparent;
 }
-.view{width:420px;height:480px;}
+.view{width:520px;height:480px;}
 .settings{width:300px;height:620px;}
 </style></head>
 <body>
@@ -731,7 +747,7 @@ def main() -> None:
     try:
         # New filenames so GitHub doesn't serve stale shots.
         shot(f"{base}/shot-chip.html?v=24", OUT / "the-chip-type.png", 152, 96, "00000000")
-        shot(f"{base}/shot-pair.html?v=21", OUT / "view-and-settings-type.png", 840, 680, "00000000")
+        shot(f"{base}/shot-pair.html?v=23", OUT / "view-and-settings-plain.png", 940, 680, "00000000")
         shot(f"{base}/shot-popup.html?v=19", OUT / "panel-main-type.png", 332, 240, "00000000")
         shot(f"{base}/shot-settings.html?v=21", OUT / "panel-settings-type.png", 332, 700, "00000000")
         shot(f"{base}/shot-chat.html?v=44", OUT / "marks-fit.png", 840, 540, "00000000")

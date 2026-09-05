@@ -721,6 +721,109 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
         return new Promise((resolve) => setTimeout(resolve, ms));
       }
 
+      async function testDocumentHidesDock() {
+        const host = document.getElementById("pasteflick-dock-host");
+        const threadEl = document.querySelector(".thread");
+        if (!host || !threadEl) throw new Error("dock or thread missing");
+        PasteFlick.scan();
+        await sleep(40);
+        if (host.getAttribute("data-hidden") === "1") {
+          throw new Error("PasteFlick should stay on the thread");
+        }
+
+        threadEl.setAttribute("hidden", "");
+        PasteFlick.scan();
+        await sleep(40);
+        if (host.getAttribute("data-hidden") !== "1") {
+          threadEl.removeAttribute("hidden");
+          throw new Error("PasteFlick should hide when the thread is gone");
+        }
+        threadEl.removeAttribute("hidden");
+        PasteFlick.scan();
+        await sleep(40);
+        if (host.getAttribute("data-hidden") === "1") {
+          throw new Error("PasteFlick should come back with the thread");
+        }
+
+        const cover = document.createElement("div");
+        cover.setAttribute("data-testid", "document-editor");
+        cover.setAttribute("aria-label", "Document");
+        cover.style.cssText = "position:fixed;inset:0;z-index:2147483000;background:#fff;";
+        document.body.appendChild(cover);
+        PasteFlick.scan();
+        await sleep(40);
+        const covered = host.getAttribute("data-hidden") === "1";
+        cover.remove();
+        PasteFlick.scan();
+        await sleep(40);
+        if (!covered) {
+          throw new Error("PasteFlick should hide when a document covers the thread");
+        }
+        if (host.getAttribute("data-hidden") === "1") {
+          throw new Error("PasteFlick should come back after the document closes");
+        }
+
+        const editor = document.createElement("div");
+        editor.setAttribute("data-testid", "code-editor");
+        editor.className = "cm-editor";
+        editor.setAttribute("aria-label", "Editor");
+        editor.style.cssText = "position:fixed;inset:0;z-index:2147483000;background:#111;";
+        document.body.appendChild(editor);
+        PasteFlick.scan();
+        await sleep(40);
+        const editing = host.getAttribute("data-hidden") === "1";
+        editor.remove();
+        PasteFlick.scan();
+        await sleep(40);
+        if (!editing) {
+          throw new Error("PasteFlick should hide when an editor covers the thread");
+        }
+        if (host.getAttribute("data-hidden") === "1") {
+          throw new Error("PasteFlick should come back after the editor closes");
+        }
+
+        const turn = document.createElement("div");
+        turn.setAttribute("data-testid", "conversation-turn-editor");
+        const inTurnEditor = document.createElement("div");
+        inTurnEditor.className = "cm-editor";
+        inTurnEditor.setAttribute("data-testid", "code-editor");
+        inTurnEditor.style.cssText = "position:fixed;inset:0;z-index:2147483000;background:#111;";
+        turn.appendChild(inTurnEditor);
+        document.querySelector(".thread").appendChild(turn);
+        PasteFlick.scan();
+        await sleep(40);
+        const editingInTurn = host.getAttribute("data-hidden") === "1";
+        turn.remove();
+        PasteFlick.scan();
+        await sleep(40);
+        if (!editingInTurn) {
+          throw new Error("PasteFlick should hide when the in-thread editor opens");
+        }
+        if (host.getAttribute("data-hidden") === "1") {
+          throw new Error("PasteFlick should come back after the in-thread editor closes");
+        }
+
+        const preview = document.createElement("div");
+        preview.style.cssText = "position:fixed;inset:0;z-index:2147483000;background:#fff;padding:48px;";
+        preview.innerHTML =
+          "<button type='button'>Edit</button><p>" +
+          "Opened document preview body. ".repeat(24) +
+          "</p>";
+        document.body.appendChild(preview);
+        PasteFlick.scan();
+        await sleep(40);
+        const previewing = host.getAttribute("data-hidden") === "1";
+        preview.remove();
+        PasteFlick.scan();
+        await sleep(40);
+        if (!previewing) {
+          throw new Error("PasteFlick should hide when a document preview covers the thread");
+        }
+        if (host.getAttribute("data-hidden") === "1") {
+          throw new Error("PasteFlick should come back after the document preview closes");
+        }
+      }
+
       async function testPasteFlick() {
         const api = window.__transcriptCopy;
         if (!api) throw new Error("extractor not loaded");
@@ -834,7 +937,7 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
           throw new Error("active marker should stay visible");
         }
         const firstCount = firstPin.querySelector('[data-pasteflick="label"]');
-        if (!firstCount || firstCount.hidden || firstCount.textContent.replace(/\s+/g, " ").trim() !== "1 of 1") {
+        if (!firstCount || !firstCount.classList.contains("is-on") || firstCount.textContent.replace(/\s+/g, " ").trim() !== "1 of 1") {
           throw new Error(
             "one bookmark should read 1 of 1, got " +
               (firstCount && firstCount.textContent),
@@ -863,7 +966,7 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
           throw new Error("earlier bookmark should read 1 of 2, got " + firstCount.textContent);
         }
         const secondCount = secondPin.querySelector('[data-pasteflick="label"]');
-        if (!secondCount || secondCount.hidden || secondCount.textContent.replace(/\s+/g, " ").trim() !== "2 of 2") {
+        if (!secondCount || !secondCount.classList.contains("is-on") || secondCount.textContent.replace(/\s+/g, " ").trim() !== "2 of 2") {
           throw new Error("later bookmark should read 2 of 2, got " + secondCount.textContent);
         }
         if (!drawer.classList.contains("is-on") || clearCount.textContent !== "2") {
@@ -898,7 +1001,7 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
         if (secondCount.textContent.replace(/\s+/g, " ").trim() !== "1 of 1") {
           throw new Error("remaining bookmark should read 1 of 1, got " + secondCount.textContent);
         }
-        if (firstCount && !firstCount.hidden) {
+        if (firstCount && firstCount.classList.contains("is-on")) {
           throw new Error("the dropped bookmark should hide its count");
         }
         if (!drawer.classList.contains("is-on") || clearCount.textContent !== "1") {
@@ -971,6 +1074,66 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
         }
         if (drawer.classList.contains("is-on")) {
           throw new Error("Deselect should slide away when nothing is selected");
+        }
+
+        {
+          const threadEl = document.querySelector(".thread");
+          const flushA = document.createElement("article");
+          flushA.setAttribute("data-testid", "conversation-turn-flush-a");
+          flushA.style.margin = "0";
+          flushA.style.padding = "0";
+          const msgA = document.createElement("div");
+          msgA.className = "msg user";
+          msgA.style.margin = "0";
+          msgA.setAttribute("data-message-author-role", "user");
+          msgA.setAttribute("data-message-id", "msg-flush-a");
+          msgA.textContent = "Flush wrap A";
+          flushA.appendChild(msgA);
+          const flushB = document.createElement("article");
+          flushB.setAttribute("data-testid", "conversation-turn-flush-b");
+          flushB.style.margin = "8px 0 0";
+          flushB.style.padding = "0";
+          const msgB = document.createElement("div");
+          msgB.className = "msg assistant";
+          msgB.style.margin = "0";
+          msgB.setAttribute("data-message-author-role", "assistant");
+          msgB.setAttribute("data-message-id", "msg-flush-b");
+          msgB.textContent = "Flush wrap B";
+          flushB.appendChild(msgB);
+          threadEl.appendChild(flushA);
+          threadEl.appendChild(flushB);
+          PasteFlick.scan();
+          await sleep(80);
+          const pinA = PasteFlick.pinFor(msgA);
+          const pinB = PasteFlick.pinFor(msgB);
+          const btnA = pinA && pinA.querySelector('[data-pasteflick="mark"]');
+          const btnB = pinB && pinB.querySelector('[data-pasteflick="mark"]');
+          if (!btnA || !btnB) {
+            flushA.remove();
+            flushB.remove();
+            throw new Error("flush turns did not get bookmarks");
+          }
+          btnA.click();
+          await sleep(40);
+          btnB.click();
+          await sleep(40);
+          PasteFlick.placeAll();
+          const wraps = Array.from(ui.querySelectorAll('[data-pasteflick="highlight"].is-on'))
+            .map((el) => el.getBoundingClientRect())
+            .filter((r) => r.width > 2 && r.height > 2)
+            .sort((a, b) => a.top - b.top);
+          const gap = wraps.length >= 2 ? wraps[1].top - wraps[0].bottom : -1;
+          clearBtn.click();
+          await sleep(40);
+          flushA.remove();
+          flushB.remove();
+          PasteFlick.scan();
+          if (wraps.length < 2) {
+            throw new Error("expected two gold wraps on adjacent turns");
+          }
+          if (gap < 4) {
+            throw new Error("gold wraps collided, gap " + gap.toFixed(1));
+          }
         }
 
         const dup = api.resolvePasteFlickIndex(
@@ -1467,6 +1630,9 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
         if (!chipMd.includes("copper lantern") || !chipMd.includes("Fourth message")) {
           throw new Error("thread chip copy missed the transcript");
         }
+        if (!/^## User$/m.test(chipMd) || !/^## Assistant$/m.test(chipMd)) {
+          throw new Error("extras on should keep speaker headings");
+        }
 
         const one = await api.captureMessage({
           messageId: "msg-user-2",
@@ -1481,6 +1647,9 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
         }
         if (!oneMd.includes("Second user turn")) {
           throw new Error("single-message copy missing that message");
+        }
+        if (!/^## User$/m.test(oneMd)) {
+          throw new Error("extras on should keep the speaker heading");
         }
 
         const frag = await api.captureFragment({
@@ -1499,9 +1668,13 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
           throw new Error("block copy missing code");
         }
 
-        if (!extras.classList.contains("on") || extras.getAttribute("aria-checked") !== "true") {
-          throw new Error("extras should start on");
+        if (extras.classList.contains("on") || extras.getAttribute("aria-checked") === "true") {
+          throw new Error("extras should start off");
         }
+
+        extras.click();
+        await sleep(40);
+        if (!extras.classList.contains("on")) throw new Error("extras did not turn on");
 
         const flowOn = await api.captureFragment(
           {
@@ -1527,7 +1700,35 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
 
         extras.click();
         await sleep(40);
-        if (extras.classList.contains("on")) throw new Error("extras did not turn off");
+        if (extras.classList.contains("on")) throw new Error("extras should be off for plain copies");
+
+        const plainMsg = await api.captureMessage(
+          {
+            messageId: "msg-user-2",
+            role: "user",
+            fingerprint: api.fingerprintText("Thanks. Second user turn stays visible."),
+            position: 2,
+          },
+          { destination: "clipboard", copyExtras: false },
+        );
+        if (!plainMsg || !plainMsg.ok) throw new Error("plain message copy failed");
+        const plainMsgMd = (await overlayState()).markdown || "";
+        if (!plainMsgMd.includes("Second user turn")) {
+          throw new Error("plain message copy lost the text");
+        }
+        if (/^## (User|Assistant)$/m.test(plainMsgMd) || plainMsgMd.trimStart().startsWith("---")) {
+          throw new Error("message Copy with extras off should be just the text");
+        }
+
+        copyThread.click();
+        await sleep(400);
+        const plainChip = (await overlayState()).markdown || "";
+        if (!plainChip.includes("copper lantern") || !plainChip.includes("Fourth message")) {
+          throw new Error("thread Copy with extras off lost the transcript");
+        }
+        if (/^## (User|Assistant)$/m.test(plainChip) || plainChip.trimStart().startsWith("---")) {
+          throw new Error("Copy/Save/Flick with extras off should drop speaker headings");
+        }
 
         const docOff = await api.captureFragment(
           {
@@ -1568,9 +1769,37 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
           throw new Error("Send should paste what you see, not title notes");
         }
 
-        extras.click();
+        const viewRes = await api.openSelectView();
+        if (!viewRes || !viewRes.opened) throw new Error("select view did not open");
+        const view = document.getElementById("pasteflick-select-view");
+        if (!view) throw new Error("select view missing");
+        const viewExtras = view.querySelector('[data-pasteflick="select-extras"]');
+        const viewCopy = view.querySelector("[data-extras-copy]");
+        const viewPre = view.querySelector(".sm-pre");
+        if (!viewExtras) throw new Error("select view needs extras toggle");
+        if (viewExtras.classList.contains("on")) {
+          throw new Error("select extras should match just the text");
+        }
+        if (!viewCopy || viewCopy.textContent !== "Just the text") {
+          throw new Error("select extras should say just the text");
+        }
+        if (viewPre && /^## (User|Assistant)$/m.test(viewPre.textContent || "")) {
+          throw new Error("select view still showing speaker headings");
+        }
+        viewExtras.click();
         await sleep(40);
-        if (!extras.classList.contains("on")) throw new Error("extras did not turn back on");
+        if (!viewExtras.classList.contains("on")) throw new Error("select extras did not turn on");
+        if (!viewCopy || viewCopy.textContent !== "With notes") {
+          throw new Error("select extras should say with notes");
+        }
+        if (viewPre && !/^## User$/m.test(viewPre.textContent || "")) {
+          throw new Error("select view With notes should show speaker headings");
+        }
+        const closeView = view.querySelector("[data-close]");
+        if (closeView) closeView.click();
+        await sleep(40);
+
+        await testDocumentHidesDock();
 
         return { turns: sliced.turn_count, source: sliced.source };
       }
@@ -1861,10 +2090,31 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
           .then((r) => log(JSON.stringify(r, null, 2), "ok"))
           .catch((e) => log(String(e.message || e), "err"));
 
+      async function runViewAutotest() {
+        try {
+          if (!globalThis.PasteFlick) throw new Error("PasteFlick not loaded");
+          await sleep(120);
+          PasteFlick.scan();
+          await sleep(40);
+          await testDocumentHidesDock();
+          document.title = "VIEW_TEST_OK";
+          history.replaceState(null, "", location.pathname + location.search + "#VIEW_TEST_OK");
+          log("VIEW_TEST_OK", "ok");
+        } catch (err) {
+          const message = err && err.message ? err.message : String(err);
+          document.title = "VIEW_TEST_FAIL";
+          history.replaceState(null, "", location.pathname + location.search + "#VIEW_TEST_FAIL");
+          log(message, "err");
+        }
+      }
+
       const testParams = new URLSearchParams(location.search);
       if (testParams.get("wraptest") === "1") {
         log("Wrap autotest running…");
         runWrapAutotest();
+      } else if (testParams.get("viewtest") === "1") {
+        log("View autotest running…");
+        runViewAutotest();
       } else if (testParams.get("autotest") === "1") {
         log("Autotest running…");
         runAutotest();

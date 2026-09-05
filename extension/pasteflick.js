@@ -701,7 +701,7 @@
   let lastConvKey = null;
   let memory = {};
   let lastPrefs = { dest: "clipboard", format: "md" };
-  let lastCopyExtras = true;
+  let lastCopyExtras = false;
 
   const doneTimers = new WeakMap();
   const pinByTarget = new WeakMap();
@@ -2146,7 +2146,7 @@
   }
 
   function applyExtrasVisuals(on) {
-    lastCopyExtras = on !== false;
+    lastCopyExtras = on === true;
     const host = dockHost();
     const shadow = host && host.shadowRoot;
     if (!shadow) return;
@@ -2160,7 +2160,7 @@
     if (!api) return lastCopyExtras;
     try {
       const data = await api.local.get(COPY_EXTRAS_KEY);
-      lastCopyExtras = data[COPY_EXTRAS_KEY] !== false;
+      lastCopyExtras = data[COPY_EXTRAS_KEY] === true;
       return lastCopyExtras;
     } catch (_) {
       return lastCopyExtras;
@@ -4197,7 +4197,7 @@
           void getDestination().then((prefs) => applyDestinationVisuals(prefs.dest, prefs.format));
         }
         if (changes[COPY_EXTRAS_KEY]) {
-          lastCopyExtras = changes[COPY_EXTRAS_KEY].newValue !== false;
+          lastCopyExtras = changes[COPY_EXTRAS_KEY].newValue === true;
           applyExtrasVisuals(lastCopyExtras);
         }
       });

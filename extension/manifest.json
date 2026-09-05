@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "PasteFlick",
-  "version": "1.0.47",
+  "version": "1.0.50",
   "description": "Copy a ChatGPT highlight or visible thread, then flick it into the last app.",
   "icons": {
     "16": "icons/icon16.png",

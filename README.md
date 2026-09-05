@@ -23,7 +23,7 @@
 <p align="center"><br></p>
 
 <p align="center">
-  <img src="readme/shots/view-and-settings-type.png" width="760" alt="PasteFlick selection view and settings">
+  <img src="readme/shots/view-and-settings-plain.png" width="760" alt="PasteFlick selection view and settings">
 </p>
 
 <p align="center"><br></p>

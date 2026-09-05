@@ -59,7 +59,7 @@
   let selectionCacheTimer = null;
   let lastDestination = "clipboard";
   let lastFileFormat = "md";
-  let lastCopyExtras = true;
+  let lastCopyExtras = false;
 
   function pageTitle() {
     const el =
@@ -290,9 +290,8 @@
     if (note) bits.push(note);
     const header = copyHeader(title, url, bits.join(" · "));
     const lines = header ? [header] : [];
-    const skipRole = !lastCopyExtras && turns.length === 1;
     for (const turn of turns) {
-      if (!skipRole) {
+      if (lastCopyExtras) {
         lines.push("## " + turn.role);
         lines.push("");
       }
@@ -527,6 +526,7 @@
     return {
       title,
       markdown,
+      turns,
       turn_count: turns.length,
       character_count: markdown.length,
       partial: true,
@@ -552,6 +552,7 @@
     return {
       title,
       markdown,
+      turns,
       turn_count: turns.length,
       character_count: markdown.length,
       partial: true,
@@ -623,6 +624,7 @@
     return {
       title,
       markdown,
+      turns,
       turn_count: turns.length,
       character_count: markdown.length,
       partial: false,
@@ -637,6 +639,7 @@
     return {
       title,
       markdown,
+      turns,
       turn_count: turns.length,
       character_count: markdown.length,
       partial: !!partial,
@@ -986,7 +989,102 @@
 
   const SELECT_VIEW_ID = "pasteflick-select-view";
 
-    function removeSelectView() {
+  const selectViewState = {
+    payload: null,
+    textEl: null,
+    metaEl: null,
+    extrasBtn: null,
+  };
+
+  function extrasCaption(on) {
+    return on ? "With notes" : "Just the text";
+  }
+
+  function extrasAria(on) {
+    return on ? "Include title and notes" : "Just the text";
+  }
+
+  function persistCopyExtras(on) {
+    lastCopyExtras = !!on;
+    window.postMessage(
+      { source: PAGE, type: "set-copy-extras", copyExtras: lastCopyExtras },
+      "*",
+    );
+  }
+
+  function selectViewMetaText(payload) {
+    if (!payload) return "";
+    return (
+      (payload.title || "Chat") +
+      " · " +
+      (payload.turn_count || 0) +
+      " turns · " +
+      (payload.character_count || 0).toLocaleString() +
+      " chars" +
+      (payload.partial ? " · partial" : "") +
+      (payload.source === "pasteflick" ? " · from PasteFlick" : "")
+    );
+  }
+
+  function applyExtrasToPayload(payload) {
+    if (!payload || !Array.isArray(payload.turns) || !payload.turns.length) return payload;
+    payload.markdown = formatMarkdown(
+      payload.title,
+      payload.turns,
+      payload.url,
+      !!payload.partial,
+      payload.status_note || "",
+    );
+    payload.character_count = payload.markdown.length;
+    return payload;
+  }
+
+  function paintSelectExtras(btn, on) {
+    if (!btn) return;
+    btn.classList.toggle("on", !!on);
+    btn.setAttribute("aria-checked", on ? "true" : "false");
+    const copy = btn.querySelector("[data-extras-copy]");
+    if (copy) copy.textContent = extrasCaption(on);
+    const tip = extrasAria(on);
+    btn.title = tip;
+    btn.setAttribute("aria-label", tip);
+  }
+
+  function syncSelectViewExtras(on) {
+    lastCopyExtras = on === true;
+    const payload = selectViewState.payload;
+    if (payload) {
+      applyExtrasToPayload(payload);
+      if (selectViewState.textEl) selectViewState.textEl.textContent = payload.markdown || "";
+      if (selectViewState.metaEl) selectViewState.metaEl.textContent = selectViewMetaText(payload);
+    }
+    paintSelectExtras(selectViewState.extrasBtn, lastCopyExtras);
+  }
+
+  function makeSelectExtrasSwitch() {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = lastCopyExtras ? "sm-extras on" : "sm-extras";
+    btn.setAttribute("data-pasteflick", "select-extras");
+    btn.setAttribute("role", "switch");
+    btn.innerHTML =
+      '<span class="sm-extras-track" aria-hidden="true"><span class="sm-extras-thumb"></span></span>' +
+      "<span data-extras-copy></span>";
+    paintSelectExtras(btn, lastCopyExtras);
+    btn.addEventListener("mousedown", (e) => e.preventDefault());
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      persistCopyExtras(!lastCopyExtras);
+      syncSelectViewExtras(lastCopyExtras);
+    });
+    return btn;
+  }
+
+  function removeSelectView() {
+    selectViewState.payload = null;
+    selectViewState.textEl = null;
+    selectViewState.metaEl = null;
+    selectViewState.extrasBtn = null;
     const el = document.getElementById(SELECT_VIEW_ID);
     if (el) el.remove();
     document.documentElement.style.overflow = "";
@@ -1090,7 +1188,7 @@
         padding:12px 16px;flex:none;background:transparent;
         box-shadow:inset 0 1px 0 var(--stroke);
       }
-      #${SELECT_VIEW_ID} .sm-row { display:flex;flex-wrap:wrap;gap:8px; }
+      #${SELECT_VIEW_ID} .sm-row { display:flex;flex-wrap:wrap;align-items:center;gap:8px; }
       #${SELECT_VIEW_ID} .sm-btn {
         display:inline-flex;align-items:center;justify-content:center;
         height:34px;padding:1px 14px 2px;border-radius:7px;
@@ -1110,6 +1208,32 @@
       }
       #${SELECT_VIEW_ID} .sm-btn:active:not(:disabled) { transform:scale(.98); }
       #${SELECT_VIEW_ID} .sm-btn:disabled { color:var(--faint);cursor:default; }
+      #${SELECT_VIEW_ID} .sm-extras {
+        appearance:none;display:inline-flex;align-items:center;gap:8px;
+        margin:0 0 0 4px;padding:0;border:0;background:transparent;
+        color:var(--muted);font:inherit;font-weight:600;font-size:12px;line-height:1;
+        letter-spacing:-.01em;cursor:pointer;white-space:nowrap;
+      }
+      #${SELECT_VIEW_ID} .sm-extras-track {
+        position:relative;flex:none;width:36px;height:20px;
+        border:1px solid rgba(201,166,106,.28);border-radius:10px;
+        background:rgba(23,20,16,.22);
+        box-shadow:inset 0 1px 0 rgba(244,226,180,.12);
+        transition:background-color 240ms cubic-bezier(.16,1,.3,1),border-color 240ms cubic-bezier(.16,1,.3,1),filter 240ms cubic-bezier(.16,1,.3,1);
+      }
+      #${SELECT_VIEW_ID} .sm-extras.on .sm-extras-track {
+        background:var(--chip);border-color:transparent;
+      }
+      #${SELECT_VIEW_ID} .sm-extras-thumb {
+        position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:7px;
+        background:#e4d2ae;pointer-events:none;
+        transition:left 280ms cubic-bezier(.16,1,.3,1),background-color 240ms cubic-bezier(.16,1,.3,1);
+      }
+      #${SELECT_VIEW_ID} .sm-extras.on .sm-extras-thumb { left:18px;background:var(--ink); }
+      #${SELECT_VIEW_ID} .sm-extras:hover .sm-extras-track { filter:brightness(1.08); }
+      #${SELECT_VIEW_ID} .sm-extras:focus-visible {
+        outline:1px solid #e4d2ae;outline-offset:3px;border-radius:8px;
+      }
       #${SELECT_VIEW_ID} .sm-hint {
         margin-top:10px;font-size:12px;line-height:1.35;min-height:16px;color:var(--faint);
       }
@@ -1161,13 +1285,16 @@
     const copySelBtn = makeBtn("Copy selection", true);
     const copyAllBtn = makeBtn("Copy all", false);
     const saveMdBtn = makeBtn("Save .md", false);
+    const extrasBtn = makeSelectExtrasSwitch();
     copySelBtn.disabled = true;
     copyAllBtn.disabled = true;
     saveMdBtn.disabled = true;
     row.appendChild(copySelBtn);
     row.appendChild(copyAllBtn);
     row.appendChild(saveMdBtn);
+    row.appendChild(extrasBtn);
     footer.appendChild(row);
+    selectViewState.extrasBtn = extrasBtn;
 
     const closeBtn = header.querySelector("[data-close]");
     const gearBtn = header.querySelector("[data-gear]");
@@ -1204,15 +1331,8 @@
 
       const meta = document.createElement("div");
       meta.className = "sm-meta";
-      meta.textContent =
-        (fullPayload.title || "Chat") +
-        " · " +
-        (fullPayload.turn_count || 0) +
-        " turns · " +
-        (fullPayload.character_count || 0).toLocaleString() +
-        " chars" +
-        (fullPayload.partial ? " · partial" : "") +
-        (fullPayload.source === "pasteflick" ? " · from PasteFlick" : "");
+      applyExtrasToPayload(fullPayload);
+      meta.textContent = selectViewMetaText(fullPayload);
 
       textEl = document.createElement("pre");
       textEl.className = "sm-pre";
@@ -1220,6 +1340,10 @@
 
       body.appendChild(meta);
       body.appendChild(textEl);
+      selectViewState.payload = fullPayload;
+      selectViewState.textEl = textEl;
+      selectViewState.metaEl = meta;
+      paintSelectExtras(extrasBtn, lastCopyExtras);
       copySelBtn.disabled = false;
       copyAllBtn.disabled = false;
       saveMdBtn.disabled = false;
@@ -1354,7 +1478,13 @@
     extra = extra || {};
     lastDestination = resolveDestination(extra);
     lastFileFormat = resolveFormat(extra);
-    lastCopyExtras = wantsCopyExtras(extra);
+    const openingView =
+      mode === "select-view" || mode === "open" || mode === "open-from-pasteflick";
+    lastCopyExtras = openingView
+      ? extra.copyExtras == null
+        ? lastCopyExtras
+        : !!extra.copyExtras
+      : wantsCopyExtras(extra);
     if (mode === "select-view" || mode === "open") {
       return openSelectView();
     }
@@ -1398,8 +1528,8 @@
   }
 
   window.__transcriptCopy = {
-    captureSelection: () => runCapture("selection"),
-    captureFull: () => runCapture("full"),
+    captureSelection: (extra) => runCapture("selection", null, extra || {}),
+    captureFull: (extra) => runCapture("full", null, extra || {}),
     openSelectView: () => openSelectView(),
     captureFromPasteFlick: (mark) => runCapture("from-pasteflick", mark),
     openFromPasteFlick: (mark) => runCapture("open-from-pasteflick", mark),
@@ -1423,6 +1553,10 @@
     if (event.source !== window) return;
     const data = event.data;
     if (!fromExtension(data)) return;
+    if (data.type === "copy-extras-changed") {
+      syncSelectViewExtras(data.copyExtras === true);
+      return;
+    }
     if (data.type) return;
     const modes = {
       full: "full",
