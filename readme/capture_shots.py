@@ -251,10 +251,10 @@ iframe{{border:0;width:{w}px;height:{h}px;border-radius:10px;overflow:hidden;bac
         if name == "shot-chat.html":
             html = f"""<!doctype html>
 <html><head><meta charset="utf-8"><style>
-html,body{{margin:0;width:840px;height:520px;background:transparent;}}
+html,body{{margin:0;width:840px;height:540px;background:transparent;}}
 .stage{{
   box-sizing:border-box;
-  width:840px;height:520px;
+  width:840px;height:540px;
   padding:24px;
   background:#3a3228;
   border-radius:16px;
@@ -263,7 +263,7 @@ html,body{{margin:0;width:840px;height:520px;background:transparent;}}
   box-sizing:border-box;
   width:100%;height:100%;
   display:grid;
-  grid-template-columns:max-content 100px 32px minmax(0,1fr);
+  grid-template-columns:max-content 96px minmax(0,1fr);
   grid-template-rows:auto auto auto auto;
   column-gap:0;
   row-gap:14px;
@@ -278,8 +278,9 @@ html,body{{margin:0;width:840px;height:520px;background:transparent;}}
   letter-spacing:-0.011em;
 }}
 .title{{
-  grid-column:4;grid-row:1;
+  grid-column:3;grid-row:1;
   margin:0 0 2px;
+  padding-left:56px;
   font:650 15px/1.2 inherit;
   letter-spacing:-0.02em;
   color:#5c4a2e;
@@ -321,7 +322,7 @@ html,body{{margin:0;width:840px;height:520px;background:transparent;}}
 .guide.more .v{{top:0;height:50%;}}
 .arm{{
   position:absolute;
-  left:0;right:8px;
+  left:0;right:4px;
   top:50%;
   margin-top:-1px;
   height:2px;
@@ -353,45 +354,45 @@ html,body{{margin:0;width:840px;height:520px;background:transparent;}}
   width:9px;height:9px;
   margin-left:1px;
 }}
+.turn{{
+  display:grid;
+  grid-template-columns:32px minmax(0,1fr);
+  column-gap:12px;
+  align-items:center;
+  box-sizing:border-box;
+  min-width:0;
+  padding:12px 14px 12px 12px;
+  border-radius:16px;
+  border:1.5px solid transparent;
+}}
+.turn.one{{grid-column:3;grid-row:2;}}
+.turn.skip{{grid-column:3;grid-row:3;}}
+.turn.more{{grid-column:3;grid-row:4;}}
+.turn.on{{
+  background:#fff;
+  border-color:rgba(201,166,106,.7);
+  box-shadow:0 0 0 1px rgba(33,28,22,.35);
+}}
 .mark-wrap{{
   width:32px;
   height:32px;
   display:grid;
   place-items:center;
 }}
-.mark-wrap.one{{grid-column:3;grid-row:2;}}
-.mark-wrap.skip{{grid-column:3;grid-row:3;}}
-.mark-wrap.more{{grid-column:3;grid-row:4;}}
-.chat [data-pasteflick="mark"].is-active .scrolllog-icon{{
-  fill:none;
-}}
 .msg{{
   box-sizing:border-box;
   min-width:0;
-  max-width:328px;
   margin:0;
-  margin-left:16px;
   padding:12px 14px;
-  border-radius:16px;
+  border-radius:10px;
   line-height:1.45;
   font-size:13px;
-}}
-.msg.one,.msg.more{{
-  grid-column:4;
-  background:#fff;
+  background:color-mix(in srgb, #c9a66a 8%, #fff);
   color:#171410;
-  border:1.5px solid rgba(201,166,106,.7);
-  box-shadow:0 0 0 1px rgba(33,28,22,.35);
 }}
-.msg.one{{grid-row:2;}}
-.msg.more{{grid-row:4;}}
-.msg.skip{{
-  grid-column:4;grid-row:3;
+.turn.skip .msg{{
   background:#f3f1ea;
   color:#8a7358;
-  border:1px solid rgba(201,166,106,.22);
-  box-shadow:0 1px 3px rgba(50,40,20,.05);
-  border-radius:10px;
 }}
 .role{{
   display:inline-block;margin:0 0 8px;padding:2px 6px;
@@ -423,11 +424,15 @@ html,body{{margin:0;width:840px;height:520px;background:transparent;}}
           <svg viewBox="0 0 10 10"><path d="M1.5 1.5 8.5 5 1.5 8.5" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
       </div>
-      <div class="mark-wrap one">{MARK_PIN_ON}</div>
-      <div class="msg one"><span class="role">You</span><div>Can you turn this into a short note I can paste into Slack?</div></div>
+      <div class="turn one on">
+        <div class="mark-wrap">{MARK_PIN_ON}</div>
+        <div class="msg"><span class="role">You</span><div>Can you turn this into a short note I can paste into Slack?</div></div>
+      </div>
       <div class="guide skip" aria-hidden="true"><span class="v"></span></div>
-      <div class="mark-wrap skip">{MARK_PIN_OFF}</div>
-      <div class="msg skip"><span class="role">Assistant</span><div>Here's a first pass you can drop in as-is.</div></div>
+      <div class="turn skip">
+        <div class="mark-wrap">{MARK_PIN_OFF}</div>
+        <div class="msg"><span class="role">Assistant</span><div>Here's a first pass you can drop in as-is.</div></div>
+      </div>
       <div class="guide more" aria-hidden="true">
         <span class="v"></span>
         <div class="arm">
@@ -437,8 +442,10 @@ html,body{{margin:0;width:840px;height:520px;background:transparent;}}
           <svg viewBox="0 0 10 10"><path d="M1.5 1.5 8.5 5 1.5 8.5" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
       </div>
-      <div class="mark-wrap more">{MARK_PIN_ON}</div>
-      <div class="msg more"><span class="role">You</span><div>Make it two sentences, and keep the Friday deadline.</div></div>
+      <div class="turn more on">
+        <div class="mark-wrap">{MARK_PIN_ON}</div>
+        <div class="msg"><span class="role">You</span><div>Make it two sentences, and keep the Friday deadline.</div></div>
+      </div>
     </div>
   </div>
 </body></html>"""
@@ -540,7 +547,7 @@ def main() -> None:
         shot(f"{base}/shot-pair.html?v=13", OUT / "the-panels.png", 688, 616, "00000000")
         shot(f"{base}/shot-popup.html?v=13", OUT / "panel-main.png", 332, 368, "00000000")
         shot(f"{base}/shot-settings.html?v=13", OUT / "panel-settings.png", 332, 616, "00000000")
-        shot(f"{base}/shot-chat.html?v=24", OUT / "in-the-chat.png", 840, 520, "00000000")
+        shot(f"{base}/shot-chat.html?v=25", OUT / "the-pick.png", 840, 540, "00000000")
     finally:
         httpd.shutdown()
     print("ok")
