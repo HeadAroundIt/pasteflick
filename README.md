@@ -11,7 +11,7 @@
 <p align="center"><br></p>
 
 <p align="center">
-  <img src="readme/shots/the-marks.png" width="760" alt="Bookmark one message, or a later one — Copy on the chip takes that stretch">
+  <img src="readme/shots/one-or-more.png" width="760" alt="Bookmark one message, or a later one — Copy on the chip takes that stretch">
 </p>
 
 <p align="center"><br></p>

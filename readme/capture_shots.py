@@ -85,7 +85,7 @@ CHIP_HTML = f"""
       </div>
     </div>
 """
-MARK_ON = f'<button type="button" data-pasteflick="mark" class="is-active is-multi" aria-pressed="true">{BOOKMARK_SVG}</button>'
+MARK_ON = f'<button type="button" data-pasteflick="mark" class="is-active" aria-pressed="true">{BOOKMARK_SVG}</button>'
 MARK_OFF = f'<button type="button" data-pasteflick="mark" aria-pressed="false">{BOOKMARK_SVG}</button>'
 
 
@@ -362,6 +362,10 @@ html,body{{margin:0;width:840px;height:520px;background:transparent;}}
 .mark-wrap.one{{grid-column:3;grid-row:2;}}
 .mark-wrap.skip{{grid-column:3;grid-row:3;}}
 .mark-wrap.more{{grid-column:3;grid-row:4;}}
+.chat [data-pasteflick="mark"].is-active{{
+  background:var(--chip);
+  box-shadow:inset 0 1px 0 rgba(244,226,180,.35);
+}}
 .msg{{
   box-sizing:border-box;
   min-width:0;
@@ -537,7 +541,7 @@ def main() -> None:
         shot(f"{base}/shot-pair.html?v=13", OUT / "the-panels.png", 688, 616, "00000000")
         shot(f"{base}/shot-popup.html?v=13", OUT / "panel-main.png", 332, 368, "00000000")
         shot(f"{base}/shot-settings.html?v=13", OUT / "panel-settings.png", 332, 616, "00000000")
-        shot(f"{base}/shot-chat.html?v=26", OUT / "the-marks.png", 840, 520, "00000000")
+        shot(f"{base}/shot-chat.html?v=27", OUT / "one-or-more.png", 840, 520, "00000000")
     finally:
         httpd.shutdown()
     print("ok")
