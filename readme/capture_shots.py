@@ -89,6 +89,18 @@ MARK_ON = f'<button type="button" data-pasteflick="mark" class="is-active is-mul
 MARK_OFF = f'<button type="button" data-pasteflick="mark" aria-pressed="false">{BOOKMARK_SVG}</button>'
 
 
+def _mark_pin(btn: str) -> str:
+    return (
+        '<div data-pasteflick="pin" data-kind="message">'
+        f'<div data-pasteflick="actions">{btn}</div>'
+        "</div>"
+    )
+
+
+MARK_PIN_ON = _mark_pin(MARK_ON)
+MARK_PIN_OFF = _mark_pin(MARK_OFF)
+
+
 class Handler(SimpleHTTPRequestHandler):
     def log_message(self, fmt: str, *args) -> None:
         pass
@@ -251,7 +263,7 @@ html,body{{margin:0;width:840px;height:520px;background:transparent;}}
   box-sizing:border-box;
   width:100%;height:100%;
   display:grid;
-  grid-template-columns:max-content 100px 24px minmax(0,1fr);
+  grid-template-columns:max-content 100px 34px minmax(0,1fr);
   grid-template-rows:auto auto auto auto;
   column-gap:0;
   row-gap:14px;
@@ -342,14 +354,18 @@ html,body{{margin:0;width:840px;height:520px;background:transparent;}}
   margin-left:1px;
 }}
 .mark-wrap{{
-  width:24px;
-  height:24px;
+  width:34px;
+  height:34px;
   display:grid;
   place-items:center;
 }}
 .mark-wrap.one{{grid-column:3;grid-row:2;}}
 .mark-wrap.skip{{grid-column:3;grid-row:3;}}
 .mark-wrap.more{{grid-column:3;grid-row:4;}}
+.chat [data-pasteflick="pin"][data-kind="message"]{{
+  background:#fff;
+  padding:4px;
+}}
 .msg{{
   box-sizing:border-box;
   min-width:0;
@@ -357,15 +373,27 @@ html,body{{margin:0;width:840px;height:520px;background:transparent;}}
   margin:0;
   margin-left:16px;
   padding:12px 14px;
-  border-radius:10px;
-  border:1px solid rgba(201,166,106,.22);
-  box-shadow:0 1px 3px rgba(50,40,20,.05);
+  border-radius:16px;
   line-height:1.45;
   font-size:13px;
 }}
-.msg.one{{grid-column:4;grid-row:2;background:color-mix(in srgb, #c9a66a 12%, #f7f7f5);color:#171410;}}
-.msg.skip{{grid-column:4;grid-row:3;background:#f3f1ea;color:#8a7358;}}
-.msg.more{{grid-column:4;grid-row:4;background:color-mix(in srgb, #c9a66a 12%, #f7f7f5);color:#171410;}}
+.msg.one,.msg.more{{
+  grid-column:4;
+  background:#fff;
+  color:#171410;
+  border:1.5px solid rgba(201,166,106,.7);
+  box-shadow:0 0 0 1px rgba(33,28,22,.35);
+}}
+.msg.one{{grid-row:2;}}
+.msg.more{{grid-row:4;}}
+.msg.skip{{
+  grid-column:4;grid-row:3;
+  background:#f3f1ea;
+  color:#8a7358;
+  border:1px solid rgba(201,166,106,.22);
+  box-shadow:0 1px 3px rgba(50,40,20,.05);
+  border-radius:10px;
+}}
 .role{{
   display:inline-block;margin:0 0 8px;padding:2px 6px;
   font:650 10px/1.2 inherit;
@@ -396,10 +424,10 @@ html,body{{margin:0;width:840px;height:520px;background:transparent;}}
           <svg viewBox="0 0 10 10"><path d="M1.5 1.5 8.5 5 1.5 8.5" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
       </div>
-      <div class="mark-wrap one">{MARK_ON}</div>
+      <div class="mark-wrap one">{MARK_PIN_ON}</div>
       <div class="msg one"><span class="role">You</span><div>Can you turn this into a short note I can paste into Slack?</div></div>
       <div class="guide skip" aria-hidden="true"><span class="v"></span></div>
-      <div class="mark-wrap skip">{MARK_OFF}</div>
+      <div class="mark-wrap skip">{MARK_PIN_OFF}</div>
       <div class="msg skip"><span class="role">Assistant</span><div>Here's a first pass you can drop in as-is.</div></div>
       <div class="guide more" aria-hidden="true">
         <span class="v"></span>
@@ -410,7 +438,7 @@ html,body{{margin:0;width:840px;height:520px;background:transparent;}}
           <svg viewBox="0 0 10 10"><path d="M1.5 1.5 8.5 5 1.5 8.5" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
       </div>
-      <div class="mark-wrap more">{MARK_ON}</div>
+      <div class="mark-wrap more">{MARK_PIN_ON}</div>
       <div class="msg more"><span class="role">You</span><div>Make it two sentences, and keep the Friday deadline.</div></div>
     </div>
   </div>
@@ -513,7 +541,7 @@ def main() -> None:
         shot(f"{base}/shot-pair.html?v=13", OUT / "the-panels.png", 688, 616, "00000000")
         shot(f"{base}/shot-popup.html?v=13", OUT / "panel-main.png", 332, 368, "00000000")
         shot(f"{base}/shot-settings.html?v=13", OUT / "panel-settings.png", 332, 616, "00000000")
-        shot(f"{base}/shot-chat.html?v=21", OUT / "one-or-more.png", 840, 520, "00000000")
+        shot(f"{base}/shot-chat.html?v=22", OUT / "the-range.png", 840, 520, "00000000")
     finally:
         httpd.shutdown()
     print("ok")
