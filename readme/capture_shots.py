@@ -118,6 +118,95 @@ class Handler(SimpleHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(data)
             return
+        if name == "shot-select-panel.html":
+            html = """<!doctype html>
+<html><head><meta charset="utf-8"><style>
+html,body{margin:0;background:transparent;}
+.panel{
+  box-sizing:border-box;width:420px;height:480px;
+  display:flex;flex-direction:column;
+  background:color-mix(in srgb,#c9a66a 8%,#f7f7f5);color:#5c4a2e;
+  border-radius:10px;border:1px solid rgba(201,166,106,.22);
+  font-family:"Segoe UI Variable Text",Segoe UI,system-ui,sans-serif;
+  font-weight:450;letter-spacing:-.011em;overflow:hidden;
+}
+.titlebar{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:10px 16px 8px;min-height:44px;flex:none;
+  box-shadow:inset 0 -1px 0 rgba(201,166,106,.22);
+}
+.brand{
+  padding:3px 8px;font:650 12px/1.2 inherit;letter-spacing:-.01em;
+  color:#171410;border-radius:6px;background:rgba(201,166,106,.48);
+  box-shadow:inset 0 1px 0 rgba(244,226,180,.35);
+}
+.chrome{display:flex;align-items:center;gap:2px;}
+.ghost{
+  width:28px;height:28px;border:0;border-radius:7px;background:transparent;
+  color:#8a7358;display:grid;place-items:center;
+}
+.body{
+  flex:1;overflow:hidden;padding:16px;
+  background:color-mix(in srgb,#c9a66a 6%,#f7f7f5);
+}
+.meta{margin:0 0 12px;font-size:11px;color:#8a7358;}
+.pre{
+  margin:0;white-space:pre-wrap;font-family:ui-monospace,Cascadia Mono,Consolas,monospace;
+  font-size:12.5px;line-height:1.45;color:#5c4a2e;
+}
+.foot{
+  padding:12px 16px;flex:none;
+  box-shadow:inset 0 1px 0 rgba(201,166,106,.22);
+}
+.row{display:flex;flex-wrap:wrap;gap:8px;}
+.btn{
+  height:34px;padding:0 14px;border-radius:7px;
+  border:1px solid rgba(201,166,106,.22);
+  background:color-mix(in srgb,#c9a66a 6%,#f7f7f5);color:#5c4a2e;
+  font:650 13px/1 inherit;
+}
+.btn.primary{
+  background:rgba(201,166,106,.4);border-color:transparent;color:#171410;
+  box-shadow:inset 0 1px 0 rgba(244,226,180,.35);
+}
+</style></head>
+<body>
+  <div class="panel">
+    <div class="titlebar">
+      <span class="brand">PasteFlick</span>
+      <div class="chrome">
+        <span class="ghost" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18"><circle cx="12" cy="12" r="3.05" fill="none" stroke="currentColor" stroke-width="1.85"/><path fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" d="M12 3.7v2.15M12 18.15v2.15M3.7 12h2.15M18.15 12h2.15M6.22 6.22l1.52 1.52M16.26 16.26l1.52 1.52M6.22 17.78l1.52-1.52M16.26 7.74l1.52-1.52"/></svg></span>
+        <span class="ghost" aria-hidden="true">✕</span>
+      </div>
+    </div>
+    <div class="body">
+      <p class="meta">Friday note · 3 turns · 1,240 chars</p>
+      <pre class="pre">You
+Can you draft the Friday note?
+
+Assistant
+Here's a first pass you can drop in as-is.
+
+You
+Make it two sentences, and keep the Friday deadline.</pre>
+    </div>
+    <div class="foot">
+      <div class="row">
+        <span class="btn primary">Copy selection</span>
+        <span class="btn">Copy all</span>
+        <span class="btn">Save .md</span>
+      </div>
+    </div>
+  </div>
+</body></html>"""
+            data = html.encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Cache-Control", "no-store")
+            self.send_header("Content-Length", str(len(data)))
+            self.end_headers()
+            self.wfile.write(data)
+            return
         if name == "shot-pair.html":
             html = """<!doctype html>
 <html><head><meta charset="utf-8"><style>
@@ -130,30 +219,29 @@ html,body{margin:0;height:100%;background:transparent;}
   align-items:center;
   justify-content:center;
   gap:24px;
-  padding:16px 32px;
+  padding:16px 28px;
   background:#3a3228;
   border-radius:16px;
 }
 iframe{
   border:0;
-  width:300px;
   border-radius:10px;
   overflow:hidden;
   background:transparent;
 }
-.home{height:336px;}
-.settings{height:560px;}
+.view{width:420px;height:480px;}
+.settings{width:300px;height:560px;}
 </style></head>
 <body>
   <div class="stage">
-    <iframe class="home" src="/popup.html?shot=1" title="Popup" scrolling="no"></iframe>
+    <iframe class="view" src="/shot-select-panel.html" title="Selection view" scrolling="no"></iframe>
     <iframe class="settings" src="/popup-settings.html?shot=1" title="Settings" scrolling="no"></iframe>
   </div>
   <script>
     function fit(frame) {
       const doc = frame.contentDocument;
       if (!doc) return;
-      const shell = doc.querySelector(".shell");
+      const shell = doc.querySelector(".shell") || doc.querySelector(".panel");
       if (!shell) return;
       const h = Math.ceil(shell.getBoundingClientRect().height);
       if (h > 8) frame.style.height = h + "px";
@@ -207,7 +295,7 @@ html,body{{margin:0;width:152px;height:96px;background:transparent;}}
             return
         if name in {"shot-popup.html", "shot-settings.html"}:
             if name == "shot-popup.html":
-                inner, w, h, pad = "/popup.html?shot=1", 300, 336, 16
+                inner, w, h, pad = "/popup.html?shot=1", 300, 200, 16
             else:
                 inner, w, h, pad = "/popup-settings.html?shot=1", 300, 560, 16
             html = f"""<!doctype html>
@@ -541,9 +629,9 @@ def main() -> None:
     try:
         # New filenames so GitHub doesn't serve stale shots.
         shot(f"{base}/shot-chip.html?v=22", OUT / "the-chip.png", 152, 96, "00000000")
-        shot(f"{base}/shot-pair.html?v=15", OUT / "home-and-settings.png", 688, 656, "00000000")
-        shot(f"{base}/shot-popup.html?v=15", OUT / "panel-main.png", 332, 368, "00000000")
-        shot(f"{base}/shot-settings.html?v=15", OUT / "panel-settings.png", 332, 656, "00000000")
+        shot(f"{base}/shot-pair.html?v=16", OUT / "view-and-settings.png", 840, 620, "00000000")
+        shot(f"{base}/shot-popup.html?v=17", OUT / "panel-main.png", 332, 240, "00000000")
+        shot(f"{base}/shot-settings.html?v=16", OUT / "panel-settings.png", 332, 656, "00000000")
         shot(f"{base}/shot-chat.html?v=27", OUT / "one-or-more.png", 840, 520, "00000000")
     finally:
         httpd.shutdown()

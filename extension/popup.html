@@ -323,6 +323,13 @@
         color: var(--faint);
       }
 
+      .idle-note {
+        margin: 0;
+        padding: 0;
+        border: 0;
+        line-height: 1.4;
+      }
+
       #status {
         display: block;
         min-width: 0;
@@ -629,32 +636,8 @@
             </button>
           </div>
         </header>
-        <p class="lede">Copy any part of a chat.</p>
-        <div class="mode-row">
-          <span class="mode-copy" id="dest-copy">Copies stay on the clipboard</span>
-          <button type="button" id="auto-paste" class="chip-toggle" aria-pressed="false" title="Flick off — copies stay on the clipboard">
-            <span class="chip-lock" aria-hidden="true">
-              <svg class="lock-on" viewBox="0 0 24 24">
-                <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M8 11V8.15a4 4 0 0 1 8 0V11" />
-                <rect x="6.25" y="11" width="11.5" height="9" rx="2" fill="none" stroke="currentColor" stroke-width="2" />
-              </svg>
-              <svg class="lock-off" viewBox="0 0 24 24">
-                <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M16 11V8.15A4 4 0 0 0 8.35 6.4" />
-                <rect x="6.25" y="11" width="11.5" height="9" rx="2" fill="none" stroke="currentColor" stroke-width="2" />
-              </svg>
-            </span>
-            Flick
-          </button>
-        </div>
-        <div class="home-actions">
-          <button type="button" id="select-view" class="btn primary">Copy selection</button>
-          <button type="button" id="full" class="btn">Copy thread</button>
-          <button type="button" id="from-pasteflick" class="btn" disabled>Copy from PasteFlick</button>
-          <button type="button" id="open-from-pasteflick" class="btn" disabled>Open from PasteFlick</button>
-        </div>
-        <div class="hint">
-          <span id="status">Open a chat.</span>
-        </div>
+        <p class="lede">Open a chat.</p>
+        <p class="hint idle-note">The icon opens the thread. Settings is the gear.</p>
       </div>
 
       <div id="view-settings" hidden>

@@ -48,7 +48,53 @@ function ingestViaBackground(payload) {
 window.addEventListener("message", (event) => {
   if (event.source !== window) return;
   const data = event.data;
-  if (!fromPage(data) || data.type !== "ingest") return;
+  if (!fromPage(data)) return;
+
+  if (data.type === "open-settings") {
+    toggleSettingsFrame();
+    return;
+  }
+  if (data.type === "close-settings") {
+    toggleSettingsFrame(false);
+    return;
+  }
+  if (data.type === "save-file") {
+    const payload = data.payload || {};
+    if (!chrome.runtime || !chrome.runtime.sendMessage) {
+      window.postMessage(
+        {
+          source: EXTENSION,
+          type: "save-file-result",
+          requestId: data.requestId,
+          result: { ok: false },
+        },
+        "*",
+      );
+      return;
+    }
+    chrome.runtime.sendMessage(
+      {
+        type: "save-file",
+        markdown: payload.markdown || "",
+        title: payload.title || "transcript",
+        format: "md",
+      },
+      (res) => {
+        const err = chrome.runtime.lastError;
+        window.postMessage(
+          {
+            source: EXTENSION,
+            type: "save-file-result",
+            requestId: data.requestId,
+            result: err ? { ok: false } : res || { ok: false },
+          },
+          "*",
+        );
+      },
+    );
+    return;
+  }
+  if (data.type !== "ingest") return;
   void ingestViaBackground(data.payload).then((result) => {
     window.postMessage(
       {
@@ -259,5 +305,45 @@ function keepWorker() {
 }
 
 keepWorker();
+
+const SETTINGS_FRAME_ID = "pasteflick-settings-frame";
+
+function closeSettingsFrame() {
+  const el = document.getElementById(SETTINGS_FRAME_ID);
+  if (el) el.remove();
+}
+
+function toggleSettingsFrame(open) {
+  const existing = document.getElementById(SETTINGS_FRAME_ID);
+  if (open === false || (open == null && existing)) {
+    closeSettingsFrame();
+    return;
+  }
+  if (existing) return;
+  if (!chrome.runtime || !chrome.runtime.getURL) return;
+
+  const wrap = document.createElement("div");
+  wrap.id = SETTINGS_FRAME_ID;
+  wrap.setAttribute("data-pasteflick", "settings-frame");
+  wrap.style.cssText =
+    "position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:24px;box-sizing:border-box;background:rgba(50,40,20,.22);";
+  wrap.addEventListener("click", (event) => {
+    if (event.target === wrap) closeSettingsFrame();
+  });
+
+  const frame = document.createElement("iframe");
+  frame.title = "PasteFlick settings";
+  frame.src = chrome.runtime.getURL("popup.html?settings=1");
+  frame.style.cssText =
+    "width:300px;height:min(580px,90vh);border:0;border-radius:10px;background:transparent;box-shadow:0 12px 32px rgba(50,40,20,.18);";
+  wrap.appendChild(frame);
+  document.documentElement.appendChild(wrap);
+}
+
+window.addEventListener("message", (event) => {
+  const data = event.data;
+  if (!data || data.source !== "pasteflick-settings") return;
+  if (data.type === "close") closeSettingsFrame();
+});
 }
 

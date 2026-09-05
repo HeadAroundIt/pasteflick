@@ -401,29 +401,17 @@ def build_what() -> None:
         1.45,
     )
     y += 14 * SCALE
-    y = draw_subhead(img, "The popup", x, y, inner)
+    y = draw_subhead(img, "The toolbar icon", x, y, inner)
     y += 8 * SCALE
     y = draw_paragraph(
         img,
-        "The toolbar is there when you want another way in.",
+        "On a chat it opens the thread as a document. Highlight, copy, or save as Markdown. Settings is the gear. The chip is still the fast path while you read.",
         small,
         x,
         y,
         inner,
         MUTED,
         1.4,
-    )
-    y += 12 * SCALE
-    y = draw_tiles(
-        img,
-        [
-            ("Copy selection", "The highlight you made."),
-            ("Copy thread", "The conversation currently on the page."),
-            ("Copy from PasteFlick", "From your bookmark onward."),
-        ],
-        x,
-        y,
-        inner,
     )
     y += 24 * SCALE
     y = draw_subhead(img, "Where it goes", x, y, inner)
@@ -452,7 +440,7 @@ def build_what() -> None:
         MUTED,
         1.4,
     )
-    finish(img, "the-goods.png")
+    finish(img, "what-you-get.png")
 
 
 def build_support() -> None:

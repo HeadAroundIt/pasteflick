@@ -1,13 +1,6 @@
-const statusEl = document.getElementById("status");
-const selectViewBtn = document.getElementById("select-view");
-const fullBtn = document.getElementById("full");
-const fromMarkBtn = document.getElementById("from-pasteflick");
-const openFromMarkBtn = document.getElementById("open-from-pasteflick");
-const destCopy = document.getElementById("dest-copy");
 const pastePrefHint = document.getElementById("paste-pref-hint");
 const folderPathEl = document.getElementById("folder-path");
 const folderPick = document.getElementById("folder-pick");
-const autoPasteBtn = document.getElementById("auto-paste");
 const autoPasteLock = document.getElementById("auto-paste-lock");
 const viewHome = document.getElementById("view-home");
 const viewSettings = document.getElementById("view-settings");
@@ -18,10 +11,11 @@ const UPDATE_OVERLAY = "http://127.0.0.1:8769";
 const DEST_KEY = "destination";
 const FORMAT_KEY = "fileFormat";
 const AUTOPASTE_KEY = "autoPaste";
+const params = new URLSearchParams(location.search);
+const embedded = params.get("settings") === "1" || window !== window.top;
 
 let currentDest = "clipboard";
 let currentFormat = "md";
-let lastMarkName = "";
 let installInfoPromise;
 
 function installInfo() {
@@ -52,196 +46,23 @@ async function updateStatus() {
   return null;
 }
 
-function setStatus(text, kind) {
-  statusEl.textContent = text;
-  statusEl.className = kind || "";
+function closeEmbedded() {
+  if (window === window.top) return false;
+  window.parent.postMessage({ source: "pasteflick-settings", type: "close" }, "*");
+  return true;
 }
 
-function isChatGptUrl(url) {
-  return /^https:\/\/(chatgpt\.com|chat\.openai\.com)\//i.test(url || "");
+function showSettings() {
+  viewHome.hidden = true;
+  viewSettings.hidden = false;
+  void refreshFolder();
 }
 
-async function pingTab(tabId) {
-  return chrome.tabs.sendMessage(tabId, { type: "ping" });
+function showHome() {
+  if (closeEmbedded()) return;
+  viewSettings.hidden = true;
+  viewHome.hidden = false;
 }
-
-async function ensureScripts(tabId) {
-  try {
-    await pingTab(tabId);
-    return;
-  } catch (_) {
-    // Content script missing — common right after install / before refresh.
-  }
-
-  await chrome.scripting.executeScript({
-    target: { tabId },
-    files: ["extractor.js"],
-    world: "MAIN",
-  });
-  await chrome.scripting.executeScript({
-    target: { tabId },
-    files: ["pasteflick.js", "content.js"],
-  });
-
-  await new Promise((r) => setTimeout(r, 75));
-
-  let lastErr;
-  for (let i = 0; i < 8; i++) {
-    try {
-      await pingTab(tabId);
-      return;
-    } catch (err) {
-      lastErr = err;
-      await new Promise((r) => setTimeout(r, 100));
-    }
-  }
-  throw lastErr || new Error("Couldn't reach the chat. Refresh the tab and try again.");
-}
-
-async function capture(tabId, mode) {
-  return chrome.tabs.sendMessage(tabId, { type: "capture", mode });
-}
-
-function setBusy(busy) {
-  selectViewBtn.disabled = busy;
-  fullBtn.disabled = busy;
-  if (busy) {
-    fromMarkBtn.disabled = true;
-    openFromMarkBtn.disabled = true;
-  }
-}
-
-function markLabel(name) {
-  const raw = String(name || "").trim();
-  return raw || "PasteFlick";
-}
-
-async function run(mode) {
-  setBusy(true);
-  const destHintText =
-    currentDest === "file" ? "Saving…" : currentDest === "cursor" ? "Flicking…" : "Copying…";
-  setStatus(
-    mode === "select-view" || mode === "open-from-pasteflick"
-      ? "Opening…"
-      : mode === "from-pasteflick"
-        ? currentDest === "file"
-          ? "Saving from PasteFlick…"
-          : currentDest === "cursor"
-            ? "Flicking from PasteFlick…"
-            : "Copying from PasteFlick…"
-        : destHintText,
-  );
-
-  try {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (!tab || !tab.id) throw new Error("No active tab");
-    const url = tab.url || "";
-    if (!isChatGptUrl(url)) {
-      throw new Error("Open a chat first.");
-    }
-
-    await ensureScripts(tab.id);
-    const response = await capture(tab.id, mode);
-    if (!response || !response.ok) {
-      throw new Error((response && response.error) || "Capture failed");
-    }
-    const r = response.result || {};
-
-    if (mode === "select-view" || mode === "open-from-pasteflick" || r.opened) {
-      setStatus("Highlight, then copy.", "ok");
-      window.close();
-      return;
-    }
-
-    const bits = [];
-    if (mode === "from-pasteflick" || r.source === "pasteflick") {
-      bits.push("Copied from " + markLabel(lastMarkName));
-    } else {
-      bits.push(r.partial ? "Partial DOM copy" : "Full thread copied");
-    }
-    if (r.turn_count) bits.push(r.turn_count + " turns");
-    bits.push((r.character_count || 0).toLocaleString() + " chars");
-    if (r.clipped) bits.push("clipboard");
-    if (r.pasted) bits.push("auto-pasted");
-    if (r.saved) {
-      const name = String(r.path || "").split(/[/\\]/).pop();
-      bits.push(name ? "saved " + name : "saved");
-    }
-    if (r.overlay) bits.push("desktop overlay");
-    if (r.note) bits.push(r.note);
-    setStatus(bits.join(" · "), "ok");
-  } catch (err) {
-    let msg = err && err.message ? err.message : String(err);
-    if (/Receiving end does not exist|Could not establish connection/i.test(msg)) {
-      msg = "Refresh the tab, then try again.";
-    }
-    setStatus(msg, "err");
-  } finally {
-    setBusy(false);
-    await refreshMarkStatus({ preserveStatus: true });
-  }
-}
-
-async function activeChatTab() {
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  if (!tab || !tab.id || !isChatGptUrl(tab.url || "")) return null;
-  return tab;
-}
-
-async function refreshMarkStatus(opts) {
-  const preserveStatus = !!(opts && opts.preserveStatus);
-  try {
-    const tab = await activeChatTab();
-    if (!tab) {
-      fromMarkBtn.disabled = true;
-      openFromMarkBtn.disabled = true;
-      lastMarkName = "";
-      if (!preserveStatus) setStatus("Open a chat.");
-      return;
-    }
-
-    try {
-      await ensureScripts(tab.id);
-    } catch (_) {
-      fromMarkBtn.disabled = true;
-      openFromMarkBtn.disabled = true;
-      lastMarkName = "";
-      if (!preserveStatus) setStatus("Refresh the tab, then open PasteFlick again.");
-      return;
-    }
-
-    let res = null;
-    try {
-      res = await chrome.tabs.sendMessage(tab.id, { type: "pasteflick-status" });
-    } catch (_) {
-      fromMarkBtn.disabled = true;
-      openFromMarkBtn.disabled = true;
-      lastMarkName = "";
-      if (!preserveStatus) setStatus("Click the bookmark on the left of a message.");
-      return;
-    }
-
-    const has = !!(res && res.hasMark);
-    const name = (res && res.name) || (res && res.mark && res.mark.name) || "";
-    lastMarkName = String(name || "").trim();
-    fromMarkBtn.disabled = !has;
-    openFromMarkBtn.disabled = !has;
-    if (!preserveStatus) {
-      if (has) setStatus(markLabel(lastMarkName) + " ready.");
-      else setStatus("Cards stay on the left of each message.");
-    }
-  } catch (_) {
-    fromMarkBtn.disabled = true;
-    openFromMarkBtn.disabled = true;
-    lastMarkName = "";
-    if (!preserveStatus) setStatus("Open a chat.");
-  }
-}
-
-selectViewBtn.addEventListener("click", () => run("select-view"));
-fullBtn.addEventListener("click", () => run("full"));
-fromMarkBtn.addEventListener("click", () => run("from-pasteflick"));
-openFromMarkBtn.addEventListener("click", () => run("open-from-pasteflick"));
 
 document.getElementById("add-browser").addEventListener("click", (event) => {
   event.preventDefault();
@@ -253,30 +74,13 @@ document.getElementById("tip-kofi").addEventListener("click", (event) => {
   chrome.tabs.create({ url: "https://ko-fi.com/ryandunham" });
 });
 
-document.getElementById("open-settings").addEventListener("click", () => {
-  viewHome.hidden = true;
-  viewSettings.hidden = false;
-  void refreshFolder();
-});
-
-document.getElementById("back-home").addEventListener("click", () => {
-  viewSettings.hidden = true;
-  viewHome.hidden = false;
-  void refreshMarkStatus();
-});
+document.getElementById("open-settings").addEventListener("click", showSettings);
+document.getElementById("back-home").addEventListener("click", showHome);
 
 function readDest(data) {
   const dest = data && data[DEST_KEY];
   if (dest === "clipboard" || dest === "cursor" || dest === "file") return dest;
   return data && data[AUTOPASTE_KEY] ? "cursor" : "clipboard";
-}
-
-function destLabel(dest, format) {
-  if (dest === "cursor") return "Copies flick into the last app.";
-  if (dest === "file") {
-    return format === "pdf" ? "Copies save as PDF." : "Copies save as Markdown.";
-  }
-  return "Copies stay on the clipboard.";
 }
 
 function pastePrefLabel(dest) {
@@ -339,16 +143,9 @@ async function pickFolderFromSettings() {
 function setDestUi(dest, format) {
   currentDest = dest;
   currentFormat = format === "pdf" ? "pdf" : "md";
-  destCopy.textContent = destLabel(currentDest, currentFormat).replace(/\.$/, "");
   pastePrefHint.textContent = pastePrefLabel(currentDest);
 
   const pasteOn = currentDest === "cursor";
-  autoPasteBtn.classList.toggle("on", pasteOn);
-  autoPasteBtn.setAttribute("aria-pressed", pasteOn ? "true" : "false");
-  autoPasteBtn.title = pasteOn
-    ? "Flick on — copies also paste"
-    : "Flick off — copies stay on the clipboard";
-
   autoPasteLock.classList.toggle("on", pasteOn);
   autoPasteLock.setAttribute("aria-checked", pasteOn ? "true" : "false");
 
@@ -423,7 +220,6 @@ formatBtns.forEach((btn) => {
   });
 });
 
-autoPasteBtn.addEventListener("click", toggleAutoPaste);
 autoPasteLock.addEventListener("click", toggleAutoPaste);
 
 folderPick.addEventListener("click", () => {
@@ -449,6 +245,6 @@ async function showVersion() {
   document.getElementById("version").textContent = line;
 }
 
+if (embedded) showSettings();
 void showVersion();
-void refreshMarkStatus();
 void refreshDestination();

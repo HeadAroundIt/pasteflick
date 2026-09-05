@@ -1089,6 +1089,41 @@
     });
   }
 
+  function saveFileThroughExtension(payload) {
+    return new Promise((resolve) => {
+      const requestId = "sav-" + Math.random().toString(36).slice(2);
+      const timer = setTimeout(() => {
+        window.removeEventListener("message", onMessage);
+        resolve(null);
+      }, 15000);
+
+      function onMessage(event) {
+        if (event.source !== window) return;
+        const data = event.data;
+        if (!fromExtension(data)) return;
+        if (data.type !== "save-file-result" || data.requestId !== requestId) return;
+        clearTimeout(timer);
+        window.removeEventListener("message", onMessage);
+        resolve(data.result || null);
+      }
+
+      window.addEventListener("message", onMessage);
+      window.postMessage(
+        {
+          source: PAGE,
+          type: "save-file",
+          requestId,
+          payload: {
+            markdown: payload.markdown || "",
+            title: payload.title || pageTitle(),
+            format: "md",
+          },
+        },
+        "*",
+      );
+    });
+  }
+
   async function ingest(payload) {
     const dest = payload.destination || lastDestination || "clipboard";
     const format = payload.format || lastFileFormat || "md";
@@ -1101,10 +1136,11 @@
 
   const SELECT_VIEW_ID = "pasteflick-select-view";
 
-  function removeSelectView() {
+    function removeSelectView() {
     const el = document.getElementById(SELECT_VIEW_ID);
     if (el) el.remove();
     document.documentElement.style.overflow = "";
+    window.postMessage({ source: PAGE, type: "close-settings" }, "*");
   }
 
   function selectionInside(el) {
@@ -1169,6 +1205,9 @@
         padding:10px 16px 8px;min-height:44px;flex:none;
         box-shadow:inset 0 -1px 0 var(--stroke);
       }
+      #${SELECT_VIEW_ID} .sm-chrome {
+        display:flex;align-items:center;gap:2px;flex:none;
+      }
       #${SELECT_VIEW_ID} .sm-brand {
         padding:3px 8px;font:650 12px/1.2 inherit;letter-spacing:-.01em;
         color:var(--ink);border-radius:6px;background:var(--chip-label);
@@ -1177,8 +1216,10 @@
       #${SELECT_VIEW_ID} .sm-ghost {
         appearance:none;border:0;background:transparent;color:var(--muted);
         width:28px;height:28px;border-radius:7px;cursor:pointer;font:inherit;
+        display:grid;place-items:center;
         transition:background 280ms cubic-bezier(.16,1,.3,1),color 280ms cubic-bezier(.16,1,.3,1);
       }
+      #${SELECT_VIEW_ID} .sm-ghost svg { display:block; }
       #${SELECT_VIEW_ID} .sm-ghost:hover {
         background:var(--chip-hot);color:var(--ink);
       }
@@ -1198,7 +1239,7 @@
         padding:12px 16px;flex:none;background:transparent;
         box-shadow:inset 0 1px 0 var(--stroke);
       }
-      #${SELECT_VIEW_ID} .sm-row { display:flex;gap:8px; }
+      #${SELECT_VIEW_ID} .sm-row { display:flex;flex-wrap:wrap;gap:8px; }
       #${SELECT_VIEW_ID} .sm-btn {
         height:34px;padding:0 14px;border-radius:7px;
         border:1px solid var(--stroke);background:var(--well);color:var(--text);
@@ -1233,7 +1274,14 @@
     header.className = "sm-titlebar";
     header.innerHTML =
       '<div class="sm-brand">PasteFlick</div>' +
-      '<button type="button" class="sm-ghost" aria-label="Close">✕</button>';
+      '<div class="sm-chrome">' +
+      '<button type="button" class="sm-ghost" data-gear="1" aria-label="Settings">' +
+      '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">' +
+      '<circle cx="12" cy="12" r="3.05" fill="none" stroke="currentColor" stroke-width="1.85"/>' +
+      '<path fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" d="M12 3.7v2.15M12 18.15v2.15M3.7 12h2.15M18.15 12h2.15M6.22 6.22l1.52 1.52M16.26 16.26l1.52 1.52M6.22 17.78l1.52-1.52M16.26 7.74l1.52-1.52"/>' +
+      "</svg></button>" +
+      '<button type="button" class="sm-ghost" data-close="1" aria-label="Close">✕</button>' +
+      "</div>";
 
     const body = document.createElement("div");
     body.className = "sm-body";
@@ -1260,13 +1308,17 @@
 
     const copySelBtn = makeBtn("Copy selection", true);
     const copyAllBtn = makeBtn("Copy all", false);
+    const saveMdBtn = makeBtn("Save .md", false);
     copySelBtn.disabled = true;
     copyAllBtn.disabled = true;
+    saveMdBtn.disabled = true;
     row.appendChild(copySelBtn);
     row.appendChild(copyAllBtn);
+    row.appendChild(saveMdBtn);
     footer.appendChild(row);
 
-    const closeBtn = header.querySelector(".sm-ghost");
+    const closeBtn = header.querySelector("[data-close]");
+    const gearBtn = header.querySelector("[data-gear]");
     panel.appendChild(header);
     panel.appendChild(body);
     panel.appendChild(footer);
@@ -1287,6 +1339,9 @@
     }
     document.addEventListener("keydown", onKey, true);
     closeBtn.addEventListener("click", cleanup);
+    gearBtn.addEventListener("click", () => {
+      window.postMessage({ source: PAGE, type: "open-settings" }, "*");
+    });
 
     let fullPayload = null;
     let textEl = null;
@@ -1315,6 +1370,7 @@
       body.appendChild(textEl);
       copySelBtn.disabled = false;
       copyAllBtn.disabled = false;
+      saveMdBtn.disabled = false;
     } catch (err) {
       loading.textContent = "Couldn't load the thread.";
       showToast(footer, loading.textContent, false);
@@ -1373,6 +1429,40 @@
       }
     });
 
+    saveMdBtn.addEventListener("click", async () => {
+      try {
+        const selected = textEl ? selectionInside(textEl) : "";
+        let payload = fullPayload;
+        let label = "Thread";
+        if (selected && selected.length > 0) {
+          payload = wrapSelection(
+            selected,
+            fullPayload.title || pageTitle(),
+            fullPayload.url || location.href,
+            false,
+          );
+          payload.status_note = "selected in PasteFlick view";
+          label = "Selection";
+        }
+        payload = Object.assign({}, payload, { destination: "file", format: "md" });
+        const overlayRes = await ingest(payload);
+        if (overlayRes && overlayRes.saved) {
+          showToast(footer, outcomeSaved(label, overlayRes, false), true);
+          return;
+        }
+        const downloaded = await saveFileThroughExtension(payload);
+        showToast(
+          footer,
+          downloaded && downloaded.ok
+            ? outcomeSaved(label, overlayRes, true)
+            : "Couldn't save. Start the PasteFlick helper, or pick a folder in Settings.",
+          !!(downloaded && downloaded.ok),
+        );
+      } catch (err) {
+        showToast(footer, (err && err.message) || String(err), false);
+      }
+    });
+
     return {
       ok: true,
       opened: true,
@@ -1383,6 +1473,15 @@
       title: fullPayload.title || "",
       note: "",
     };
+  }
+
+  function outcomeSaved(label, overlayRes, downloaded) {
+    if (overlayRes && overlayRes.saved) {
+      const name = String(overlayRes.path || "").split(/[/\\]/).pop();
+      return name ? label + " saved · " + name : label + " saved.";
+    }
+    if (downloaded) return label + " saved.";
+    return "Couldn't save.";
   }
 
   function outcomeMessage(label, overlayRes, clipped) {

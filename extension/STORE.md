@@ -12,12 +12,7 @@ Long ChatGPT threads often only copy what’s on screen. PasteFlick copies a hig
 
 On the chat, each turn has a Message card on the left for Copy, Flick, and Save. Bookmark a turn — Copy from PasteFlick starts there among the messages currently on the page.
 
-From the PasteFlick popup:
-• Copy selection — highlight, then copy
-• Copy thread — the visible conversation
-• Copy from PasteFlick — from the bookmark onward
-
-Settings can keep copies on the clipboard, Flick into the last app, or save as Markdown or PDF.
+The toolbar icon opens the thread as a document. Highlight, copy, or save as Markdown. Settings is the gear on that view (Flick, clipboard or file, Markdown or PDF).
 
 Windows only. Not affiliated with OpenAI.
 

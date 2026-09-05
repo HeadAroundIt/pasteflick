@@ -82,6 +82,72 @@ async function injectIntoTab(tabId) {
   });
 }
 
+function isChatUrl(url) {
+  return /^https:\/\/(chatgpt\.com|chat\.openai\.com)\//i.test(url || "");
+}
+
+async function ensureTab(tabId) {
+  if (await pingTab(tabId)) return;
+  await injectIntoTab(tabId);
+  for (let i = 0; i < 8; i++) {
+    await new Promise((r) => setTimeout(r, 100));
+    if (await pingTab(tabId)) return;
+  }
+  throw new Error("Couldn't reach the chat. Refresh the tab and try again.");
+}
+
+async function openSelectView(tab) {
+  if (!tab || !tab.id || !isChatUrl(tab.url)) return;
+  await ensureTab(tab.id);
+  const response = await chrome.tabs.sendMessage(tab.id, { type: "capture", mode: "select-view" });
+  if (!response || !response.ok) {
+    throw new Error((response && response.error) || "Couldn't open the thread.");
+  }
+}
+
+async function syncActionPopup() {
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    await chrome.action.setPopup({ popup: tab && isChatUrl(tab.url) ? "" : "popup.html" });
+  } catch (_) {
+    try {
+      await chrome.action.setPopup({ popup: "popup.html" });
+    } catch (__) {
+      /* ignore */
+    }
+  }
+}
+
+chrome.action.onClicked.addListener((tab) => {
+  void (async () => {
+    if (tab && isChatUrl(tab.url)) {
+      try {
+        await openSelectView(tab);
+      } catch (err) {
+        console.warn("PasteFlick: could not open selection view", err);
+      }
+      return;
+    }
+    await chrome.action.setPopup({ popup: "popup.html" });
+    try {
+      await chrome.action.openPopup();
+    } catch (_) {
+      /* older Chrome, or already open */
+    }
+  })();
+});
+
+chrome.tabs.onActivated.addListener(() => {
+  void syncActionPopup();
+});
+
+chrome.windows.onFocusChanged.addListener((wid) => {
+  if (wid === chrome.windows.WINDOW_ID_NONE) return;
+  void syncActionPopup();
+});
+
+void syncActionPopup();
+
 async function wakeChatTabs() {
   try {
     const tabs = await chrome.tabs.query({ url: CHAT_TAB_URLS });
@@ -109,6 +175,7 @@ async function wakeChatTabs() {
 }
 
 chrome.tabs.onUpdated.addListener((tabId, info, tab) => {
+  if (info.status === "complete" || info.url) void syncActionPopup();
   if (info.status !== "complete") return;
   const url = (tab && tab.url) || "";
   if (!/^https:\/\/(chatgpt\.com|chat\.openai\.com)\//i.test(url)) return;

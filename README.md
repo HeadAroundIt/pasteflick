@@ -17,13 +17,13 @@
 <p align="center"><br></p>
 
 <p align="center">
-  <img src="readme/the-goods.png" width="760" alt="What you get — the chip, the popup, and where copies go">
+  <img src="readme/what-you-get.png" width="760" alt="What you get — the chip, the toolbar icon, and where copies go">
 </p>
 
 <p align="center"><br></p>
 
 <p align="center">
-  <img src="readme/shots/home-and-settings.png" width="760" alt="PasteFlick popup and settings">
+  <img src="readme/shots/view-and-settings.png" width="760" alt="PasteFlick selection view and settings">
 </p>
 
 <p align="center"><br></p>
