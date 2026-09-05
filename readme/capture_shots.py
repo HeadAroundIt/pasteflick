@@ -451,10 +451,19 @@ html,body{{margin:0;width:840px;height:520px;background:transparent;}}
   align-items:center;
   z-index:2;
 }}
+{RAIL_SHOT_CSS}
 .chip-slot .pf-host{{
-  zoom:1.32;
+  zoom:1;
   flex:none;
   width:max-content;
+}}
+.chip-slot .stem{{
+  flex:none;
+  width:18px;
+  height:2px;
+  margin-left:4px;
+  background:#c9a66a;
+  border-radius:1px;
 }}
 .chip-slot [data-pasteflick="stack"]{{
   position:relative;
@@ -464,8 +473,8 @@ html,body{{margin:0;width:840px;height:520px;background:transparent;}}
   width:max-content;
 }}
 .chip-slot [data-pasteflick="pin"][data-kind="thread"]{{
-  width:max-content;
-  max-width:none;
+  width:max-content !important;
+  max-width:none !important;
 }}
 .chip-slot [data-pasteflick="drawer"].is-on{{
   grid-template-rows:max-content;
@@ -479,7 +488,6 @@ html,body{{margin:0;width:840px;height:520px;background:transparent;}}
 .chip-slot [data-pasteflick="clear"]{{
   padding:4px 6px;
 }}
-{RAIL_SHOT_CSS}
 .guide{{
   position:relative;
   align-self:stretch;
@@ -594,6 +602,7 @@ html,body{{margin:0;width:840px;height:520px;background:transparent;}}
       <p class="title">Friday update</p>
       <div class="chip-slot">
 {CHIP_BOUND_HTML}
+        <span class="stem" aria-hidden="true"></span>
       </div>
       <div class="guide one" aria-hidden="true">
         <span class="v"></span>
@@ -725,7 +734,7 @@ def main() -> None:
         shot(f"{base}/shot-pair.html?v=21", OUT / "view-and-settings-type.png", 840, 680, "00000000")
         shot(f"{base}/shot-popup.html?v=19", OUT / "panel-main-type.png", 332, 240, "00000000")
         shot(f"{base}/shot-settings.html?v=21", OUT / "panel-settings-type.png", 332, 700, "00000000")
-        shot(f"{base}/shot-chat.html?v=42", OUT / "marks-type.png", 840, 560, "00000000")
+        shot(f"{base}/shot-chat.html?v=44", OUT / "marks-fit.png", 840, 540, "00000000")
     finally:
         httpd.shutdown()
     print("ok")
