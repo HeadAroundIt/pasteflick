@@ -11,7 +11,7 @@
 <p align="center"><br></p>
 
 <p align="center">
-  <img src="readme/shots/marks-ring.png" width="760" alt="Bookmark messages — compact cream pin with a gold ring, 1 of 2 under a selected mark">
+  <img src="readme/shots/marks-deselect.png" width="760" alt="Bookmark messages — PasteFlick chip with Deselect underneath, gold ring, 1 of 2 under a selected mark">
 </p>
 
 <p align="center"><br></p>

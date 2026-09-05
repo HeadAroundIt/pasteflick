@@ -92,13 +92,15 @@ CHIP_HTML = f"""
 """
 CHIP_BOUND_HTML = f"""
     <div class="pf-host">
+      <div data-pasteflick="stack" data-role="thread">
 {CHIP_PIN}
-      <div data-pasteflick="drawer" class="is-on">
-        <div data-pasteflick="drawer-inner">
-          <button type="button" data-pasteflick="clear">
-            <span data-pasteflick="clear-count">2</span>
-            <span data-pasteflick="clear-word">Deselect</span>
-          </button>
+        <div data-pasteflick="drawer" class="is-on">
+          <div data-pasteflick="drawer-inner">
+            <button type="button" data-pasteflick="clear">
+              <span data-pasteflick="clear-count">2</span>
+              <span data-pasteflick="clear-word">Deselect</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -404,12 +406,32 @@ html,body{{margin:0;width:840px;height:520px;background:transparent;}}
   z-index:2;
 }}
 .chip-slot .pf-host{{
-  zoom:1.62;
+  zoom:1.32;
   flex:none;
-  display:flex;
-  flex-direction:column;
+  width:max-content;
+}}
+.chip-slot [data-pasteflick="stack"]{{
+  position:relative;
+  top:auto;
+  gap:0;
   align-items:stretch;
   width:max-content;
+}}
+.chip-slot [data-pasteflick="pin"][data-kind="thread"]{{
+  width:max-content;
+  max-width:none;
+}}
+.chip-slot [data-pasteflick="drawer"].is-on{{
+  grid-template-rows:max-content;
+  margin-top:4px;
+}}
+.chip-slot [data-pasteflick="drawer"],
+.chip-slot [data-pasteflick="clear"]{{
+  box-sizing:border-box;
+  width:100%;
+}}
+.chip-slot [data-pasteflick="clear"]{{
+  padding:4px 6px;
 }}
 {RAIL_SHOT_CSS}
 .guide{{
@@ -569,7 +591,7 @@ html,body{{margin:0;width:840px;height:520px;background:transparent;}}
             html = html.replace('id="view-home"', 'id="view-home" hidden', 1)
             html = html.replace('id="view-settings" hidden', 'id="view-settings"', 1)
             ver = json.loads((EXT / "manifest.json").read_text(encoding="utf-8")).get("version", "")
-            html = html.replace('id="version" class="version-value"></span>', f'id="version" class="version-value">{ver}</span>', 1)
+            html = html.replace('id="version"></p>', f'id="version">PasteFlick {ver}</p>', 1)
             data = html.encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
@@ -652,10 +674,10 @@ def main() -> None:
     try:
         # New filenames so GitHub doesn't serve stale shots.
         shot(f"{base}/shot-chip.html?v=22", OUT / "the-chip.png", 152, 96, "00000000")
-        shot(f"{base}/shot-pair.html?v=17", OUT / "view-and-settings-gear.png", 840, 680, "00000000")
+        shot(f"{base}/shot-pair.html?v=19", OUT / "view-and-settings-foot.png", 840, 680, "00000000")
         shot(f"{base}/shot-popup.html?v=17", OUT / "panel-main.png", 332, 240, "00000000")
-        shot(f"{base}/shot-settings.html?v=17", OUT / "panel-settings-gear.png", 332, 720, "00000000")
-        shot(f"{base}/shot-chat.html?v=36", OUT / "marks-ring.png", 840, 560, "00000000")
+        shot(f"{base}/shot-settings.html?v=19", OUT / "panel-settings-foot.png", 332, 700, "00000000")
+        shot(f"{base}/shot-chat.html?v=40", OUT / "marks-deselect.png", 840, 560, "00000000")
     finally:
         httpd.shutdown()
     print("ok")
