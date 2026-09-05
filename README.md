@@ -41,13 +41,13 @@
 <p align="center"><br></p>
 
 <p align="center">
-  <a href="https://ko-fi.com/ryandunham"><img src="readme/appreciate-type.png" width="760" alt="Support — leave a tip on Ko-fi if you like it"></a>
+  <a href="https://ko-fi.com/ryandunham"><img src="readme/support-type.png" width="760" alt="Support — if PasteFlick helped, consider a tip on Ko-fi"></a>
 </p>
 
 <p align="center"><br></p>
 
 <p align="center">
-  <img src="readme/on-device-type.png" width="760" alt="Privacy — runs in your browser, copied text stays on your device">
+  <img src="readme/privacy-type.png" width="760" alt="Privacy — local helper for Flick and files; chat text is not sent to the maker">
 </p>
 
 # PasteFlick
@@ -58,6 +58,8 @@ It copies what is already on the page, not turns ChatGPT has not rendered. One c
 
 **Install.** Download the [Windows zip](https://github.com/HeadAroundIt/pasteflick/releases/latest), extract it, run `Install PasteFlick.bat`, then Load unpacked in the browser.
 
-**Privacy.** Runs in your browser. Copied text stays on your device. Flick uses a local helper on your computer.
+**Support.** If PasteFlick helped, consider a tip. Optional.
+
+**Privacy.** The extension reads the open ChatGPT page. A small Windows helper on this computer handles Flick into the last app and saving a file. Copied chat text is not sent to me. Updates check GitHub, and the tip button opens Ko-fi.
 
 Repo: [github.com/HeadAroundIt/pasteflick](https://github.com/HeadAroundIt/pasteflick)

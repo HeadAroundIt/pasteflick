@@ -453,26 +453,46 @@ def build_what() -> None:
     finish(img, "what-you-get-type.png")
 
 
+def draw_paras(
+    img: Image.Image,
+    paras: list[str],
+    fnt: ImageFont.FreeTypeFont,
+    x: int,
+    y: int,
+    inner: int,
+    fill: tuple[int, int, int, int],
+    leading: float = 1.45,
+    gap: int = 14,
+) -> int:
+    for i, para in enumerate(paras):
+        if i:
+            y += gap * SCALE
+        y = draw_paragraph(img, para, fnt, x, y, inner, fill, leading)
+    return y
+
+
 def build_support() -> None:
     img = sheet()
     x = PAD
     y = PAD
     inner = WIDTH - PAD * 2
     y = section_head(img, "If you like it", "Support", x, y, inner)
-    y = draw_paragraph(
+    y = draw_paras(
         img,
-        "Help me keep creating useful apps and sharing them freely. A contribution supports new ideas, continued development, and more tools for everyone.",
+        [
+            "I'm Ryan Dunham, a Louisiana entrepreneur. I've worked in IT and consulting, run the Pie Eyed food business, and helped operate a brewery. Now I'm making software with AI coding agents — I describe the idea, they help write it, and I decide what ships. PasteFlick is my first public release.",
+            "If this helped you, consider supporting my work. A $5 tip helps pay for my development time, fixes, testing, and future tools. I'm earning a living from this work.",
+        ],
         font("segoeui.ttf", 16),
         x,
         y,
         inner,
         TEXT,
-        1.45,
     )
     y += 20 * SCALE
     btn = make_button("Leave a tip", 13, cup=True)
     note_f = font("segoeui.ttf", 14)
-    note = "No pressure—just genuine appreciation!"
+    note = "Optional — other amounts are welcome."
     well_pad = 18 * SCALE
     note_h = int(note_f.size * 1.4)
     well_h = well_pad + btn.height + 12 * SCALE + note_h + well_pad - int(note_f.size * 0.28)
@@ -495,7 +515,18 @@ def build_support() -> None:
         font=note_f,
         fill=MUTED,
     )
-    finish(img, "appreciate-type.png")
+    y += well_h + 16 * SCALE
+    draw_paragraph(
+        img,
+        "Sharing PasteFlick with someone who'd use it helps too.",
+        font("segoeui.ttf", 13),
+        x,
+        y,
+        inner,
+        MUTED,
+        1.4,
+    )
+    finish(img, "support-type.png")
 
 
 def build_privacy() -> None:
@@ -504,17 +535,19 @@ def build_privacy() -> None:
     y = PAD
     inner = WIDTH - PAD * 2
     y = section_head(img, "On your machine", "Privacy", x, y, inner)
-    draw_paragraph(
+    draw_paras(
         img,
-        "Runs in your browser. Copied text stays on your device. Flick uses a local helper on your computer.",
+        [
+            "The extension reads the open ChatGPT page. A small Windows helper on this computer handles Flick into the last app and saving a file.",
+            "Copied chat text is not sent to me. Updates check GitHub, and the tip button opens Ko-fi.",
+        ],
         font("segoeui.ttf", 16),
         x,
         y,
         inner,
         TEXT,
-        1.45,
     )
-    finish(img, "on-device-type.png")
+    finish(img, "privacy-type.png")
 
 
 def build_install() -> None:
