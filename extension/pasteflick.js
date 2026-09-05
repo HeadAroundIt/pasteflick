@@ -238,19 +238,24 @@
       box-sizing: border-box;
     }
     [data-pasteflick="pin"][data-kind="message"] {
-      padding: 3px 3px 4px;
+      padding: 0;
       max-width: none;
-      gap: 3px;
+      width: max-content;
+      gap: 4px;
       align-items: center;
+      background: transparent;
+      border: none;
+      box-shadow: none;
+      overflow: visible;
     }
     [data-pasteflick="silo"][data-role="thread"] {
       z-index: 50;
+      overflow: visible;
     }
     [data-pasteflick="stack"][data-role="thread"] {
       align-items: stretch;
-      overflow-x: clip;
+      overflow: visible;
       width: max-content;
-      max-width: 148px;
     }
     [data-pasteflick="picks"],
     [data-pasteflick="pick"] {
@@ -511,14 +516,18 @@
       display: inline-flex;
       align-items: baseline;
       justify-content: center;
+      min-width: 36px;
       min-height: 1em;
-      padding: 0 1px;
-      font: 590 9px/1.15 "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+      padding: 3px 8px;
+      font: 650 10px/1.2 "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
       font-variant-numeric: tabular-nums;
-      letter-spacing: -0.03em;
-      color: var(--text);
+      letter-spacing: -0.02em;
+      color: var(--ink);
       white-space: nowrap;
       pointer-events: none;
+      border-radius: 6px;
+      background: var(--chip-label);
+      box-shadow: inset 0 1px 0 rgba(244, 226, 180, 0.35);
     }
     [data-pasteflick="label"][hidden] {
       display: none;
@@ -613,6 +622,9 @@
       [data-pasteflick="pin"][data-kind="block"],
       [data-pasteflick="pin"][data-kind="link"] {
         background: #f7f7f5;
+      }
+      [data-pasteflick="pin"][data-kind="message"] {
+        background: transparent;
       }
     }
     [data-pasteflick="toast"] {

@@ -465,7 +465,7 @@ html,body{{margin:0;width:840px;height:520px;background:transparent;}}
   margin-left:1px;
 }}
 .mark-wrap{{
-  width:44px;
+  width:52px;
   min-height:32px;
   display:flex;
   justify-content:center;
@@ -655,7 +655,7 @@ def main() -> None:
         shot(f"{base}/shot-pair.html?v=16", OUT / "view-and-settings.png", 840, 620, "00000000")
         shot(f"{base}/shot-popup.html?v=17", OUT / "panel-main.png", 332, 240, "00000000")
         shot(f"{base}/shot-settings.html?v=16", OUT / "panel-settings.png", 332, 656, "00000000")
-        shot(f"{base}/shot-chat.html?v=31", OUT / "marks-stack.png", 840, 560, "00000000")
+        shot(f"{base}/shot-chat.html?v=32", OUT / "marks-count.png", 840, 560, "00000000")
     finally:
         httpd.shutdown()
     print("ok")
