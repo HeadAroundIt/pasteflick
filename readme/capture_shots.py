@@ -263,7 +263,7 @@ html,body{{margin:0;width:840px;height:520px;background:transparent;}}
   box-sizing:border-box;
   width:100%;height:100%;
   display:grid;
-  grid-template-columns:max-content 100px 34px minmax(0,1fr);
+  grid-template-columns:max-content 100px 32px minmax(0,1fr);
   grid-template-rows:auto auto auto auto;
   column-gap:0;
   row-gap:14px;
@@ -271,7 +271,7 @@ html,body{{margin:0;width:840px;height:520px;background:transparent;}}
   align-content:center;
   padding:28px 30px 28px 22px;
   overflow:visible;
-  background:#f7f7f5;
+  background:#f8f8f8;
   border-radius:16px;
   color:#171410;
   font-family:"Segoe UI Variable Text","Segoe UI",system-ui,sans-serif;
@@ -340,7 +340,7 @@ html,body{{margin:0;width:840px;height:520px;background:transparent;}}
   flex:none;
   padding:0 8px;
   margin:0;
-  background:#f7f7f5;
+  background:#f8f8f8;
   font:650 11px/1 inherit;
   letter-spacing:-0.02em;
   color:#171410;
@@ -354,17 +354,16 @@ html,body{{margin:0;width:840px;height:520px;background:transparent;}}
   margin-left:1px;
 }}
 .mark-wrap{{
-  width:34px;
-  height:34px;
+  width:32px;
+  height:32px;
   display:grid;
   place-items:center;
 }}
 .mark-wrap.one{{grid-column:3;grid-row:2;}}
 .mark-wrap.skip{{grid-column:3;grid-row:3;}}
 .mark-wrap.more{{grid-column:3;grid-row:4;}}
-.chat [data-pasteflick="pin"][data-kind="message"]{{
-  background:#fff;
-  padding:4px;
+.chat [data-pasteflick="mark"].is-active .scrolllog-icon{{
+  fill:none;
 }}
 .msg{{
   box-sizing:border-box;
@@ -537,11 +536,11 @@ def main() -> None:
     base = f"http://127.0.0.1:{port}"
     try:
         # New filenames so GitHub doesn't serve stale shots.
-        shot(f"{base}/shot-chip.html?v=21", OUT / "the-chip.png", 152, 96, "00000000")
+        shot(f"{base}/shot-chip.html?v=22", OUT / "the-chip.png", 152, 96, "00000000")
         shot(f"{base}/shot-pair.html?v=13", OUT / "the-panels.png", 688, 616, "00000000")
         shot(f"{base}/shot-popup.html?v=13", OUT / "panel-main.png", 332, 368, "00000000")
         shot(f"{base}/shot-settings.html?v=13", OUT / "panel-settings.png", 332, 616, "00000000")
-        shot(f"{base}/shot-chat.html?v=22", OUT / "the-range.png", 840, 520, "00000000")
+        shot(f"{base}/shot-chat.html?v=24", OUT / "in-the-chat.png", 840, 520, "00000000")
     finally:
         httpd.shutdown()
     print("ok")
