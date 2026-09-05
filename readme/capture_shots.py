@@ -253,7 +253,7 @@ iframe{
   background:transparent;
 }
 .view{width:420px;height:480px;}
-.settings{width:300px;height:560px;}
+.settings{width:300px;height:620px;}
 </style></head>
 <body>
   <div class="stage">
@@ -569,7 +569,7 @@ html,body{{margin:0;width:840px;height:520px;background:transparent;}}
             html = html.replace('id="view-home"', 'id="view-home" hidden', 1)
             html = html.replace('id="view-settings" hidden', 'id="view-settings"', 1)
             ver = json.loads((EXT / "manifest.json").read_text(encoding="utf-8")).get("version", "")
-            html = html.replace('id="version"></p>', f'id="version">PasteFlick {ver}</p>', 1)
+            html = html.replace('id="version" class="version-value"></span>', f'id="version" class="version-value">{ver}</span>', 1)
             data = html.encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
@@ -652,9 +652,9 @@ def main() -> None:
     try:
         # New filenames so GitHub doesn't serve stale shots.
         shot(f"{base}/shot-chip.html?v=22", OUT / "the-chip.png", 152, 96, "00000000")
-        shot(f"{base}/shot-pair.html?v=16", OUT / "view-and-settings.png", 840, 620, "00000000")
+        shot(f"{base}/shot-pair.html?v=17", OUT / "view-and-settings-gear.png", 840, 680, "00000000")
         shot(f"{base}/shot-popup.html?v=17", OUT / "panel-main.png", 332, 240, "00000000")
-        shot(f"{base}/shot-settings.html?v=16", OUT / "panel-settings.png", 332, 656, "00000000")
+        shot(f"{base}/shot-settings.html?v=17", OUT / "panel-settings-gear.png", 332, 720, "00000000")
         shot(f"{base}/shot-chat.html?v=36", OUT / "marks-ring.png", 840, 560, "00000000")
     finally:
         httpd.shutdown()

@@ -60,6 +60,8 @@
 
       html {
         margin: 0;
+        height: auto;
+        min-height: 0;
         background: var(--bg0);
         overflow: hidden;
       }
@@ -67,10 +69,18 @@
       body {
         margin: 0;
         width: 300px;
+        height: auto;
+        min-height: 0;
         padding: 8px;
         overflow: hidden;
         background: var(--bg0);
         color: var(--text);
+      }
+
+      html.embedded,
+      html.embedded body {
+        background: transparent;
+        padding: 0;
       }
 
       button,
@@ -188,9 +198,13 @@
         color: var(--muted);
       }
 
+      .shell:has(#view-settings:not([hidden])) {
+        padding-bottom: 8px;
+      }
+
       #view-settings .lede {
         font-size: 13px;
-        margin-bottom: 10px;
+        margin-bottom: 8px;
       }
 
       .mode-row {
@@ -536,10 +550,10 @@
         box-shadow: inset 0 1px 0 rgba(244, 226, 180, 0.35);
       }
 
-      .version {
-        margin: 0;
-        font-size: 11px;
-        color: var(--faint);
+      .version-value {
+        color: var(--text);
+        font-size: 12px;
+        font-weight: 650;
       }
 
       html.shot,
@@ -683,6 +697,11 @@
             </button>
           </div>
 
+          <div class="field">
+            <span>Version</span>
+            <span id="version" class="version-value"></span>
+          </div>
+
           <button type="button" id="add-browser" class="btn">Add to a browser</button>
           <div class="support">
             <p>Help me keep creating useful apps and sharing them freely.</p>
@@ -695,7 +714,6 @@
               Leave a tip
             </a>
           </div>
-          <p class="version" id="version"></p>
         </div>
       </div>
     </div>

@@ -52,9 +52,17 @@ function closeEmbedded() {
   return true;
 }
 
+function reportFrameHeight() {
+  if (!embedded) return;
+  const h = Math.ceil(document.documentElement.scrollHeight);
+  window.parent.postMessage({ source: "pasteflick-settings", type: "height", height: h }, "*");
+}
+
 function showSettings() {
   viewHome.hidden = true;
   viewSettings.hidden = false;
+  reportFrameHeight();
+  requestAnimationFrame(reportFrameHeight);
   void refreshFolder();
 }
 
@@ -160,6 +168,7 @@ function setDestUi(dest, format) {
     btn.classList.toggle("on", on);
     btn.setAttribute("aria-pressed", on ? "true" : "false");
   });
+  reportFrameHeight();
 }
 
 async function persistDest(dest, format) {
@@ -197,13 +206,17 @@ async function refreshFolder() {
   showFolder("Documents\\PasteFlick");
   try {
     const res = await fetch(OVERLAY + "/api/export-settings");
-    if (!res.ok) return;
+    if (!res.ok) {
+      reportFrameHeight();
+      return;
+    }
     const data = await res.json();
     const dir = data && data.dir;
     if (dir) showFolder(dir);
   } catch (_) {
     /* overlay not running — default folder is used once it is */
   }
+  reportFrameHeight();
 }
 
 destBtns.forEach((btn) => {
@@ -234,17 +247,21 @@ folderPick.addEventListener("click", () => {
 
 async function showVersion() {
   const local = chrome.runtime.getManifest().version || "";
-  let line = "PasteFlick " + local;
+  const el = document.getElementById("version");
+  el.textContent = local;
+  reportFrameHeight();
   try {
     const data = await updateStatus();
     const disk = data && data.version;
-    if (disk && disk !== local) line += " · updating";
+    if (disk && disk !== local) el.textContent = local + " · updating";
   } catch (_) {
     /* helper not up */
   }
-  document.getElementById("version").textContent = line;
 }
 
-if (embedded) showSettings();
+if (embedded) {
+  document.documentElement.classList.add("embedded");
+  showSettings();
+}
 void showVersion();
 void refreshDestination();
