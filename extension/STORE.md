@@ -10,7 +10,7 @@ Copy a ChatGPT highlight or visible thread, then flick it into the last Windows 
 **Detailed description:**  
 Long ChatGPT threads often only copy what’s on screen. PasteFlick copies a highlight, a message, or the visible thread, then can Flick it into the last app you were using (Windows helper).
 
-On the chat, each turn has a Message card on the left for Copy, Flick, and Save. Bookmark a turn — Copy from PasteFlick starts there among the messages currently on the page.
+On the chat, each turn has a bookmark on the left. Select one or several — each pin shows 1 of 3 in chat order. Copy from PasteFlick takes that stretch among the messages currently on the page.
 
 The toolbar icon opens the thread as a document. Highlight, copy, or save as Markdown. Settings is the gear on that view (Flick, clipboard or file, Markdown or PDF).
 

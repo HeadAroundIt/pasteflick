@@ -314,9 +314,13 @@
       pointer-events: none;
       transition: opacity 160ms var(--ease-out), transform 200ms var(--ease-out);
     }
-    [data-pasteflick="mark"].is-joinable:hover::after {
+    [data-pasteflick="mark"].is-joinable:hover::after,
+    [data-pasteflick="mark"].is-joinable.is-hint::after {
       opacity: 1;
       transform: scale(1);
+    }
+    [data-pasteflick="mark"].is-joinable.is-hint::after {
+      animation: pasteflick-join-pulse 1.15s var(--ease-out) 2;
     }
     [data-pasteflick="mark"].is-active.is-multi {
       box-shadow: 0 0 0 2px rgba(201, 166, 106, 0.7);
@@ -328,6 +332,14 @@
     @keyframes pasteflick-pick-in {
       from { opacity: 0; transform: translateX(-8px) scale(0.6); }
       to { opacity: 1; transform: none; }
+    }
+    @keyframes pasteflick-join-pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+    }
+    @keyframes pasteflick-more-hint {
+      0%, 100% { opacity: 0.38; transform: scale(1); }
+      40% { opacity: 0.95; transform: scale(1.12); }
     }
     [data-pasteflick="pin"][data-kind="link"] {
       flex-direction: row;
@@ -425,6 +437,7 @@
     [data-pasteflick="actions"] {
       display: flex;
       align-items: center;
+      justify-content: center;
       gap: 2px;
     }
     [data-pasteflick="copy-thread"],
@@ -473,21 +486,48 @@
     }
     [data-pasteflick="label"] {
       position: absolute;
-      left: 0;
+      left: 50%;
       top: calc(100% + 2px);
+      transform: translateX(-50%);
+      display: inline-flex;
+      align-items: baseline;
       min-height: 1em;
-      font: 600 10px/1.2 "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+      font: 650 10px/1.2 "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.02em;
       color: var(--ink);
       text-shadow: none;
       padding: 2px 6px;
       outline: none;
       white-space: nowrap;
+      pointer-events: none;
       border-radius: 6px;
       background: var(--chip-label);
       box-shadow: inset 0 1px 0 rgba(244, 226, 180, 0.35);
     }
     [data-pasteflick="label"][hidden] {
       display: none;
+    }
+    [data-pasteflick="count-sep"],
+    [data-pasteflick="total"] {
+      font-weight: 600;
+      opacity: 0.72;
+    }
+    [data-pasteflick="label"].is-open::after {
+      content: "+";
+      margin-left: 3px;
+      font-weight: 700;
+      opacity: 0.38;
+      animation: pasteflick-more-hint 2.2s var(--ease-out) 2;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      [data-pasteflick="mark"].is-joinable.is-hint::after,
+      [data-pasteflick="label"].is-open::after {
+        animation: none;
+      }
+      [data-pasteflick="label"].is-open::after {
+        opacity: 0.55;
+      }
     }
     [data-pasteflick="copy-thread"]:hover,
     [data-pasteflick="paste-thread"]:hover,
@@ -630,6 +670,8 @@
   let heldSidebar = readHeld("pasteflick.sidebar", 8);
   let heldTitleLeft = NaN;
   let lastPickEl = null;
+  let joinHintKey = "";
+  let joinHintTimer = 0;
   let lastHostH = 0;
   const geometryObserver =
     typeof ResizeObserver === "function"
@@ -3373,8 +3415,6 @@
     const name = document.createElement("span");
     name.setAttribute("data-pasteflick", "label");
     name.hidden = true;
-    bindLabel(name);
-
     pin.appendChild(actions);
     pin.appendChild(name);
     dockPin(pin);
@@ -3503,87 +3543,74 @@
     return idx >= 0 ? records[idx].el : null;
   }
 
-  function editingLabel() {
-    const host = dockHost();
-    const active = (host && host.shadowRoot && host.shadowRoot.activeElement) || document.activeElement;
-    return active && active.getAttribute && active.getAttribute("data-pasteflick") === "label" ? active : null;
-  }
-
   function namedMark(mark) {
     return mark && String(mark.name || "").trim();
   }
 
-  function bindLabel(label) {
-    label.setAttribute("spellcheck", "false");
-    label.setAttribute("role", "textbox");
-    label.setAttribute("aria-label", "Name this PasteFlick");
-    label.title = "Name this mark";
+  function countLabelText(n, total) {
+    return n + " of " + total;
+  }
 
-    const stop = (event) => event.stopPropagation();
-    ["mousedown", "mouseup", "click", "dblclick", "keydown", "keyup", "keypress", "input", "paste"].forEach((type) => {
-      label.addEventListener(type, stop);
-    });
+  function paintCountLabel(label, n, total, canAdd) {
+    const text = countLabelText(n, total);
+    const open = total === 1 && canAdd;
+    const spoken =
+      total === 1
+        ? open
+          ? "Bookmark 1 of 1. Bookmark another message to add it."
+          : "Bookmark 1 of 1."
+        : "Bookmark " + n + " of " + total + ".";
+    label.hidden = false;
+    label.classList.toggle("is-open", open);
+    label.setAttribute("aria-label", spoken);
+    label.title = open ? text + " — bookmark another to add it" : text;
+    if (label.getAttribute("data-count") === text && label.childElementCount) return;
+    label.setAttribute("data-count", text);
+    const ordinal = document.createElement("span");
+    ordinal.setAttribute("data-pasteflick", "ordinal");
+    ordinal.textContent = String(n);
+    const sep = document.createElement("span");
+    sep.setAttribute("data-pasteflick", "count-sep");
+    sep.textContent = " of ";
+    const denom = document.createElement("span");
+    denom.setAttribute("data-pasteflick", "total");
+    denom.textContent = String(total);
+    label.replaceChildren(ordinal, sep, denom);
+  }
 
-    label.addEventListener("click", (event) => {
-      event.preventDefault();
-      beginRename(label);
-    });
-
-    label.addEventListener("keydown", (event) => {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        label.blur();
-      }
-      if (event.key === "Escape") {
-        event.preventDefault();
-        label.textContent = label.getAttribute("data-saved") || "PasteFlick";
-        label.blur();
-      }
-    });
-
-    label.addEventListener("input", () => {
-      const text = String(label.textContent || "");
-      if (text.length <= 40) return;
-      label.textContent = text.slice(0, 40);
-      const range = document.createRange();
-      range.selectNodeContents(label);
-      range.collapse(false);
-      const sel = window.getSelection();
-      sel.removeAllRanges();
-      sel.addRange(range);
-    });
-
-    label.addEventListener("paste", (event) => {
-      event.preventDefault();
-      const text = String((event.clipboardData || window.clipboardData).getData("text") || "")
-        .replace(/\s+/g, " ")
-        .trim()
-        .slice(0, 40);
-      document.execCommand("insertText", false, text);
-    });
-
-    label.addEventListener("blur", () => {
-      void commitRename(label);
+  function clearJoinHints(root) {
+    if (!root) return;
+    root.querySelectorAll('[data-pasteflick="mark"].is-hint').forEach((btn) => {
+      btn.classList.remove("is-hint");
     });
   }
 
-  function beginRename(label) {
-    if (label.isContentEditable) return;
-    label.setAttribute("data-saved", String(label.textContent || "").trim());
-    label.setAttribute("contenteditable", "plaintext-only");
-    label.focus();
-    const range = document.createRange();
-    range.selectNodeContents(label);
-    const sel = window.getSelection();
-    sel.removeAllRanges();
-    sel.addRange(range);
-  }
-
-  async function commitRename(label) {
-    label.removeAttribute("contenteditable");
-    const raw = String(label.textContent || "").replace(/\s+/g, " ").trim().slice(0, 40);
-    const next = !raw || /^pasteflick$/i.test(raw) ? "" : raw;
-    await setPasteFlickName(next);
+  function hintJoinableNeighbors(root, activeEls, nodes) {
+    if (activeEls.length !== 1 || nodes.length < 2) {
+      joinHintKey = "";
+      if (joinHintTimer) {
+        clearTimeout(joinHintTimer);
+        joinHintTimer = 0;
+      }
+      clearJoinHints(root);
+      return;
+    }
+    const key = activeEls[0].getAttribute("data-message-id") || String(nodes.indexOf(activeEls[0]));
+    if (joinHintKey === key) return;
+    joinHintKey = key;
+    if (joinHintTimer) clearTimeout(joinHintTimer);
+    clearJoinHints(root);
+    const idx = nodes.indexOf(activeEls[0]);
+    [nodes[idx - 1], nodes[idx + 1]].forEach((el) => {
+      if (!el) return;
+      const pin = pinByTarget.get(el);
+      const btn = pin && pin.querySelector('[data-pasteflick="mark"]');
+      if (btn && !btn.classList.contains("is-active")) btn.classList.add("is-hint");
+    });
+    joinHintTimer = setTimeout(() => {
+      joinHintTimer = 0;
+      clearJoinHints(layerRoot());
+    }, 2800);
   }
 
   function chipWhat(count) {
@@ -3690,32 +3717,50 @@
     });
     activeEls.sort((a, b) => nodes.indexOf(a) - nodes.indexOf(b));
     const multi = activeEls.length >= 2;
-    const custom = namedMark(marks[0]);
-    const labelText = custom || "PasteFlick";
-    const focused = editingLabel();
+    const total = activeEls.length;
+    const canAdd = nodes.length > 1;
     const root = layerRoot();
 
     root.querySelectorAll('[data-pasteflick="pin"][data-kind="message"]').forEach((pin) => {
-      const on = !!(pin._anchor && activeEls.indexOf(pin._anchor) >= 0);
+      const rank = pin._anchor ? activeEls.indexOf(pin._anchor) : -1;
+      const on = rank >= 0;
       const btn = pin.querySelector('[data-pasteflick="mark"]');
       const label = pin.querySelector('[data-pasteflick="label"]');
       if (btn) {
         btn.classList.toggle("is-active", on);
         btn.classList.toggle("is-multi", on && multi);
-        btn.classList.toggle("is-joinable", !on && activeEls.length === 1);
+        btn.classList.toggle("is-joinable", !on && total === 1);
         btn.setAttribute("aria-pressed", on ? "true" : "false");
+        if (on) {
+          btn.title = total === 1 && canAdd
+            ? "1 of 1 — bookmark another message to add it."
+            : countLabelText(rank + 1, total) + " in this chat.";
+          btn.setAttribute("aria-label", total === 1 && canAdd
+            ? "Bookmark 1 of 1. Bookmark another message to add it."
+            : "Bookmark " + countLabelText(rank + 1, total) + ".");
+        } else if (total === 1) {
+          btn.title = "Add this bookmark.";
+          btn.setAttribute("aria-label", "Add this bookmark.");
+        } else {
+          btn.title = TOOLTIP;
+          btn.setAttribute("aria-label", TOOLTIP);
+        }
       }
-      if (label && label !== focused) {
-        label.hidden = !(on && !multi);
-        label.textContent = on && !multi ? labelText : "PasteFlick";
-        if (on && !multi && custom) label.setAttribute("data-custom", "1");
-        else label.removeAttribute("data-custom");
+      if (label) {
+        if (on) paintCountLabel(label, rank + 1, total, canAdd);
+        else {
+          label.hidden = true;
+          label.classList.remove("is-open");
+          label.removeAttribute("data-count");
+          label.replaceChildren();
+        }
       }
     });
 
     syncChipBound(activeEls.length);
     paintPickStack(activeEls);
     syncHighlights(activeEls);
+    hintJoinableNeighbors(root, activeEls, nodes);
   }
 
   function scan() {

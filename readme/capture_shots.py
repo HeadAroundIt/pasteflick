@@ -90,15 +90,21 @@ MARK_ON = f'<button type="button" data-pasteflick="mark" class="is-active" aria-
 MARK_OFF = f'<button type="button" data-pasteflick="mark" aria-pressed="false">{BOOKMARK_SVG}</button>'
 
 
-def _mark_pin(btn: str) -> str:
+def _count_chip(n: int, total: int) -> str:
+    return f'<span data-pasteflick="label">{n} of {total}</span>'
+
+
+def _mark_pin(btn: str, count: str = "") -> str:
     return (
         '<div data-pasteflick="pin" data-kind="message">'
         f'<div data-pasteflick="actions">{btn}</div>'
+        f"{count}"
         "</div>"
     )
 
 
-MARK_PIN_ON = _mark_pin(MARK_ON)
+MARK_PIN_ON_1 = _mark_pin(MARK_ON, _count_chip(1, 2))
+MARK_PIN_ON_2 = _mark_pin(MARK_ON, _count_chip(2, 2))
 MARK_PIN_OFF = _mark_pin(MARK_OFF)
 
 
@@ -443,10 +449,12 @@ html,body{{margin:0;width:840px;height:520px;background:transparent;}}
   margin-left:1px;
 }}
 .mark-wrap{{
-  width:32px;
-  height:32px;
-  display:grid;
-  place-items:center;
+  width:44px;
+  min-height:32px;
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+  overflow:visible;
 }}
 .mark-wrap.one{{grid-column:3;grid-row:2;}}
 .mark-wrap.skip{{grid-column:3;grid-row:3;}}
@@ -513,7 +521,7 @@ html,body{{margin:0;width:840px;height:520px;background:transparent;}}
           <svg viewBox="0 0 10 10"><path d="M1.5 1.5 8.5 5 1.5 8.5" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
       </div>
-      <div class="mark-wrap one">{MARK_PIN_ON}</div>
+      <div class="mark-wrap one">{MARK_PIN_ON_1}</div>
       <div class="msg one"><span class="role">You</span><div>Can you turn this into a short note I can paste into Slack?</div></div>
       <div class="guide skip" aria-hidden="true"><span class="v"></span></div>
       <div class="mark-wrap skip">{MARK_PIN_OFF}</div>
@@ -527,7 +535,7 @@ html,body{{margin:0;width:840px;height:520px;background:transparent;}}
           <svg viewBox="0 0 10 10"><path d="M1.5 1.5 8.5 5 1.5 8.5" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
       </div>
-      <div class="mark-wrap more">{MARK_PIN_ON}</div>
+      <div class="mark-wrap more">{MARK_PIN_ON_2}</div>
       <div class="msg more"><span class="role">You</span><div>Make it two sentences, and keep the Friday deadline.</div></div>
     </div>
   </div>
@@ -632,7 +640,7 @@ def main() -> None:
         shot(f"{base}/shot-pair.html?v=16", OUT / "view-and-settings.png", 840, 620, "00000000")
         shot(f"{base}/shot-popup.html?v=17", OUT / "panel-main.png", 332, 240, "00000000")
         shot(f"{base}/shot-settings.html?v=16", OUT / "panel-settings.png", 332, 656, "00000000")
-        shot(f"{base}/shot-chat.html?v=27", OUT / "one-or-more.png", 840, 520, "00000000")
+        shot(f"{base}/shot-chat.html?v=28", OUT / "marks-in-order.png", 840, 540, "00000000")
     finally:
         httpd.shutdown()
     print("ok")

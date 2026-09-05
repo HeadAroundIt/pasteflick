@@ -392,7 +392,7 @@ def build_what() -> None:
     y += 14 * SCALE
     y = draw_paragraph(
         img,
-        "Bookmark a message. Copy from PasteFlick starts there, so you can take the rest of the conversation without dragging a selection.",
+        "Bookmark a message, or a few in chat order. Each selected pin shows 1 of 3, so any one of them tells you the set. Copy takes that stretch.",
         body,
         x,
         y,
@@ -440,7 +440,7 @@ def build_what() -> None:
         MUTED,
         1.4,
     )
-    finish(img, "what-you-get.png")
+    finish(img, "what-you-get-marks.png")
 
 
 def build_support() -> None:
