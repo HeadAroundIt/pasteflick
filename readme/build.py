@@ -411,17 +411,6 @@ def build_what() -> None:
         1.45,
     )
     y += 14 * SCALE
-    y = draw_paragraph(
-        img,
-        "A code block has its own small card. Flick is the main button, so you can send that snippet without bookmarking the message first.",
-        body,
-        x,
-        y,
-        inner,
-        TEXT,
-        1.45,
-    )
-    y += 14 * SCALE
     y = draw_subhead(img, "The toolbar icon", x, y, inner)
     y += 8 * SCALE
     y = draw_paragraph(

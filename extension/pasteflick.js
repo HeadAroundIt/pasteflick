@@ -1886,16 +1886,6 @@
     return outermost(out);
   }
 
-  function codeFencesIn(messageEl) {
-    return contentBlocks(messageEl)
-      .filter((el) => {
-        if (isFileTarget(el) || isInlineLink(el) || isDiagramHost(el)) return false;
-        const fragment = describeBlock(el);
-        return !!(fragment && fragment.kind === "code");
-      })
-      .slice(0, 12);
-  }
-
   function leftoverAfterFiles(messageEl, fileEls) {
     let text = String((messageEl && messageEl.innerText) || "");
     (fileEls || []).forEach((el) => {
@@ -2378,7 +2368,6 @@
     if (/selected/i.test(what)) return "Flick the selected messages.";
     if (what === "this file") return "Send this file.";
     if (what === "this link") return "Send this link.";
-    if (/code/i.test(what)) return "Flick this code.";
     return "Flick what you see.";
   }
 
@@ -3449,9 +3438,7 @@
         ? "this file"
         : isProseDocument(fragment, blockEl)
           ? (fragment && (fragment.name || fragment.title)) || "this markdown"
-          : fragment && fragment.kind === "code"
-            ? "this code"
-            : (fragment && (fragment.title || fragment.label)) || cardLabel || "this block";
+          : (fragment && (fragment.title || fragment.label)) || cardLabel || "this block";
     const pastePrimary = !!(fragment && fragment.kind === "code");
     pin = document.createElement("div");
     pin.setAttribute("data-pasteflick", "pin");
@@ -4021,9 +4008,6 @@
     if (threadPin) seen.add(threadPin);
     messageNodes().forEach((el) => {
       seen.add(ensureMessagePin(el));
-      codeFencesIn(el).forEach((blockEl) => {
-        seen.add(ensureBlockPin(blockEl));
-      });
     });
     if (rails) {
       rails.querySelectorAll('[data-pasteflick="pin"]').forEach((pin) => {
@@ -4073,13 +4057,6 @@
         ensureMessagePin(el);
         needPlace = true;
       }
-      codeFencesIn(el).forEach((blockEl) => {
-        const blockPin = pinByTarget.get(blockEl);
-        if (!blockPin || !blockPin.isConnected) {
-          ensureBlockPin(blockEl);
-          needPlace = true;
-        }
-      });
     });
     rails.querySelectorAll('[data-pasteflick="pin"]').forEach((pin) => {
       if (pin.getAttribute("data-kind") === "thread") return;
