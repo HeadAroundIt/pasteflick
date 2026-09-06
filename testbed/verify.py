@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 TESTBED = Path(__file__).resolve().parent
 EXT = ROOT / "extension"
 OVERLAY = "http://127.0.0.1:8768"
-MOCK = "http://127.0.0.1:8770/mock-chatgpt.html?autotest=1&v=84"
+MOCK = "http://127.0.0.1:8770/mock-chatgpt.html?autotest=1&v=85"
 
 BROWSER_CANDIDATES = [
     Path(os.environ.get("PROGRAMFILES", r"C:\Program Files"))

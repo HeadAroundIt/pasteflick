@@ -876,11 +876,51 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
         if (threadActions[threadActions.length - 1] !== "paste-thread") {
           throw new Error("Flick should be rightmost on the thread chip, got " + threadActions.join(","));
         }
-        if (ui.querySelector('[data-pasteflick="pin"][data-kind="block"]')) {
-          throw new Error("inside cards should not appear");
-        }
         if (ui.querySelector('[data-pasteflick="pin"][data-kind="link"]')) {
           throw new Error("link chips should not appear");
+        }
+        const codePins = ui.querySelectorAll('[data-pasteflick="pin"][data-kind="block"]');
+        const pythonPre = document.querySelector('[data-message-id="msg-assistant-1"] > pre');
+        const plainPre = document.querySelector("#code-plain");
+        const mermaidPre = document.querySelector("#flow-chart pre");
+        const namedDoc = document.querySelector("#named-doc");
+        if (!pythonPre || !plainPre) throw new Error("fixture code blocks missing");
+        const codePin = PasteFlick.pinFor(pythonPre);
+        if (!codePin || codePin.getAttribute("data-block-kind") !== "code") {
+          throw new Error("code blocks should get their own Flick card");
+        }
+        if (!PasteFlick.pinFor(plainPre)) {
+          throw new Error("plain code fences should get a Flick card too");
+        }
+        if (codePins.length !== 2) {
+          throw new Error("only code should get inside cards, got " + codePins.length);
+        }
+        if (Array.from(codePins).some((pin) => pin.getAttribute("data-block-kind") !== "code")) {
+          throw new Error("non-code inside cards should not appear");
+        }
+        const copyCode = codePin.querySelector('[data-pasteflick="copy-block"]');
+        const pasteCode = codePin.querySelector('[data-pasteflick="paste-block"]');
+        const saveCode = codePin.querySelector('[data-pasteflick="save-block"]');
+        if (!copyCode || !pasteCode || !saveCode) {
+          throw new Error("code card needs Copy, Save, and Flick");
+        }
+        if (pasteCode.title !== "Flick this code.") {
+          throw new Error("unexpected code flick tooltip: " + pasteCode.title);
+        }
+        if (!pasteCode.classList.contains("is-primary")) {
+          throw new Error("Flick should be the primary action on a code card");
+        }
+        const codeActions = Array.from(
+          codePin.querySelectorAll('[data-pasteflick="actions"] [data-pasteflick]'),
+        ).map((el) => el.getAttribute("data-pasteflick"));
+        if (codeActions[codeActions.length - 1] !== "paste-block") {
+          throw new Error("Flick should be rightmost on a code card, got " + codeActions.join(","));
+        }
+        if (mermaidPre && PasteFlick.pinFor(mermaidPre)) {
+          throw new Error("flowcharts should not get a code card");
+        }
+        if (namedDoc && PasteFlick.pinFor(namedDoc)) {
+          throw new Error("documents should not get their own cards");
         }
         if (ui.querySelector('[data-pasteflick="copy-message"], [data-pasteflick="paste-message"], [data-pasteflick="save-message"]')) {
           throw new Error("message pins should be bookmark-only");
@@ -1529,8 +1569,11 @@ Got it — copper lantern. Longer assistant reply for DOM scrape:
         await sleep(80);
         PasteFlick.placeAll();
         await settlePins();
-        if (PasteFlick.pinFor(assistant.querySelector("pre")) || PasteFlick.pinFor(assistant.querySelector("#named-doc"))) {
-          throw new Error("code and documents should not get their own cards");
+        if (PasteFlick.pinFor(assistant.querySelector("#named-doc"))) {
+          throw new Error("documents should not get their own cards");
+        }
+        if (!PasteFlick.pinFor(assistant.querySelector("pre"))) {
+          throw new Error("code should keep its Flick card after scroll");
         }
 
         const threadElForScroll = document.querySelector(".thread");

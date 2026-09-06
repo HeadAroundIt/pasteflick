@@ -20,6 +20,8 @@ One chip under the chat title. Highlight a passage, or take the visible thread, 
 
 Bookmark a message, or a few. Each pin shows 1 of 3. Deselect slides out under the chip with the count, so you can clear the set in one tap.
 
+A code block has its own small card. Flick is the main button, so you can send that snippet without bookmarking the message first.
+
 **The toolbar icon.** On a chat it opens the thread as a document. Highlight, copy, or save as Markdown. Settings is the gear. The chip is still the fast path while you read.
 
 **Where it goes.** Pick one in Settings.
